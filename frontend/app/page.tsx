@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -11,6 +11,9 @@ import AiTutorCard from "@/components/AiTutorCard";
 import WeeklyChallenge from "@/components/WeeklyChallenge";
 import RightPanel from "@/components/RightPanel";
 import LessonsPage from "@/components/LessonsPage";
+import { useGuestUser } from "@/lib/guestUser";
+import { useProgress } from "@/hooks/useProgress";
+import { useUserStats } from "@/hooks/useUserStats";
 
 const NAV_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -27,6 +30,10 @@ export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+
+  const userId = useGuestUser();
+  const { progress } = useProgress(userId);
+  const stats = useUserStats(progress);
 
   return (
     <div className="relative flex h-screen overflow-x-visible overflow-y-hidden">
@@ -64,6 +71,8 @@ export default function DashboardPage() {
         <Topbar
           onMobileMenuOpen={() => setMobileOpen(true)}
           title={NAV_LABELS[activeNav] || "Dashboard"}
+          streak={stats.streak}
+          totalXp={stats.totalXp}
         />
 
         {/* Scroll area */}
@@ -75,7 +84,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
                 <div className="flex flex-col gap-5 min-w-0">
                   <Hero />
-                  <StatsRow />
+                  <StatsRow streak={stats.streak} />
                   <LessonsSection />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <AiTutorCard />
