@@ -139,7 +139,6 @@ export default function LessonsSection() {
           onClose={() => setOpenLessonId(null)}
           onComplete={() => {
             refresh();
-            setOpenLessonId(null);
           }}
         />
       )}

@@ -432,7 +432,6 @@ export default function LessonsPage() {
           onClose={() => setOpenLessonId(null)}
           onComplete={() => {
             refresh();
-            setOpenLessonId(null);
           }}
         />
       )}
