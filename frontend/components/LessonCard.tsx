@@ -9,9 +9,10 @@ import type { Lesson } from "@/lib/types";
 interface LessonCardProps {
   lesson: Lesson;
   delay?: number;
+  onClick?: () => void;
 }
 
-export default function LessonCard({ lesson, delay = 0 }: LessonCardProps) {
+export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardProps) {
   const [barLoaded, setBarLoaded] = useState(false);
   const typeConfig = getLessonTypeConfig(lesson.type);
   const progressColor = getLessonProgressColor(lesson.type);
@@ -36,6 +37,7 @@ export default function LessonCard({ lesson, delay = 0 }: LessonCardProps) {
         isRecommended && "border-[#2DA8FF]/25",
       )}
       style={{ animationDelay: `${delay}ms` }}
+      onClick={!isLocked ? onClick : undefined}
       onMouseEnter={(e) => {
         if (!isLocked) (e.currentTarget as HTMLDivElement).style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
       }}

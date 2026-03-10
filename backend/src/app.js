@@ -53,9 +53,11 @@ function createApp() {
   // app.use("/api/v1/users",      require("./routes/userRoutes"));
   // app.use("/api/v1/vocabulary", require("./routes/vocabularyRoutes"));
   // app.use("/api/v1/quizzes",    require("./routes/quizRoutes"));
-  const courseRoutes = require("./routes/courseRoutes");
+  const courseRoutes    = require("./routes/courseRoutes");
+  const progressRoutes  = require("./routes/progressRoutes");
   app.use("/api/v1/lessons",    require("./routes/lessonRoutes"));
-  app.use("/api/v1/courses", courseRoutes);
+  app.use("/api/v1/courses",    courseRoutes);
+  app.use("/api/v1",            progressRoutes);
 
   // -------------------------------------------------------------------------
   // Error handling (must be registered last)

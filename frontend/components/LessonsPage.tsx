@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   useCourses,
@@ -9,6 +9,9 @@ import {
   type NodeStatus,
   type Difficulty,
 } from "@/hooks/useCourses";
+import { useGuestUser } from "@/lib/guestUser";
+import { useProgress } from "@/hooks/useProgress";
+import LessonModal from "./LessonModal";
 import {
   IconCheck, IconLock, IconPlay, IconClock, IconArrowRight,
   IconFire, IconZap, IconTrophy, IconAward, IconChat,
@@ -223,7 +226,7 @@ function ProgressBar() {
   );
 }
 
-function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
+function PathNodeItem({ node, index, onOpen }: { node: PathNode; index: number; onOpen: (id: string) => void }) {
   const offset = ZIGZAG[index % ZIGZAG.length];
   const nodeSize = node.type === "boss" ? "w-[72px] h-[72px]" : node.type === "challenge" ? "w-[64px] h-[64px]" : "w-[56px] h-[56px]";
 
@@ -247,6 +250,7 @@ function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
     <div className="flex flex-col items-center gap-2 transition-all duration-300" style={{ transform: `translateX(${offset}px)` }}>
       <button
         disabled={node.status === "locked"}
+        onClick={node.status !== "locked" ? () => onOpen(node.id) : undefined}
         className={cn("relative rounded-full flex items-center justify-center transition-all duration-300", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed border-2 border-white/[0.08]")}
         style={bgStyle()}
       >
@@ -285,7 +289,7 @@ function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
   );
 }
 
-function UnitSection({ unit }: { unit: UnitData }) {
+function UnitSection({ unit, onOpen }: { unit: UnitData; onOpen: (id: string) => void }) {
   const completedCount = unit.nodes.filter((n) => n.status === "completed").length;
   const totalCount     = unit.nodes.length;
   const pct            = Math.round((completedCount / totalCount) * 100);
@@ -325,7 +329,7 @@ function UnitSection({ unit }: { unit: UnitData }) {
                 style={{ transform: `translateX(${(ZIGZAG[i % ZIGZAG.length] + ZIGZAG[(i - 1) % ZIGZAG.length]) / 2}px)` }}
               />
             )}
-            <PathNodeItem node={node} index={i} />
+            <PathNodeItem node={node} index={i} onOpen={onOpen} />
           </div>
         ))}
       </div>
@@ -350,9 +354,17 @@ function PathLoadingSkeleton() {
    ════════════════════════════════════════════════════════════ */
 export default function LessonsPage() {
   const [levelFilter, setLevelFilter] = useState("All");
+  const [openLessonId, setOpenLessonId] = useState<string | null>(null);
 
-  // Real data from the backend — replaces the hardcoded UNITS constant.
-  const { units, loading, error } = useCourses();
+  const userId = useGuestUser();
+  const { progress, refresh } = useProgress(userId);
+
+  const completedIds = useMemo(
+    () => new Set(progress.filter((p) => p.completed).map((p) => p.lessonId)),
+    [progress]
+  );
+
+  const { units, loading, error } = useCourses(completedIds);
 
   const filteredUnits = levelFilter === "All"
     ? units
@@ -398,7 +410,7 @@ export default function LessonsPage() {
       ) : filteredUnits.length > 0 ? (
         <div className="flex flex-col gap-14">
           {filteredUnits.map((unit) => (
-            <UnitSection key={unit.id} unit={unit} />
+            <UnitSection key={unit.id} unit={unit} onOpen={setOpenLessonId} />
           ))}
         </div>
       ) : (
@@ -411,6 +423,19 @@ export default function LessonsPage() {
       <div className="mt-10 mb-4">
         <ProgressBar />
       </div>
+
+      {/* Lesson modal */}
+      {openLessonId && userId && (
+        <LessonModal
+          lessonId={openLessonId}
+          userId={userId}
+          onClose={() => setOpenLessonId(null)}
+          onComplete={() => {
+            refresh();
+            setOpenLessonId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

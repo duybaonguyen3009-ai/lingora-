@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useLessons } from "@/hooks/useLessons";
+import { useGuestUser } from "@/lib/guestUser";
+import { useProgress } from "@/hooks/useProgress";
 import LessonCard from "./LessonCard";
-import type { LessonStatus } from "@/lib/types";
+import LessonModal from "./LessonModal";
 
 type TabFilter = "all" | "recommended" | "completed";
 
@@ -14,9 +16,6 @@ const TABS: { id: TabFilter; label: string }[] = [
   { id: "completed",   label: "Completed"   },
 ];
 
-// ---------------------------------------------------------------------------
-// Loading skeleton — same grid layout as the real cards, no design change.
-// ---------------------------------------------------------------------------
 function LoadingSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -36,14 +35,33 @@ function LoadingSkeleton() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 export default function LessonsSection() {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
+  const [openLessonId, setOpenLessonId] = useState<string | null>(null);
 
-  // Real data from the backend — replaces mockLessons.
-  const { lessons, loading, error } = useLessons();
+  const userId = useGuestUser();
+  const { progress, refresh } = useProgress(userId);
+
+  const completedIds = useMemo(
+    () => new Set(progress.filter((p) => p.completed).map((p) => p.lessonId)),
+    [progress]
+  );
+
+  // useLessons returns lessons with status derived from API order; we override
+  // status here based on real completion data.
+  const { lessons: rawLessons, loading, error } = useLessons();
+
+  const lessons = useMemo(
+    () =>
+      rawLessons.map((l) => ({
+        ...l,
+        status: completedIds.has(l.id)
+          ? ("completed" as const)
+          : l.status,
+        progress: completedIds.has(l.id) ? 100 : l.progress,
+      })),
+    [rawLessons, completedIds]
+  );
 
   const filtered = lessons.filter((l) => {
     if (activeTab === "all") return true;
@@ -59,7 +77,6 @@ export default function LessonsSection() {
         <h3 className="font-sora font-bold text-[15.5px] tracking-[-0.2px]">Today&apos;s Lessons</h3>
 
         <div className="flex items-center gap-2">
-          {/* Tabs */}
           <div className="flex items-center bg-white/[0.04] border border-white/[0.07] rounded-[10px] p-[3px] gap-0.5">
             {TABS.map((tab) => (
               <button
@@ -98,7 +115,12 @@ export default function LessonsSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filtered.length > 0
             ? filtered.map((lesson, i) => (
-                <LessonCard key={lesson.id} lesson={lesson} delay={i * 60} />
+                <LessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  delay={i * 60}
+                  onClick={() => setOpenLessonId(lesson.id)}
+                />
               ))
             : (
               <div className="col-span-2 py-10 text-center text-[#A6B3C2] text-sm">
@@ -107,6 +129,19 @@ export default function LessonsSection() {
             )
           }
         </div>
+      )}
+
+      {/* Lesson modal */}
+      {openLessonId && userId && (
+        <LessonModal
+          lessonId={openLessonId}
+          userId={userId}
+          onClose={() => setOpenLessonId(null)}
+          onComplete={() => {
+            refresh();
+            setOpenLessonId(null);
+          }}
+        />
       )}
     </section>
   );

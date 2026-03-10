@@ -26,10 +26,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getCourses,
   getCourseById,
+  type ApiCourseDetail,
   type ApiUnit,
   type ApiUnitLesson,
 } from "@/lib/api";
@@ -83,42 +84,58 @@ function nodeDifficulty(type: NodeType): Difficulty {
 }
 
 /**
- * Map one API lesson node to a PathNode.
- *
- * @param lesson     - lesson data from the API
- * @param isFirst    - true only for the very first lesson in the first unit
+ * Compute node status given the completed set and whether we've seen an
+ * "unlocked but not completed" node yet in the traversal.
  */
-function mapNode(lesson: ApiUnitLesson, isFirst: boolean): PathNode {
-  return {
-    id: lesson.id,
-    title: lesson.title,
-    type: lesson.type,
-    // Phase 1: only the entry point is "current"; everything else is locked.
-    status: isFirst ? "current" : "locked",
-    xp: lesson.xp_reward,
-    difficulty: nodeDifficulty(lesson.type),
-    progress: 0,
-  };
+function nodeStatus(
+  lessonId: string,
+  completedIds: Set<string>,
+  foundCurrentRef: { value: boolean }
+): NodeStatus {
+  if (completedIds.has(lessonId)) return "completed";
+  if (!foundCurrentRef.value) {
+    foundCurrentRef.value = true;
+    return "current";
+  }
+  return "locked";
 }
 
 /**
- * Map one API unit (with nested lessons) to a UnitData.
- *
- * @param unit       - unit data from the API
- * @param unitIndex  - 0-based position within the course (used for level)
- * @param isFirst    - true only for the very first unit across all courses
+ * Build UnitData[] from raw API data + completed lesson IDs.
+ * The first non-completed lesson across all units becomes "current"; the
+ * rest are "locked".
  */
-function mapUnit(unit: ApiUnit, unitIndex: number, isFirst: boolean): UnitData {
-  return {
-    id: String(unit.id),
-    title: unit.title,
-    // Units have no description in the schema yet — left empty for Phase 1.
-    description: "",
-    level: unitLevel(unitIndex),
-    nodes: unit.lessons.map((lesson, lessonIndex) =>
-      mapNode(lesson, isFirst && lessonIndex === 0)
-    ),
-  };
+function buildUnits(
+  rawCourses: ApiCourseDetail[],
+  completedIds: Set<string>
+): UnitData[] {
+  const allUnits: UnitData[] = [];
+  const foundCurrentRef = { value: false };
+  let globalUnitIndex = 0;
+
+  for (const course of rawCourses) {
+    for (let i = 0; i < course.units.length; i++) {
+      const unit = course.units[i];
+      allUnits.push({
+        id: String(unit.id),
+        title: unit.title,
+        description: "",
+        level: unitLevel(globalUnitIndex),
+        nodes: unit.lessons.map((lesson) => ({
+          id: lesson.id,
+          title: lesson.title,
+          type: lesson.type,
+          status: nodeStatus(lesson.id, completedIds, foundCurrentRef),
+          xp: lesson.xp_reward,
+          difficulty: nodeDifficulty(lesson.type),
+          progress: completedIds.has(lesson.id) ? 100 : 0,
+        })),
+      });
+      globalUnitIndex++;
+    }
+  }
+
+  return allUnits;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,10 +152,16 @@ export interface UseCoursesResult {
  * useCourses
  *
  * Returns a flat list of UnitData (all units across all courses), a loading
- * flag, and an error message. Falls back gracefully when the backend is down.
+ * flag, and an error message.
+ *
+ * @param completedLessonIds - Set of lesson IDs the user has completed.
+ *   When this set changes (after finishing a lesson), node statuses are
+ *   recomputed reactively via useMemo without re-fetching the API.
  */
-export function useCourses(): UseCoursesResult {
-  const [units, setUnits] = useState<UnitData[]>([]);
+export function useCourses(
+  completedLessonIds: Set<string> = new Set()
+): UseCoursesResult {
+  const [rawCourses, setRawCourses] = useState<ApiCourseDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -147,37 +170,21 @@ export function useCourses(): UseCoursesResult {
 
     async function load() {
       try {
-        // Step 1: get the course list to discover IDs.
         const courses = await getCourses();
-
         if (cancelled) return;
 
         if (courses.length === 0) {
-          setUnits([]);
+          setRawCourses([]);
           setLoading(false);
           return;
         }
 
-        // Step 2: fetch full details (units + lessons) for all courses in parallel.
         const details = await Promise.all(
           courses.map((c) => getCourseById(c.id))
         );
-
         if (cancelled) return;
 
-        // Step 3: flatten all units across all courses into one ordered list.
-        let globalUnitIndex = 0;
-        const allUnits: UnitData[] = [];
-
-        for (const course of details) {
-          for (let i = 0; i < course.units.length; i++) {
-            const isFirstEver = globalUnitIndex === 0;
-            allUnits.push(mapUnit(course.units[i], i, isFirstEver));
-            globalUnitIndex++;
-          }
-        }
-
-        setUnits(allUnits);
+        setRawCourses(details);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;
@@ -187,11 +194,15 @@ export function useCourses(): UseCoursesResult {
     }
 
     load();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
+
+  // Recompute node statuses when completedLessonIds changes — no extra fetch.
+  const units = useMemo(
+    () => buildUnits(rawCourses, completedLessonIds),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawCourses, completedLessonIds]
+  );
 
   return { units, loading, error };
 }
