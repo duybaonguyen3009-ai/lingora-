@@ -25,8 +25,9 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
   }
 
   function handleNext() {
+    if (index >= items.length - 1) return; // guard against OOB
     setFlipped(false);
-    setTimeout(() => setIndex((i) => i + 1), 150);
+    setTimeout(() => setIndex((i) => Math.min(i + 1, items.length - 1)), 150);
   }
 
   return (
