@@ -3,13 +3,13 @@
   "configurations": [
     {
       "name": "frontend",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
       "runtimeArgs": ["run", "dev", "--workspace=frontend"],
       "port": 3000
     },
     {
       "name": "backend",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
       "runtimeArgs": ["run", "dev", "--workspace=backend"],
       "port": 4000
     }

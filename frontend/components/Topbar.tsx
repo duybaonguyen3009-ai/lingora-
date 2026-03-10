@@ -2,14 +2,15 @@
 
 import { IconSearch, IconBell, IconFire, IconZap, IconMenu } from "./Icons";
 import { cn } from "@/lib/utils";
-import { mockUser } from "@/lib/mockData";
 
 interface TopbarProps {
   onMobileMenuOpen: () => void;
   title?: string;
+  streak?: number;
+  totalXp?: number;
 }
 
-export default function Topbar({ onMobileMenuOpen, title = "Dashboard" }: TopbarProps) {
+export default function Topbar({ onMobileMenuOpen, title = "Dashboard", streak = 0, totalXp = 0 }: TopbarProps) {
   return (
     <header className="h-16 px-7 flex items-center justify-between gap-4 border-b border-white/[0.07] bg-[#071A2F]/80 backdrop-blur-md flex-shrink-0">
       {/* Left */}
@@ -46,13 +47,13 @@ export default function Topbar({ onMobileMenuOpen, title = "Dashboard" }: Topbar
         {/* Streak badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[12.5px] font-semibold cursor-pointer hover:bg-amber-500/15 transition-colors">
           <IconFire className="text-amber-400" />
-          18 Day Streak
+          {streak} Day{streak !== 1 ? "s" : ""} Streak
         </div>
 
         {/* XP badge */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[20px] bg-[#2ED3C6]/10 border border-[#2ED3C6]/20 text-[#2ED3C6] text-[12.5px] font-semibold cursor-pointer hover:bg-[#2ED3C6]/15 transition-colors">
           <IconZap size={13} className="text-[#2ED3C6]" />
-          2,480 XP
+          {totalXp.toLocaleString()} XP
         </div>
 
         {/* Notification bell */}
@@ -73,7 +74,7 @@ export default function Topbar({ onMobileMenuOpen, title = "Dashboard" }: Topbar
           onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(46,211,198,0.4)")}
           onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 0 2px rgba(46,211,198,0.25)")}
         >
-          {mockUser.initials}
+          AN
         </button>
       </div>
     </header>

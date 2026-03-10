@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   useCourses,
@@ -9,6 +9,10 @@ import {
   type NodeStatus,
   type Difficulty,
 } from "@/hooks/useCourses";
+import { useGuestUser } from "@/lib/guestUser";
+import { useProgress } from "@/hooks/useProgress";
+import { useUserStats } from "@/hooks/useUserStats";
+import LessonModal from "./LessonModal";
 import {
   IconCheck, IconLock, IconPlay, IconClock, IconArrowRight,
   IconFire, IconZap, IconTrophy, IconAward, IconChat,
@@ -21,16 +25,14 @@ const DIFF_CONFIG: Record<Difficulty, { label: string; dot: string; bg: string; 
   hard:   { label: "Hard",   dot: "bg-red-400",     bg: "bg-red-500/10",     border: "border-red-500/20",     text: "text-red-400" },
 };
 
-/* ─── static data (not fetched from API in Phase 1) ─── */
+/* ─── static data (not yet connected to API) ─── */
 const DAILY_MISSIONS = [
   { id: "dm-1", label: "Complete 1 lesson", done: true,  xp: 10 },
   { id: "dm-2", label: "Learn 10 new words", done: true,  xp: 15 },
   { id: "dm-3", label: "Practice speaking",  done: false, xp: 20 },
 ];
 
-const STREAK_DATA = { current: 18, milestones: [3, 7, 14, 30] };
-
-const USER_PROGRESS = { level: 3, xp: 320, xpToNext: 500, totalXp: 1320 };
+const STREAK_MILESTONES = [3, 7, 14, 30];
 
 const SKILL_XP = [
   { skill: "Vocabulary", xp: 420, color: "from-[#2DA8FF] to-[#82CAFF]" },
@@ -112,17 +114,17 @@ function DailyMission() {
   );
 }
 
-function StreakMilestones() {
+function StreakMilestones({ streak }: { streak: number }) {
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
       <div className="flex items-center gap-2.5 mb-4">
         <IconFire size={16} className="text-amber-400" />
         <h3 className="text-[14px] font-bold text-[#E6EDF3]">Streak Milestones</h3>
-        <span className="ml-auto text-[12px] font-bold text-amber-400">{STREAK_DATA.current} days</span>
+        <span className="ml-auto text-[12px] font-bold text-amber-400">{streak} days</span>
       </div>
       <div className="flex items-center gap-2">
-        {STREAK_DATA.milestones.map((m) => {
-          const achieved = STREAK_DATA.current >= m;
+        {STREAK_MILESTONES.map((m) => {
+          const achieved = streak >= m;
           return (
             <div key={m} className="flex-1 flex flex-col items-center gap-1.5">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-[13px] font-bold transition-all", achieved ? "bg-gradient-to-br from-amber-400 to-orange-500 text-[#071A2F] shadow-lg shadow-amber-500/20" : "bg-white/[0.04] border border-white/[0.08] text-[#A6B3C2]/40")}>
@@ -137,14 +139,14 @@ function StreakMilestones() {
   );
 }
 
-function SkillXpCard() {
+function SkillXpCard({ totalXp }: { totalXp: number }) {
   const maxXp = Math.max(...SKILL_XP.map((s) => s.xp));
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
       <div className="flex items-center gap-2.5 mb-4">
         <IconZap size={14} className="text-[#2ED3C6]" />
         <h3 className="text-[14px] font-bold text-[#E6EDF3]">Skill XP</h3>
-        <span className="ml-auto text-[11px] text-[#A6B3C2]">{USER_PROGRESS.totalXp} total XP</span>
+        <span className="ml-auto text-[11px] text-[#A6B3C2]">{totalXp} total XP</span>
       </div>
       <div className="flex flex-col gap-3">
         {SKILL_XP.map((s) => (
@@ -200,18 +202,18 @@ function MiniProgress({ pct, status }: { pct: number; status: NodeStatus }) {
   );
 }
 
-function ProgressBar() {
-  const pct = Math.round((USER_PROGRESS.xp / USER_PROGRESS.xpToNext) * 100);
+function ProgressBar({ level, xp, xpToNext }: { level: number; xp: number; xpToNext: number }) {
+  const pct = Math.round((xp / (xp + xpToNext)) * 100);
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center font-sora font-black text-sm text-[#071A2F]" style={{ background: "linear-gradient(135deg, #2ED3C6, #2DA8FF)" }}>
-            {USER_PROGRESS.level}
+            {level}
           </div>
           <div>
-            <p className="text-[13px] font-semibold text-[#E6EDF3]">Level {USER_PROGRESS.level}</p>
-            <p className="text-[11px] text-[#A6B3C2]">{USER_PROGRESS.xp} / {USER_PROGRESS.xpToNext} XP to next level</p>
+            <p className="text-[13px] font-semibold text-[#E6EDF3]">Level {level}</p>
+            <p className="text-[11px] text-[#A6B3C2]">{xp} / {xp + xpToNext} XP to next level</p>
           </div>
         </div>
         <span className="text-[12px] font-bold text-[#2ED3C6]">{pct}%</span>
@@ -223,7 +225,7 @@ function ProgressBar() {
   );
 }
 
-function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
+function PathNodeItem({ node, index, onOpen }: { node: PathNode; index: number; onOpen: (id: string) => void }) {
   const offset = ZIGZAG[index % ZIGZAG.length];
   const nodeSize = node.type === "boss" ? "w-[72px] h-[72px]" : node.type === "challenge" ? "w-[64px] h-[64px]" : "w-[56px] h-[56px]";
 
@@ -247,6 +249,7 @@ function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
     <div className="flex flex-col items-center gap-2 transition-all duration-300" style={{ transform: `translateX(${offset}px)` }}>
       <button
         disabled={node.status === "locked"}
+        onClick={node.status !== "locked" ? () => onOpen(node.id) : undefined}
         className={cn("relative rounded-full flex items-center justify-center transition-all duration-300", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed border-2 border-white/[0.08]")}
         style={bgStyle()}
       >
@@ -285,7 +288,7 @@ function PathNodeItem({ node, index }: { node: PathNode; index: number }) {
   );
 }
 
-function UnitSection({ unit }: { unit: UnitData }) {
+function UnitSection({ unit, onOpen }: { unit: UnitData; onOpen: (id: string) => void }) {
   const completedCount = unit.nodes.filter((n) => n.status === "completed").length;
   const totalCount     = unit.nodes.length;
   const pct            = Math.round((completedCount / totalCount) * 100);
@@ -325,7 +328,7 @@ function UnitSection({ unit }: { unit: UnitData }) {
                 style={{ transform: `translateX(${(ZIGZAG[i % ZIGZAG.length] + ZIGZAG[(i - 1) % ZIGZAG.length]) / 2}px)` }}
               />
             )}
-            <PathNodeItem node={node} index={i} />
+            <PathNodeItem node={node} index={i} onOpen={onOpen} />
           </div>
         ))}
       </div>
@@ -350,9 +353,18 @@ function PathLoadingSkeleton() {
    ════════════════════════════════════════════════════════════ */
 export default function LessonsPage() {
   const [levelFilter, setLevelFilter] = useState("All");
+  const [openLessonId, setOpenLessonId] = useState<string | null>(null);
 
-  // Real data from the backend — replaces the hardcoded UNITS constant.
-  const { units, loading, error } = useCourses();
+  const userId = useGuestUser();
+  const { progress, refresh } = useProgress(userId);
+  const stats = useUserStats(progress);
+
+  const completedIds = useMemo(
+    () => new Set(progress.filter((p) => p.completed).map((p) => p.lessonId)),
+    [progress]
+  );
+
+  const { units, loading, error } = useCourses(completedIds);
 
   const filteredUnits = levelFilter === "All"
     ? units
@@ -374,8 +386,8 @@ export default function LessonsPage() {
 
       {/* Streak + Skill XP */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5">
-        <StreakMilestones />
-        <SkillXpCard />
+        <StreakMilestones streak={stats.streak} />
+        <SkillXpCard totalXp={stats.totalXp} />
       </div>
 
       {/* Path divider */}
@@ -398,7 +410,7 @@ export default function LessonsPage() {
       ) : filteredUnits.length > 0 ? (
         <div className="flex flex-col gap-14">
           {filteredUnits.map((unit) => (
-            <UnitSection key={unit.id} unit={unit} />
+            <UnitSection key={unit.id} unit={unit} onOpen={setOpenLessonId} />
           ))}
         </div>
       ) : (
@@ -409,8 +421,20 @@ export default function LessonsPage() {
 
       {/* Bottom progress */}
       <div className="mt-10 mb-4">
-        <ProgressBar />
+        <ProgressBar level={stats.level} xp={stats.xp} xpToNext={stats.xpToNext} />
       </div>
+
+      {/* Lesson modal */}
+      {openLessonId && userId && (
+        <LessonModal
+          lessonId={openLessonId}
+          userId={userId}
+          onClose={() => setOpenLessonId(null)}
+          onComplete={() => {
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -89,10 +89,20 @@ function StatCardItem({ stat, delay }: { stat: StatCard; delay: number }) {
   );
 }
 
-export default function StatsRow() {
+interface StatsRowProps {
+  streak?: number;
+}
+
+export default function StatsRow({ streak }: StatsRowProps) {
+  const stats = mockStats.map((s) =>
+    s.id === "streak" && streak !== undefined
+      ? { ...s, value: streak, barPercent: Math.min(Math.round((streak / 30) * 100), 100) }
+      : s
+  );
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-      {mockStats.map((stat, i) => (
+      {stats.map((stat, i) => (
         <StatCardItem key={stat.id} stat={stat} delay={i * 80} />
       ))}
     </div>
