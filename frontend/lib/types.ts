@@ -38,3 +38,76 @@ export interface HeatmapDay {
   level: 0 | 1 | 2 | 3 | 4;
   isToday?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Gamification types
+// ---------------------------------------------------------------------------
+
+export interface Badge {
+  id:          string;
+  slug:        string;
+  name:        string;
+  description: string | null;
+  icon_url:    string | null;
+  xp_reward:   number;
+  awarded_at?: string;
+}
+
+export interface XpSummary {
+  totalXp:       number;
+  level:         number;
+  xpInLevel:     number;
+  xpToNextLevel: number;
+}
+
+export interface StreakSummary {
+  currentStreak:  number;
+  longestStreak:  number;
+  lastActivityAt: string | null;
+}
+
+export interface GamificationData {
+  xp:     XpSummary;
+  streak: StreakSummary;
+  badges: Badge[];
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  name:   string;
+  xp:     number;
+  rank:   number;
+}
+
+export interface LeaderboardData {
+  scope:   "weekly" | "all-time";
+  entries: LeaderboardEntry[];
+  myEntry: LeaderboardEntry | null;
+}
+
+// ---------------------------------------------------------------------------
+// Pronunciation types
+// ---------------------------------------------------------------------------
+
+export interface PhonemeDetail {
+  phoneme:  string;
+  score:    number; // 0-100
+  offset:   number; // ms
+  duration: number; // ms
+}
+
+export interface WordDetail {
+  word:     string;
+  score:    number; // 0-100
+  phonemes: PhonemeDetail[];
+}
+
+export interface PronunciationResult {
+  attemptId:          string;
+  overallScore:       number;
+  accuracyScore:      number;
+  fluencyScore:       number;
+  completenessScore:  number;
+  pronunciationScore: number;
+  words:              WordDetail[];
+}

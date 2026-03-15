@@ -20,6 +20,15 @@ export function getGuestUserId(): string | null {
 }
 
 /**
+ * Removes the guest UUID from localStorage after a successful migration to
+ * a real account. Safe to call on the server (no-op) or when the key is absent.
+ */
+export function clearGuestUserId(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+/**
  * SSR-safe hook that returns the guest UUID after hydration.
  * Returns null during SSR / before the first client render.
  */

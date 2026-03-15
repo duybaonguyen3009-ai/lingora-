@@ -35,7 +35,12 @@ function LoadingSkeleton() {
   );
 }
 
-export default function LessonsSection() {
+interface LessonsSectionProps {
+  /** Called after a lesson is saved — parent can use this to refetch gamification data. */
+  onLessonComplete?: () => void;
+}
+
+export default function LessonsSection({ onLessonComplete }: LessonsSectionProps = {}) {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [openLessonId, setOpenLessonId] = useState<string | null>(null);
 
@@ -139,6 +144,7 @@ export default function LessonsSection() {
           onClose={() => setOpenLessonId(null)}
           onComplete={() => {
             refresh();
+            onLessonComplete?.();
           }}
         />
       )}

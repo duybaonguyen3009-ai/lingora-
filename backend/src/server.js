@@ -6,7 +6,12 @@
  * Keep this file thin — all app logic lives in app.js.
  */
 
+// dotenv must be loaded first so SENTRY_DSN is available before Sentry.init()
 require("dotenv").config();
+
+// Sentry must be initialised before any other requires that might throw.
+const { initSentry } = require("./config/sentry");
+initSentry();
 
 const createApp = require("./app");
 

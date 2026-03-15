@@ -1,24 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { ApiSpeakingPrompt } from "@/lib/api";
+import type { PronunciationResult } from "@/lib/types";
+import {
+  getAudioUploadUrl,
+  uploadAudioBlob,
+  assessPronunciation,
+} from "@/lib/api";
+import AudioRecorder from "./AudioRecorder";
+import PronunciationResults from "./PronunciationResults";
+
+type PromptState = "idle" | "recording" | "uploading" | "assessing" | "results" | "error";
 
 interface SpeakingSectionProps {
   items: ApiSpeakingPrompt[];
-  onContinue: () => void;
+  lessonId: string;
+  userId: string;
+  onContinue: (speakingScore: number) => void;
 }
 
-export default function SpeakingSection({ items, onContinue }: SpeakingSectionProps) {
+export default function SpeakingSection({
+  items,
+  lessonId,
+  userId,
+  onContinue,
+}: SpeakingSectionProps) {
   const [index, setIndex] = useState(0);
+  const [promptState, setPromptState] = useState<PromptState>("idle");
   const [revealed, setRevealed] = useState(false);
+  const [result, setResult] = useState<PronunciationResult | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Track best score per prompt index
+  const [bestScores, setBestScores] = useState<Map<number, number>>(new Map());
 
   const current = items[index];
   const isLast = index === items.length - 1;
 
-  function handleNext() {
+  // Reset per-prompt state when moving to a new prompt
+  useEffect(() => {
+    setPromptState("idle");
     setRevealed(false);
-    setTimeout(() => setIndex((i) => i + 1), 150);
+    setResult(null);
+    setErrorMsg(null);
+  }, [index]);
+
+  const handleRecordingComplete = useCallback(
+    async (blob: Blob) => {
+      setPromptState("uploading");
+      setErrorMsg(null);
+
+      try {
+        // 1. Get pre-signed upload URL
+        const { uploadUrl, storageKey } = await getAudioUploadUrl(
+          current.id,
+          blob.type || "audio/webm"
+        );
+
+        // 2. Upload audio directly to storage
+        await uploadAudioBlob(uploadUrl, blob);
+
+        // 3. Assess pronunciation
+        setPromptState("assessing");
+        const assessResult = await assessPronunciation(
+          lessonId,
+          current.id,
+          storageKey
+        );
+
+        setResult(assessResult);
+
+        // Track best score
+        setBestScores((prev) => {
+          const next = new Map(prev);
+          const existing = next.get(index) ?? 0;
+          next.set(index, Math.max(existing, assessResult.overallScore));
+          return next;
+        });
+
+        setPromptState("results");
+      } catch (err) {
+        setPromptState("error");
+        setErrorMsg(
+          err instanceof Error ? err.message : "Something went wrong. Please try again."
+        );
+      }
+    },
+    [current.id, lessonId, index]
+  );
+
+  function handleTryAgain() {
+    setPromptState("idle");
+    setResult(null);
+    setErrorMsg(null);
+  }
+
+  function handleNext() {
+    if (isLast) {
+      // Compute average of best scores across all prompts
+      const scores = Array.from(bestScores.values());
+      const avg =
+        scores.length > 0
+          ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+          : 0;
+      onContinue(avg);
+    } else {
+      setIndex((i) => i + 1);
+    }
   }
 
   return (
@@ -30,23 +120,33 @@ export default function SpeakingSection({ items, onContinue }: SpeakingSectionPr
             key={i}
             className={cn(
               "h-1.5 rounded-full transition-all duration-300",
-              i === index ? "w-6 bg-[#A064FF]" : i < index ? "w-2.5 bg-[#A064FF]/40" : "w-2.5 bg-white/[0.1]"
+              i === index
+                ? "w-6 bg-[#A064FF]"
+                : i < index
+                ? "w-2.5 bg-[#A064FF]/40"
+                : "w-2.5 bg-white/[0.1]"
             )}
           />
         ))}
       </div>
 
-      {/* Prompt */}
+      {/* Prompt card — always visible */}
       <div className="rounded-2xl border border-[#A064FF]/20 bg-[#A064FF]/[0.05] p-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#A064FF] mb-3">Speaking Prompt</p>
-        <p className="text-[16px] font-semibold text-[#E6EDF3] leading-relaxed">{current.prompt_text}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#A064FF] mb-3">
+          Speaking Prompt
+        </p>
+        <p className="text-[16px] font-semibold text-[#E6EDF3] leading-relaxed">
+          {current.prompt_text}
+        </p>
         {current.hint && (
-          <p className="text-[12px] text-[#A6B3C2]/60 mt-3 italic">💡 {current.hint}</p>
+          <p className="text-[12px] text-[#A6B3C2]/60 mt-3 italic">
+            💡 {current.hint}
+          </p>
         )}
       </div>
 
-      {/* Sample answer toggle */}
-      {current.sample_answer && (
+      {/* Sample answer toggle — hidden when showing results */}
+      {current.sample_answer && promptState !== "results" && (
         <div>
           <button
             onClick={() => setRevealed((v) => !v)}
@@ -67,25 +167,60 @@ export default function SpeakingSection({ items, onContinue }: SpeakingSectionPr
         </div>
       )}
 
-      {/* Navigation */}
-      {!isLast ? (
-        <button
-          onClick={handleNext}
-          className="py-3 rounded-xl font-semibold text-[14px] bg-[#A064FF]/20 border border-[#A064FF]/25 text-[#A064FF] hover:bg-[#A064FF]/30 transition-all duration-200"
-        >
-          Next →
-        </button>
-      ) : (
-        <button
-          onClick={onContinue}
-          className="py-3 rounded-xl font-semibold text-[14px] bg-gradient-to-r from-[#2ED3C6] to-[#2DA8FF] text-[#071A2F] hover:opacity-90 transition-all duration-200"
-        >
-          Finish Lesson
-        </button>
+      {/* Audio recorder — visible in idle state */}
+      {promptState === "idle" && (
+        <AudioRecorder
+          onRecordingComplete={handleRecordingComplete}
+          disabled={false}
+        />
       )}
 
+      {/* Processing states */}
+      {promptState === "uploading" && (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <div className="w-8 h-8 rounded-full border-2 border-[#A064FF]/30 border-t-[#A064FF] animate-spin" />
+          <p className="text-[13px] text-[#A6B3C2]">Uploading audio…</p>
+        </div>
+      )}
+
+      {promptState === "assessing" && (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <div className="w-8 h-8 rounded-full border-2 border-[#A064FF]/30 border-t-[#A064FF] animate-spin" />
+          <p className="text-[13px] text-[#A6B3C2]">Analyzing pronunciation…</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {promptState === "error" && (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <p className="text-[13px] text-red-400">{errorMsg}</p>
+          <button
+            onClick={handleTryAgain}
+            className="px-5 py-2 rounded-lg text-[13px] font-semibold bg-[#A064FF]/15 border border-[#A064FF]/20 text-[#A064FF] hover:bg-[#A064FF]/25 transition-all duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Results */}
+      {promptState === "results" && result && (
+        <PronunciationResults
+          result={result}
+          onTryAgain={handleTryAgain}
+          onNext={handleNext}
+          isLast={isLast}
+        />
+      )}
+
+      {/* Prompt counter */}
       <p className="text-[12px] text-[#A6B3C2]/50 text-center">
         {index + 1} / {items.length} prompts
+        {bestScores.has(index) && (
+          <span className="ml-2 text-[#A064FF]">
+            Best: {Math.round(bestScores.get(index)!)}%
+          </span>
+        )}
       </p>
     </div>
   );

@@ -18,13 +18,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * completeLesson
  *
- * Body: { userId: string (UUID), score: number (0–100) }
- * Upserts a user_progress row and returns the saved record.
+ * Body: { userId: string (UUID), score: number (0–100), timeTakenMs?: number }
+ * Upserts a user_progress row, runs gamification side-effects, and returns
+ * an enriched record that includes XP, level, streak, and any new badges.
  */
 async function completeLesson(req, res, next) {
   try {
     const { lessonId } = req.params;
-    const { userId, score } = req.body;
+    const { userId, score, timeTakenMs } = req.body;
 
     // --- Validate lessonId ---
     if (!UUID_RE.test(lessonId)) {
@@ -48,7 +49,20 @@ async function completeLesson(req, res, next) {
       return next(err);
     }
 
-    const result = await progressService.completeLesson(userId, lessonId, Math.round(scoreNum));
+    // --- Validate timeTakenMs (optional) ---
+    const timeTakenNum = timeTakenMs != null ? Number(timeTakenMs) : undefined;
+    if (timeTakenNum !== undefined && (isNaN(timeTakenNum) || timeTakenNum < 0)) {
+      const err = new Error("timeTakenMs must be a non-negative number.");
+      err.status = 400;
+      return next(err);
+    }
+
+    const result = await progressService.completeLesson(
+      userId,
+      lessonId,
+      Math.round(scoreNum),
+      timeTakenNum,
+    );
 
     return sendSuccess(res, {
       data:    result,
@@ -90,4 +104,40 @@ async function getProgress(req, res, next) {
   }
 }
 
-module.exports = { completeLesson, getProgress };
+// ---------------------------------------------------------------------------
+// POST /api/v1/users/migrate-guest
+// ---------------------------------------------------------------------------
+
+/**
+ * migrateGuest
+ *
+ * Body: { guestId: string (UUID) }
+ * Migrates all user_progress rows owned by the guest UUID to the
+ * authenticated user (req.user.id), then cleans up the guest stub.
+ * Non-critical — returns 200 even when the guest had no progress.
+ */
+async function migrateGuest(req, res, next) {
+  try {
+    const { guestId } = req.body;
+    const realUserId  = req.user.id;
+
+    if (!guestId || !UUID_RE.test(String(guestId))) {
+      const err = new Error("guestId is required and must be a valid UUID.");
+      err.status = 400;
+      return next(err);
+    }
+
+    const result = await progressService.migrateGuestProgress(realUserId, guestId);
+
+    return sendSuccess(res, {
+      data:    result,
+      message: result.migratedCount > 0
+        ? `Migrated ${result.migratedCount} lesson(s) from guest account.`
+        : "No guest progress to migrate.",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { completeLesson, getProgress, migrateGuest };

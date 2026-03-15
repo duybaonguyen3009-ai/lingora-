@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -11,31 +11,39 @@ import AiTutorCard from "@/components/AiTutorCard";
 import WeeklyChallenge from "@/components/WeeklyChallenge";
 import RightPanel from "@/components/RightPanel";
 import LessonsPage from "@/components/LessonsPage";
-import { useGuestUser } from "@/lib/guestUser";
+import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
 import { useUserStats } from "@/hooks/useUserStats";
+import { useGamification } from "@/hooks/useGamification";
 
 const NAV_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  lessons: "Lessons",
-  practice: "Practice",
+  dashboard:  "Dashboard",
+  lessons:    "Lessons",
+  practice:   "Practice",
   vocabulary: "Vocabulary",
-  reading: "Reading",
-  listening: "Listening",
-  speaking: "Speaking",
-  progress: "Progress",
+  reading:    "Reading",
+  listening:  "Listening",
+  speaking:   "Speaking",
+  progress:   "Progress",
 };
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const [mobileOpen,       setMobileOpen]       = useState(false);
+  const [activeNav,        setActiveNav]        = useState("dashboard");
 
-  const userId = useGuestUser();
-  const { progress } = useProgress(userId);
-  const { apiLessons } = useLessons();
-  const stats = useUserStats(progress, apiLessons);
+  const userId          = useCurrentUserId();
+  const { progress }    = useProgress(userId);
+  const { apiLessons }  = useLessons();
+  const stats           = useUserStats(progress, apiLessons);
+
+  // Real gamification data from the API — overrides computed useUserStats values.
+  const { data: gamification, refetch: refetchGamification } = useGamification(userId);
+
+  // Prefer live API data; fall back to locally-computed stats while loading.
+  const displayStreak = gamification?.streak.currentStreak ?? stats.streak;
+  const displayXp     = gamification?.xp.totalXp          ?? stats.totalXp;
 
   return (
     <div className="relative flex h-screen overflow-x-visible overflow-y-hidden">
@@ -73,8 +81,8 @@ export default function DashboardPage() {
         <Topbar
           onMobileMenuOpen={() => setMobileOpen(true)}
           title={NAV_LABELS[activeNav] || "Dashboard"}
-          streak={stats.streak}
-          totalXp={stats.totalXp}
+          streak={displayStreak}
+          totalXp={displayXp}
         />
 
         {/* Scroll area */}
@@ -87,11 +95,11 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-5 min-w-0">
                   <Hero />
                   <StatsRow
-                    streak={stats.streak}
+                    streak={displayStreak}
                     vocabLearned={stats.vocabLearned}
                     studyMinutes={stats.studyMinutes}
                   />
-                  <LessonsSection />
+                  <LessonsSection onLessonComplete={refetchGamification} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <AiTutorCard />
                     <WeeklyChallenge />

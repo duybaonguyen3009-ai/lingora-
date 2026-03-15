@@ -1,0 +1,297 @@
+"use client";
+
+/**
+ * app/(auth)/register/page.tsx  →  URL: /register
+ *
+ * New-account creation form.
+ * Collects: name, email, password, role, date-of-birth (optional, for COPPA).
+ * On success: calls registerUser() which updates the Zustand store,
+ * then redirects to the dashboard at /.
+ */
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { registerUser, migrateGuestProgress } from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { getGuestUserId, clearGuestUserId } from "@/lib/guestUser";
+import { cn } from "@/lib/utils";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function todayISO(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+function minDateISO(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 100);
+  return d.toISOString().split("T")[0];
+}
+
+// ─── Shared input style ────────────────────────────────────────────────────────
+
+const inputCls = cn(
+  "w-full h-11 px-4 rounded-[10px] text-[14px] text-[#E6EDF3]",
+  "bg-white/[0.05] border border-white/[0.07]",
+  "placeholder:text-[#4A6078] outline-none",
+  "focus:border-[#2ED3C6]/50 focus:bg-[#2ED3C6]/[0.04]",
+  "transition-all duration-200",
+  "[color-scheme:dark]",   // native date/select respect dark mode
+);
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
+
+export default function RegisterPage() {
+  const router    = useRouter();
+  const user      = useAuthStore((s) => s.user);
+  const authReady = !useAuthStore((s) => s.isLoading);
+
+  const [name,         setName]         = useState("");
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [role,         setRole]         = useState<"kid" | "teacher" | "parent">("kid");
+  const [dob,          setDob]          = useState("");
+  const [error,        setError]        = useState<string | null>(null);
+  const [submitting,   setSubmitting]   = useState(false);
+
+  // Already authenticated → go home
+  useEffect(() => {
+    if (authReady && user) router.replace("/");
+  }, [authReady, user, router]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    // Client-side validation
+    if (!name.trim())  { setError("Full name is required.");                  return; }
+    if (!email.trim()) { setError("Email is required.");                       return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Enter a valid email address."); return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters."); return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await registerUser({
+        name:     name.trim(),
+        email:    email.trim().toLowerCase(),
+        password,
+        role,
+        ...(dob ? { dob } : {}),
+      });
+
+      // COPPA: under-13 account created but parental consent needed (Task 7)
+      if (result.needsParentalConsent) {
+        // TODO (Task 7): redirect to "/consent-pending" page
+        console.info("[COPPA] Parental consent required for:", result.user.email);
+      }
+
+      // Migrate any progress accumulated as a guest into the new account.
+      // Non-critical: swallow errors so a migration hiccup never blocks registration.
+      const guestId = getGuestUserId();
+      if (guestId) {
+        await migrateGuestProgress(guestId).catch(() => {});
+        clearGuestUserId();
+      }
+
+      router.replace("/");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="max-w-[440px] mx-auto animate-fadeSlideUp">
+
+      {/* ── Logo + heading ── */}
+      <div className="text-center mb-8">
+        <div
+          className="inline-flex items-center justify-center w-12 h-12 rounded-[14px] mb-4"
+          style={{ background: "linear-gradient(135deg, #2ED3C6, #2DA8FF)" }}
+        >
+          <span className="font-sora font-black text-[20px] text-[#071A2F]">L</span>
+        </div>
+        <h1 className="font-sora font-black text-[26px] text-[#E6EDF3] tracking-[-0.5px]">
+          Create your account
+        </h1>
+        <p className="text-[#A6B3C2] text-sm mt-1.5">Start learning English today — it&apos;s free</p>
+      </div>
+
+      {/* ── Card ── */}
+      <div
+        className="rounded-[20px] p-7 border border-white/[0.07]"
+        style={{
+          background:           "rgba(11,34,57,0.75)",
+          backdropFilter:       "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          boxShadow:            "0 8px 48px rgba(0,0,0,0.45)",
+        }}
+      >
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+
+          {/* Full name */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+              Full name
+            </label>
+            <input
+              type="text"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Emma Wilson"
+              className={inputCls}
+            />
+          </div>
+
+          {/* Email */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+              Email address
+            </label>
+            <input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className={inputCls}
+            />
+          </div>
+
+          {/* Password */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className={cn(inputCls, "pr-11")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6078] hover:text-[#A6B3C2] transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
+            {/* Inline strength hint */}
+            {password.length > 0 && password.length < 8 && (
+              <p className="text-[11.5px] text-amber-400/80 mt-0.5">
+                {8 - password.length} more character{8 - password.length !== 1 ? "s" : ""} needed
+              </p>
+            )}
+          </div>
+
+          {/* Role + Date of birth — side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+                I am a…
+              </label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as "kid" | "teacher" | "parent")}
+                className={cn(inputCls, "cursor-pointer")}
+              >
+                <option value="kid">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="parent">Parent</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+                Date of birth
+              </label>
+              <input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                max={todayISO()}
+                min={minDateISO()}
+                className={cn(inputCls, "cursor-pointer")}
+              />
+            </div>
+          </div>
+
+          {/* COPPA notice */}
+          <p className="text-[11px] text-[#3D5670] leading-[1.6]">
+            Date of birth is used for COPPA age verification. Accounts for users
+            under 13 require a parent or guardian&apos;s email consent before activation.
+          </p>
+
+          {/* Error banner */}
+          {error && (
+            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[9px] bg-red-500/10 border border-red-500/20 text-red-400 text-[13px]">
+              <span className="mt-[1px] flex-shrink-0">⚠</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className={cn(
+              "h-11 mt-1 rounded-[10px] font-sora font-bold text-[13.5px] text-[#071A2F]",
+              "bg-[#2ED3C6] transition-all duration-200",
+              "hover:-translate-y-[1px]",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0",
+            )}
+            style={{ boxShadow: "0 4px 20px rgba(46,211,198,0.35)" }}
+          >
+            {submitting ? "Creating account…" : "Create Account"}
+          </button>
+        </form>
+      </div>
+
+      {/* Sign-in link */}
+      <p className="text-center text-[13px] text-[#A6B3C2] mt-5">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-[#2ED3C6] hover:text-[#4DDDCE] font-medium transition-colors"
+        >
+          Sign in
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+// ─── Inline SVG icons ─────────────────────────────────────────────────────────
+
+function IconEye() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+}
+
+function IconEyeOff() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}

@@ -95,9 +95,11 @@ interface StatsRowProps {
   vocabLearned?: number;
   /** Estimated study time in minutes (completedLessons × avg lesson duration). */
   studyMinutes?: number;
+  /** Global rank from the leaderboard. null = not yet computed, undefined = show placeholder. */
+  rank?: number | null;
 }
 
-export default function StatsRow({ streak, vocabLearned, studyMinutes }: StatsRowProps) {
+export default function StatsRow({ streak, vocabLearned, studyMinutes, rank }: StatsRowProps) {
   const stats = mockStats.map((s): StatCard => {
     if (s.id === "streak" && streak !== undefined) {
       return { ...s, value: streak, trend: "", barPercent: Math.min(Math.round((streak / 30) * 100), 100) };
@@ -112,7 +114,10 @@ export default function StatsRow({ streak, vocabLearned, studyMinutes }: StatsRo
       };
     }
     if (s.id === "rank") {
-      // No real leaderboard yet — degrade cleanly rather than show a fake number
+      if (rank != null) {
+        return { ...s, value: rank, unit: "", trend: "" };
+      }
+      // No rank yet — show a clean placeholder
       return { ...s, value: "—", unit: "", trend: "—" };
     }
     if (s.id === "time" && studyMinutes !== undefined) {

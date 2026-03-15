@@ -1,0 +1,21 @@
+# railway.toml — Railway deployment config for Lingora backend
+#
+# Docs: https://docs.railway.com/reference/config-as-code
+#
+# Key design:
+#   - releaseCommand runs node-pg-migrate BEFORE traffic is shifted to the new
+#     deployment, so the DB schema is always ahead of the running code.
+#   - healthcheckPath lets Railway confirm the new instance is up before
+#     cutting over — zero-downtime deploys.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand    = "npm start"
+# Run migrations before the new instance receives traffic.
+# node-pg-migrate reads DATABASE_URL from the environment automatically.
+releaseCommand  = "npx node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL"
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

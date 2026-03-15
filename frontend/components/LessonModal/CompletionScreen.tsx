@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 
 interface CompletionScreenProps {
-  lessonTitle: string;
-  xpEarned: number;
-  quizScore: number; // 0-100
-  onClose: () => void;
+  lessonTitle:    string;
+  xpEarned:       number;
+  quizScore:      number; // 0-100
+  speakingScore?: number; // 0-100, from pronunciation practice
+  streak?:        number;
+  onClose:        () => void;
 }
 
 export default function CompletionScreen({
   lessonTitle,
   xpEarned,
   quizScore,
+  speakingScore,
+  streak,
   onClose,
 }: CompletionScreenProps) {
   const [show, setShow] = useState(false);
@@ -55,10 +59,24 @@ export default function CompletionScreen({
           <p className="text-[26px] font-bold text-[#2ED3C6]">+{xpEarned}</p>
           <p className="text-[11px] text-[#A6B3C2] mt-0.5">XP Earned</p>
         </div>
-        <div className="flex-1 rounded-xl border border-[#2DA8FF]/20 bg-[#2DA8FF]/[0.07] p-4 text-center">
-          <p className={`text-[26px] font-bold ${grade.color}`}>{quizScore}%</p>
-          <p className="text-[11px] text-[#A6B3C2] mt-0.5">Quiz Score</p>
-        </div>
+        {quizScore > 0 && (
+          <div className="flex-1 rounded-xl border border-[#2DA8FF]/20 bg-[#2DA8FF]/[0.07] p-4 text-center">
+            <p className={`text-[26px] font-bold ${grade.color}`}>{quizScore}%</p>
+            <p className="text-[11px] text-[#A6B3C2] mt-0.5">Quiz Score</p>
+          </div>
+        )}
+        {speakingScore != null && speakingScore > 0 && (
+          <div className="flex-1 rounded-xl border border-[#A064FF]/20 bg-[#A064FF]/[0.07] p-4 text-center">
+            <p className="text-[26px] font-bold text-[#A064FF]">{speakingScore}%</p>
+            <p className="text-[11px] text-[#A6B3C2] mt-0.5">Speaking</p>
+          </div>
+        )}
+        {streak != null && streak > 0 && (
+          <div className="flex-1 rounded-xl border border-amber-500/20 bg-amber-500/[0.07] p-4 text-center">
+            <p className="text-[26px] font-bold text-amber-400">{streak}</p>
+            <p className="text-[11px] text-[#A6B3C2] mt-0.5">Day Streak</p>
+          </div>
+        )}
       </div>
 
       <p className={`text-[16px] font-semibold ${grade.color}`}>{grade.label}</p>
