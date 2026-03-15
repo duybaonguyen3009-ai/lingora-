@@ -152,7 +152,27 @@ async function getLessonById(lessonId) {
   };
 }
 
+/**
+ * Return a single speaking prompt by UUID, formatted for API output.
+ * Returns null when no prompt matches.
+ *
+ * @param {string} promptId – UUID
+ * @returns {Promise<object|null>}
+ */
+async function getSpeakingPromptById(promptId) {
+  const row = await lessonRepository.findSpeakingPromptById(promptId);
+  if (!row) return null;
+  return {
+    id:            row.id,
+    lesson_id:     row.lesson_id,
+    prompt_text:   row.prompt_text,
+    sample_answer: row.sample_answer,
+    hint:          row.hint,
+  };
+}
+
 module.exports = {
   getAllLessons,
   getLessonById,
+  getSpeakingPromptById,
 };

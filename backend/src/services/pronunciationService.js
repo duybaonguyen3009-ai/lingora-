@@ -11,25 +11,9 @@
 const { createSpeechProvider } = require("../providers/speech/speechProvider");
 const pronunciationRepository = require("../repositories/pronunciationRepository");
 const mediaService = require("./mediaService");
-const { query } = require("../config/db");
+const lessonService = require("./lessonService");
 
 const speech = createSpeechProvider();
-
-/**
- * Look up a speaking prompt by ID.
- * Returns the raw row or null.
- *
- * @param {string} promptId
- * @returns {Promise<object|null>}
- */
-async function findSpeakingPromptById(promptId) {
-  const result = await query(
-    `SELECT id, lesson_id, prompt_text, sample_answer, hint
-     FROM speaking_prompts WHERE id = $1`,
-    [promptId]
-  );
-  return result.rows[0] || null;
-}
 
 /**
  * Run pronunciation assessment for a recorded audio.
@@ -42,8 +26,8 @@ async function findSpeakingPromptById(promptId) {
  * @returns {Promise<object>} formatted attempt result
  */
 async function assess(userId, lessonId, promptId, storageKey, audioDurationMs = null) {
-  // 1. Look up the speaking prompt for reference text
-  const prompt = await findSpeakingPromptById(promptId);
+  // 1. Look up the speaking prompt via lessonService (respects domain boundaries)
+  const prompt = await lessonService.getSpeakingPromptById(promptId);
   if (!prompt) {
     throw { status: 404, message: "Speaking prompt not found" };
   }
@@ -131,5 +115,4 @@ module.exports = {
   assess,
   getLessonSpeakingScore,
   getAttemptsByPrompt,
-  findSpeakingPromptById,
 };
