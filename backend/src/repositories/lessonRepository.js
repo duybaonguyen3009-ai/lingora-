@@ -82,6 +82,16 @@ const SQL_GET_SPEAKING_BY_LESSON = `
   ORDER BY created_at ASC;
 `;
 
+/**
+ * Return a single speaking prompt by its UUID.
+ * Columns: id, lesson_id, prompt_text, sample_answer, hint
+ */
+const SQL_GET_SPEAKING_PROMPT_BY_ID = `
+  SELECT id, lesson_id, prompt_text, sample_answer, hint
+  FROM speaking_prompts
+  WHERE id = $1;
+`;
+
 // ---------------------------------------------------------------------------
 // Repository functions
 // ---------------------------------------------------------------------------
@@ -136,10 +146,22 @@ async function findSpeakingByLessonId(lessonId) {
   return rows;
 }
 
+/**
+ * Fetch a single speaking prompt by its UUID.
+ * Returns undefined when no prompt matches.
+ * @param {string} promptId – UUID
+ * @returns {Promise<object|undefined>}
+ */
+async function findSpeakingPromptById(promptId) {
+  const { rows } = await db.query(SQL_GET_SPEAKING_PROMPT_BY_ID, [promptId]);
+  return rows[0];
+}
+
 module.exports = {
   findAll,
   findById,
   findVocabByLessonId,
   findQuizByLessonId,
   findSpeakingByLessonId,
+  findSpeakingPromptById,
 };
