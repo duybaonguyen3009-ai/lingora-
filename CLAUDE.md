@@ -167,29 +167,24 @@ no effect on request/response shapes, route paths, or calling code.
 
 ---
 
-## Active Phase: Phase 4 — Scenario Speaking (Core Conversations)
+## Completed: Phase 4 — Scenario Speaking (Core Conversations)
 
-**Goal:** User selects a scenario, has multi-turn AI conversation, gets session score. This is the core product — conversation role-play is Lingona's primary value proposition, not an add-on.
+**Goal:** User selects a scenario, has multi-turn AI conversation, gets session score.
 
-**Approach:** Mock-first (same pattern as Phase 3). AI provider returns scripted responses initially; real OpenAI integration follows in Phase 4b.
+**Approach:** Mock-first (same pattern as Phase 3). AI provider returns deterministic scripted responses; real OpenAI integration follows in Phase 4b.
 
-Tasks in order:
-1. ⬅️ **NEXT** Design scenario data model — migration for `scenarios`, `scenario_sessions`, `conversation_turns` tables
-2. Backend: AI provider abstraction — `providers/ai/aiProvider.js` factory, `mockAi.js`, future `openaiProvider.js`
-3. Backend: Scenario domain module — `scenarioRepository`, `scenarioService`, `scenarioController`
-4. Backend: Scenario session management — start session, submit turn, get AI response, end session
-5. Backend: Seed 10–15 scenario templates (ordering food, job interview, hotel check-in, doctor visit, etc.)
-6. Frontend: Scenario selection page — category cards, difficulty indicators
-7. Frontend: Conversation UI — chat bubbles + audio recording per turn
-8. Frontend: Session summary with speaking metrics and score
+Changes applied:
+1. ✅ Migration 0006: `scenarios`, `scenario_sessions`, `conversation_turns` tables with CHECK constraints
+2. ✅ AI provider factory — `providers/ai/aiProvider.js` + `mockAi.js` (category-specific response pools, deterministic scoring)
+3. ✅ Scenario domain module — `scenarioRepository`, `scenarioService`, `scenarioController`, `scenarioRoutes`
+4. ✅ Session lifecycle: start → submit turns (with mock AI response) → end with scoring (fluency, vocabulary, grammar, coach feedback, per-turn tips)
+5. ✅ 12 scenario templates seeded across 6 categories (daily, food, travel, work, social, academic)
+6. ✅ `ScenarioList` — category filter pills, difficulty badges, turn count, scenario cards
+7. ✅ `ScenarioConversation` — full-screen chat overlay, optimistic UI, typing indicator, "End Chat" after 2+ user turns
+8. ✅ `ScenarioSummary` — animated score circle (0→target ease-out), sub-score bars, coach feedback, turn-by-turn tips
+9. ✅ Speak tab wired to real API data; homepage PracticeScenarios switches to Speak tab
 
-**Exit criteria:** User can select a scenario, engage in multi-turn speaking practice with AI (mock), and receive a session-level score.
-
-**What this phase does NOT include:**
-- No real OpenAI API calls (mock-first)
-- No ClawDBot / AI orchestration layer
-- No multi-model routing
-- No personalized recommendations (rules-based comes in Phase 5)
+**Next:** Phase 4b — Real OpenAI integration (swap mock provider for `openaiProvider.js`)
 
 ---
 
@@ -324,8 +319,8 @@ Tasks in order:
 | 2 – Gamification | XP ledger, streaks, badges, leaderboard | ✅ Done |
 | 3 – Pronunciation Practice | Audio upload, speech-to-text, AI pronunciation scoring, phoneme feedback | ✅ Done (mock providers) |
 | — UI/UX Overhaul | Speaking-first homepage, dark/light theme, new navigation, branding | ✅ Done |
-| **4 – Scenario Speaking** | **AI role-play conversations (mock-first): scenario domain, AI provider, 10-15 templates, conversation UI** | **⬅️ Next** |
-| 4b – Real Providers + Exam Speaking | Wire real Azure Speech + R2 + OpenAI; add IELTS speaking as scenario variant; speaking metrics | ⬜ |
+| 4 – Scenario Speaking | AI role-play conversations (mock-first): scenario domain, AI provider, 12 templates, conversation UI | ✅ Done (mock providers) |
+| **4b – Real Providers + Exam Speaking** | **Wire real Azure Speech + R2 + OpenAI; add IELTS speaking as scenario variant; speaking metrics** | **⬅️ Next** |
 | 5 – AI Study Coach (Rules-Based) | Homepage "Today's Focus" based on weakest scores; quick practice actions; no LLM needed | ⬜ |
 | 6 – Admin CMS | Browser-based lesson/vocab/scenario content editor | ⬜ |
 | 7 – Monetization | Stripe subscriptions, free tier limits, pro tier unlocks | ⬜ |
