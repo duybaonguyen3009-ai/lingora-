@@ -1,7 +1,7 @@
 /**
  * lib/api.ts
  *
- * HTTP client for the Lingora backend.
+ * HTTP client for the Lingona backend.
  * Base URL falls back to http://localhost:4000/api/v1 for local development.
  *
  * Three tiers of fetch helpers:

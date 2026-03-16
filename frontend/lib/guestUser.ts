@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "lingora_guest_id";
+const STORAGE_KEY = "lingona_guest_id";
 
 /**
  * Returns the guest user UUID from localStorage, creating one if it doesn't

@@ -22,13 +22,17 @@ function LoadingSkeleton() {
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
-          className="rounded-[16px] p-[18px] border border-white/[0.07] bg-[#0B2239] animate-pulse"
-          style={{ animationDelay: `${i * 80}ms` }}
+          className="rounded-[16px] p-[18px] animate-pulse"
+          style={{
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg-card)",
+            animationDelay: `${i * 80}ms`,
+          }}
         >
-          <div className="h-3 w-20 rounded bg-white/[0.07] mb-3" />
-          <div className="h-4 w-3/4 rounded bg-white/[0.07] mb-2" />
-          <div className="h-3 w-1/2 rounded bg-white/[0.05] mb-4" />
-          <div className="h-[3px] rounded-full bg-white/[0.05]" />
+          <div className="h-3 w-20 rounded mb-3" style={{ backgroundColor: "var(--color-border)" }} />
+          <div className="h-4 w-3/4 rounded mb-2" style={{ backgroundColor: "var(--color-border)" }} />
+          <div className="h-3 w-1/2 rounded mb-4" style={{ backgroundColor: "var(--color-border)", opacity: 0.7 }} />
+          <div className="h-[3px] rounded-full" style={{ backgroundColor: "var(--color-border)", opacity: 0.7 }} />
         </div>
       ))}
     </div>
@@ -36,7 +40,6 @@ function LoadingSkeleton() {
 }
 
 interface LessonsSectionProps {
-  /** Called after a lesson is saved — parent can use this to refetch gamification data. */
   onLessonComplete?: () => void;
 }
 
@@ -52,8 +55,6 @@ export default function LessonsSection({ onLessonComplete }: LessonsSectionProps
     [progress]
   );
 
-  // useLessons returns lessons with status derived from API order; we override
-  // status here based on real completion data.
   const { lessons: rawLessons, loading, error } = useLessons();
 
   const lessons = useMemo(
@@ -79,28 +80,38 @@ export default function LessonsSection({ onLessonComplete }: LessonsSectionProps
     <section>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h3 className="font-sora font-bold text-[15.5px] tracking-[-0.2px]">Today&apos;s Lessons</h3>
+        <h3 className="font-sora font-bold text-[15.5px] tracking-[-0.2px]" style={{ color: "var(--color-text)" }}>
+          Today&apos;s Lessons
+        </h3>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-white/[0.04] border border-white/[0.07] rounded-[10px] p-[3px] gap-0.5">
+          <div
+            className="flex items-center rounded-[10px] p-[3px] gap-0.5"
+            style={{ backgroundColor: "var(--color-primary-soft)", border: "1px solid var(--color-border)" }}
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "px-3.5 py-[5px] rounded-[7px] text-[12px] font-medium",
-                  "transition-all duration-200 whitespace-nowrap",
-                  activeTab === tab.id
-                    ? "bg-[#2ED3C6] text-[#071A2F] font-bold"
-                    : "text-[#A6B3C2] hover:text-[#E6EDF3] hover:bg-white/[0.05]"
+                  "transition-all duration-200 whitespace-nowrap"
                 )}
+                style={{
+                  backgroundColor: activeTab === tab.id ? "var(--color-primary)" : "transparent",
+                  color: activeTab === tab.id ? "white" : "var(--color-text-secondary)",
+                  fontWeight: activeTab === tab.id ? 700 : 500,
+                }}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <button className="text-[12.5px] font-medium text-[#2ED3C6] hover:opacity-75 transition-opacity whitespace-nowrap">
+          <button
+            className="text-[12.5px] font-medium hover:opacity-75 transition-opacity whitespace-nowrap"
+            style={{ color: "var(--color-primary)" }}
+          >
             View all →
           </button>
         </div>
@@ -112,8 +123,8 @@ export default function LessonsSection({ onLessonComplete }: LessonsSectionProps
       ) : error ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="col-span-2 py-10 text-center space-y-1">
-            <p className="text-[#A6B3C2] text-sm">Could not load lessons.</p>
-            <p className="text-[#A6B3C2]/50 text-xs">{error}</p>
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Could not load lessons.</p>
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)", opacity: 0.5 }}>{error}</p>
           </div>
         </div>
       ) : (
@@ -128,7 +139,7 @@ export default function LessonsSection({ onLessonComplete }: LessonsSectionProps
                 />
               ))
             : (
-              <div className="col-span-2 py-10 text-center text-[#A6B3C2] text-sm">
+              <div className="col-span-2 py-10 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>
                 No lessons in this category yet.
               </div>
             )

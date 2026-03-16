@@ -19,13 +19,17 @@ import { cn } from "@/lib/utils";
 // ─── Shared input style ────────────────────────────────────────────────────────
 
 const inputCls = cn(
-  "w-full h-11 px-4 rounded-[10px] text-[14px] text-[#E6EDF3]",
-  "bg-white/[0.05] border border-white/[0.07]",
-  "placeholder:text-[#4A6078] outline-none",
-  "focus:border-[#2ED3C6]/50 focus:bg-[#2ED3C6]/[0.04]",
+  "w-full h-11 px-4 rounded-[10px] text-[14px]",
+  "border outline-none",
   "transition-all duration-200",
   "[color-scheme:dark]",   // native inputs respect dark mode
 );
+
+const inputStyle: React.CSSProperties = {
+  color: "var(--color-text)",
+  backgroundColor: "var(--color-primary-soft)",
+  borderColor: "var(--color-border)",
+};
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -79,20 +83,21 @@ export default function LoginPage() {
       <div className="text-center mb-8">
         <div
           className="inline-flex items-center justify-center w-12 h-12 rounded-[14px] mb-4"
-          style={{ background: "linear-gradient(135deg, #2ED3C6, #2DA8FF)" }}
+          style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))" }}
         >
-          <span className="font-sora font-black text-[20px] text-[#071A2F]">L</span>
+          <span className="font-sora font-black text-[20px]" style={{ color: "var(--color-bg)" }}>L</span>
         </div>
-        <h1 className="font-sora font-black text-[26px] text-[#E6EDF3] tracking-[-0.5px]">
+        <h1 className="font-sora font-black text-[26px] tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
           Welcome back
         </h1>
-        <p className="text-[#A6B3C2] text-sm mt-1.5">Sign in to continue your learning</p>
+        <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>Sign in to continue your learning</p>
       </div>
 
       {/* ── Card ── */}
       <div
-        className="rounded-[20px] p-7 border border-white/[0.07]"
+        className="rounded-[20px] p-7 border"
         style={{
+          borderColor:           "var(--color-border)",
           background:            "rgba(11,34,57,0.75)",
           backdropFilter:        "blur(20px)",
           WebkitBackdropFilter:  "blur(20px)",
@@ -103,7 +108,7 @@ export default function LoginPage() {
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Email address
             </label>
             <input
@@ -113,12 +118,13 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className={inputCls}
+              style={inputStyle}
             />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium text-[#A6B3C2] tracking-[0.2px]">
+            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Password
             </label>
             <div className="relative">
@@ -129,11 +135,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className={cn(inputCls, "pr-11")}
+                style={inputStyle}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A6078] hover:text-[#A6B3C2] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: "var(--color-text-secondary)" }}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <IconEyeOff /> : <IconEye />}
@@ -154,12 +162,12 @@ export default function LoginPage() {
             type="submit"
             disabled={submitting}
             className={cn(
-              "h-11 mt-1 rounded-[10px] font-sora font-bold text-[13.5px] text-[#071A2F]",
-              "bg-[#2ED3C6] transition-all duration-200",
+              "h-11 mt-1 rounded-[10px] font-sora font-bold text-[13.5px]",
+              "transition-all duration-200",
               "hover:-translate-y-[1px]",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0",
             )}
-            style={{ boxShadow: "0 4px 20px rgba(46,211,198,0.35)" }}
+            style={{ color: "var(--color-bg)", backgroundColor: "var(--color-success)", boxShadow: "0 4px 20px rgba(46,211,198,0.35)" }}
           >
             {submitting ? "Signing in…" : "Sign In"}
           </button>
@@ -167,9 +175,9 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-white/[0.07]" />
-          <span className="text-[11px] text-[#4A6078] uppercase tracking-wider">or</span>
-          <div className="flex-1 h-px bg-white/[0.07]" />
+          <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
+          <span className="text-[11px] uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>or</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
         </div>
 
         {/* Guest access */}
@@ -177,21 +185,22 @@ export default function LoginPage() {
           href="/"
           className={cn(
             "flex items-center justify-center h-11 rounded-[10px]",
-            "text-[13.5px] font-medium text-[#A6B3C2]",
-            "border border-white/[0.07] bg-white/[0.03]",
-            "hover:bg-white/[0.06] hover:text-[#E6EDF3] transition-all duration-200",
+            "text-[13.5px] font-medium",
+            "border transition-all duration-200",
           )}
+          style={{ color: "var(--color-text-secondary)", borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}
         >
           Continue as guest
         </Link>
       </div>
 
       {/* Sign-up link */}
-      <p className="text-center text-[13px] text-[#A6B3C2] mt-5">
+      <p className="text-center text-[13px] mt-5" style={{ color: "var(--color-text-secondary)" }}>
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="text-[#2ED3C6] hover:text-[#4DDDCE] font-medium transition-colors"
+          className="font-medium transition-colors"
+          style={{ color: "var(--color-success)" }}
         >
           Sign up free
         </Link>

@@ -128,17 +128,18 @@ export default function LessonModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: "rgba(7,26,47,0.85)", backdropFilter: "blur(8px)" }}
+        style={{ background: "color-mix(in srgb, var(--color-bg) 85%, transparent)", backdropFilter: "blur(8px)" }}
       >
         {/* Panel */}
         <div
-          className="relative w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl border border-white/[0.08] bg-[#071A2F] shadow-2xl"
-          style={{ boxShadow: "0 25px 60px rgba(0,0,0,0.6)" }}
+          className="relative w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+          style={{ border: "1px solid var(--color-border)", background: "var(--color-bg)", boxShadow: "0 25px 60px rgba(0,0,0,0.6)" }}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.08] text-[#A6B3C2] hover:text-[#E6EDF3] hover:bg-white/[0.1] flex items-center justify-center transition-all duration-200 text-[16px]"
+            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 text-[16px]"
+            style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
           >
             ×
           </button>
@@ -147,16 +148,16 @@ export default function LessonModal({
             {/* Loading */}
             {loading && (
               <div className="flex flex-col items-center gap-4 py-16">
-                <div className="w-8 h-8 rounded-full border-2 border-[#2ED3C6]/30 border-t-[#2ED3C6] animate-spin" />
-                <p className="text-[#A6B3C2] text-sm">Loading lesson…</p>
+                <div className="w-8 h-8 rounded-full animate-spin" style={{ border: "2px solid color-mix(in srgb, var(--color-success) 30%, transparent)", borderTopColor: "var(--color-success)" }} />
+                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Loading lesson…</p>
               </div>
             )}
 
             {/* Error */}
             {error && !loading && (
               <div className="py-16 text-center space-y-2">
-                <p className="text-[#A6B3C2]">Could not load lesson.</p>
-                <p className="text-[#A6B3C2]/50 text-xs">{error}</p>
+                <p style={{ color: "var(--color-text-secondary)" }}>Could not load lesson.</p>
+                <p className="text-xs" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 50%, transparent)" }}>{error}</p>
               </div>
             )}
 
@@ -169,14 +170,15 @@ export default function LessonModal({
                     {steps.filter((s) => s !== "complete").map((s) => (
                       <div
                         key={s}
-                        className={cn(
-                          "flex-1 h-1 rounded-full transition-all duration-300",
-                          s === step
-                            ? "bg-[#2ED3C6]"
-                            : steps.indexOf(s) < steps.indexOf(step)
-                            ? "bg-[#2ED3C6]/40"
-                            : "bg-white/[0.08]"
-                        )}
+                        className="flex-1 h-1 rounded-full transition-all duration-300"
+                        style={{
+                          background:
+                            s === step
+                              ? "var(--color-success)"
+                              : steps.indexOf(s) < steps.indexOf(step)
+                              ? "color-mix(in srgb, var(--color-success) 40%, transparent)"
+                              : "var(--color-border)",
+                        }}
                       />
                     ))}
                   </div>
@@ -185,10 +187,10 @@ export default function LessonModal({
                 {/* Section label */}
                 {step !== "complete" && (
                   <div className="mb-5">
-                    <h2 className="text-[17px] font-sora font-bold text-[#E6EDF3]">
+                    <h2 className="text-[17px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
                       {detail.lesson.title}
                     </h2>
-                    <p className="text-[12px] text-[#2ED3C6] font-semibold mt-0.5">
+                    <p className="text-[12px] font-semibold mt-0.5" style={{ color: "var(--color-success)" }}>
                       {stepLabels[step]}
                     </p>
                   </div>
@@ -210,8 +212,8 @@ export default function LessonModal({
                 )}
                 {step === "complete" && saving && (
                   <div className="flex flex-col items-center gap-4 py-16">
-                    <div className="w-8 h-8 rounded-full border-2 border-[#2ED3C6]/30 border-t-[#2ED3C6] animate-spin" />
-                    <p className="text-[#A6B3C2] text-sm">Saving progress…</p>
+                    <div className="w-8 h-8 rounded-full animate-spin" style={{ border: "2px solid color-mix(in srgb, var(--color-success) 30%, transparent)", borderTopColor: "var(--color-success)" }} />
+                    <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Saving progress…</p>
                   </div>
                 )}
                 {step === "complete" && !saving && (

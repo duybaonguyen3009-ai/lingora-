@@ -37,15 +37,15 @@ export default function BadgeToast({ badges, duration = 4000 }: BadgeToastProps)
       {badges.map((badge) => (
         <div
           key={badge.id}
-          className="flex items-center gap-3 px-4 py-3 rounded-[14px] border border-amber-500/30 bg-[#0D2137]/90 backdrop-blur-md shadow-2xl animate-fade-in"
-          style={{ animation: "fadeInUp 0.4s ease forwards" }}
+          className="flex items-center gap-3 px-4 py-3 rounded-[14px] border border-amber-500/30 backdrop-blur-md shadow-2xl animate-fade-in"
+          style={{ backgroundColor: "rgba(13,33,55,0.9)", animation: "fadeInUp 0.4s ease forwards" }}
         >
           {/* Icon or emoji placeholder */}
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-amber-500/20 border border-amber-500/30 flex-shrink-0">
             {badge.icon_url ? (
               <img src={badge.icon_url} alt={badge.name} className="w-6 h-6 object-contain" />
             ) : (
-              "🏅"
+              "\u{1F3C5}"
             )}
           </div>
 
@@ -53,11 +53,11 @@ export default function BadgeToast({ badges, duration = 4000 }: BadgeToastProps)
             <p className="text-[11px] text-amber-400 font-semibold uppercase tracking-wide">
               Badge Unlocked!
             </p>
-            <p className="text-[13px] text-[#E6EDF3] font-semibold font-sora truncate">
+            <p className="text-[13px] font-semibold font-sora truncate" style={{ color: "var(--color-text)" }}>
               {badge.name}
             </p>
             {badge.xp_reward > 0 && (
-              <p className="text-[11px] text-[#2ED3C6]">+{badge.xp_reward} XP</p>
+              <p className="text-[11px]" style={{ color: "var(--color-success)" }}>+{badge.xp_reward} XP</p>
             )}
           </div>
         </div>

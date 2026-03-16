@@ -67,16 +67,17 @@ export default function ProtectedRoute({
 
 function AuthLoader() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#071A2F]">
+    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: "var(--color-bg)" }}>
       <div className="flex flex-col items-center gap-4">
 
         {/* Spinning ring that matches the accent colour */}
         <div
-          className="w-10 h-10 rounded-full border-[3px] border-white/[0.07] border-t-[#2ED3C6] animate-spin"
+          className="w-10 h-10 rounded-full animate-spin"
+          style={{ border: "3px solid var(--color-border)", borderTopColor: "var(--color-success)" }}
           aria-hidden="true"
         />
 
-        <p className="text-[#A6B3C2] text-sm">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Loading…</p>
       </div>
     </div>
   );

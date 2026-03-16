@@ -1,5 +1,5 @@
 {
-  "name": "lingora-frontend",
+  "name": "lingona-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,6 +12,7 @@
     "@sentry/nextjs": "^10.43.0",
     "clsx": "^2.1.1",
     "next": "14.2.5",
+    "next-themes": "^0.4.6",
     "react": "^18",
     "react-dom": "^18",
     "zustand": "^5.0.11"

@@ -2,8 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Light theme (default) ── */
+:root {
+  --color-bg: #F6F8FF;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-hover: #F0F2FF;
+  --color-primary: #8B71EA;
+  --color-primary-soft: rgba(139, 113, 234, 0.08);
+  --color-primary-glow: rgba(139, 113, 234, 0.15);
+  --color-accent: #5BA3D9;
+  --color-text: #1A1A2E;
+  --color-text-secondary: #6B6880;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+}
+
+/* ── Dark theme ── */
+.dark {
+  --color-bg: #0F1226;
+  --color-bg-card: #1A1F3F;
+  --color-bg-card-hover: #222750;
+  --color-primary: #8B71EA;
+  --color-primary-soft: rgba(139, 113, 234, 0.12);
+  --color-primary-glow: rgba(139, 113, 234, 0.3);
+  --color-accent: #89CFFF;
+  --color-text: #E8E4F0;
+  --color-text-secondary: #9B95B0;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+}
+
 body {
-  background-color: #071a2f;
-  color: white;
-  font-family: Inter, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: "DM Sans", sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Splash keyframes ── */
+@keyframes splashFadeIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }

@@ -1,139 +1,92 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
-import Hero from "@/components/Hero";
-import StatsRow from "@/components/StatsRow";
-import LessonsSection from "@/components/LessonsSection";
-import AiTutorCard from "@/components/AiTutorCard";
-import WeeklyChallenge from "@/components/WeeklyChallenge";
-import RightPanel from "@/components/RightPanel";
+import BottomNav from "@/components/BottomNav";
+import StartSpeakingCard from "@/components/StartSpeakingCard";
+import PracticeScenarios from "@/components/PracticeScenarios";
+import CoachTipCard from "@/components/CoachTipCard";
 import LessonsPage from "@/components/LessonsPage";
+import LessonsSection from "@/components/LessonsSection";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
 import { useUserStats } from "@/hooks/useUserStats";
 import { useGamification } from "@/hooks/useGamification";
 
-const NAV_LABELS: Record<string, string> = {
-  dashboard:  "Dashboard",
-  lessons:    "Lessons",
-  practice:   "Practice",
-  vocabulary: "Vocabulary",
-  reading:    "Reading",
-  listening:  "Listening",
-  speaking:   "Speaking",
-  progress:   "Progress",
-};
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState("home");
 
-export default function DashboardPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileOpen,       setMobileOpen]       = useState(false);
-  const [activeNav,        setActiveNav]        = useState("dashboard");
-
-  const userId          = useCurrentUserId();
-  const { progress }    = useProgress(userId);
-  const { apiLessons }  = useLessons();
-  const stats           = useUserStats(progress, apiLessons);
-
-  // Real gamification data from the API — overrides computed useUserStats values.
+  const userId = useCurrentUserId();
+  const { progress } = useProgress(userId);
+  const { apiLessons } = useLessons();
+  const stats = useUserStats(progress, apiLessons);
   const { data: gamification, refetch: refetchGamification } = useGamification(userId);
 
-  // Prefer live API data; fall back to locally-computed stats while loading.
   const displayStreak = gamification?.streak.currentStreak ?? stats.streak;
-  const displayXp     = gamification?.xp.totalXp          ?? stats.totalXp;
+
+  const handleStartSpeaking = () => {
+    setActiveTab("speak");
+  };
+
+  const handleScenarioSelect = (_scenarioId: string) => {
+    // TODO: Open specific scenario lesson modal
+  };
 
   return (
-    <div className="relative flex h-screen overflow-x-visible overflow-y-hidden">
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+    <div className="flex flex-col min-h-dvh" style={{ backgroundColor: "var(--color-bg)" }}>
+      <Topbar streak={displayStreak} />
 
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "md:relative fixed inset-y-0 left-0 z-50",
-          "transition-transform duration-200",
-          "md:translate-x-0",
-          "overflow-visible",
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        )}
-      >
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((v) => !v)}
-          activeNav={activeNav}
-          onNavChange={(id) => {
-            setActiveNav(id);
-            setMobileOpen(false);
-          }}
-        />
-      </div>
+      {/* Scroll area — account for bottom nav */}
+      <main className="flex-1 overflow-y-auto pb-20">
+        <div className="max-w-lg mx-auto px-4 py-5">
 
-      {/* Main */}
-      <main className="flex-1 flex flex-col overflow-y-hidden overflow-x-visible">
-        <Topbar
-          onMobileMenuOpen={() => setMobileOpen(true)}
-          title={NAV_LABELS[activeNav] || "Dashboard"}
-          streak={displayStreak}
-          totalXp={displayXp}
-        />
+          {/* ── HOME TAB ── */}
+          {activeTab === "home" && (
+            <div className="flex flex-col gap-5">
+              <StartSpeakingCard onStart={handleStartSpeaking} />
+              <PracticeScenarios onSelect={handleScenarioSelect} />
+              <CoachTipCard />
+            </div>
+          )}
 
-        {/* Scroll area */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-7 py-6">
-          <div className="max-w-[1400px] mx-auto">
+          {/* ── SPEAK TAB ── */}
+          {activeTab === "speak" && (
+            <div className="flex flex-col gap-4">
+              <LessonsSection onLessonComplete={refetchGamification} />
+            </div>
+          )}
 
-            {/* ── DASHBOARD ── */}
-            {activeNav === "dashboard" && (
-              <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
-                <div className="flex flex-col gap-5 min-w-0">
-                  <Hero />
-                  <StatsRow
-                    streak={displayStreak}
-                    vocabLearned={stats.vocabLearned}
-                    studyMinutes={stats.studyMinutes}
-                  />
-                  <LessonsSection onLessonComplete={refetchGamification} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <AiTutorCard />
-                    <WeeklyChallenge />
-                  </div>
-                </div>
-                <div className="xl:block">
-                  <RightPanel />
-                </div>
+          {/* ── PRACTICE TAB ── */}
+          {activeTab === "practice" && (
+            <LessonsPage apiLessons={apiLessons} />
+          )}
+
+          {/* ── PROFILE TAB ── */}
+          {activeTab === "profile" && (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: "var(--color-primary-soft)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                <span style={{ color: "var(--color-primary)" }} className="text-2xl font-bold">P</span>
               </div>
-            )}
+              <h2 className="text-xl font-sora font-bold" style={{ color: "var(--color-text)" }}>
+                Profile
+              </h2>
+              <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                Coming soon — stay tuned!
+              </p>
+            </div>
+          )}
 
-            {/* ── LESSONS ── */}
-            {activeNav === "lessons" && <LessonsPage apiLessons={apiLessons} />}
-
-            {/* ── OTHER PAGES — placeholder ── */}
-            {activeNav !== "dashboard" && activeNav !== "lessons" && (
-              <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-[#2ED3C6]/10 border border-[#2ED3C6]/20 flex items-center justify-center">
-                  <span className="text-[#2ED3C6] text-2xl font-bold">
-                    {NAV_LABELS[activeNav]?.[0] || "?"}
-                  </span>
-                </div>
-                <h2 className="text-xl font-sora font-bold text-[#E6EDF3]">
-                  {NAV_LABELS[activeNav]}
-                </h2>
-                <p className="text-[#A6B3C2] text-sm">
-                  This section is coming soon — stay tuned!
-                </p>
-              </div>
-            )}
-
-          </div>
         </div>
       </main>
+
+      <BottomNav active={activeTab} onChange={setActiveTab} />
     </div>
   );
 }

@@ -43,8 +43,8 @@ export default function XpProgressBar({
     <div className={`flex items-center gap-2 ${className}`}>
       {/* Level badge */}
       <div
-        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold font-sora text-[#071A2F]"
-        style={{ background: "linear-gradient(135deg, #2ED3C6, #2DA8FF)" }}
+        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold font-sora"
+        style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
         title={`Level ${level}`}
       >
         {level}
@@ -53,14 +53,14 @@ export default function XpProgressBar({
       {/* Bar + labels */}
       <div className="flex-1 min-w-0">
         {/* Track */}
-        <div className="h-[5px] rounded-full bg-white/10 overflow-hidden">
+        <div className="h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
           {/* Fill — starts at 0, animates to pct via CSS transition */}
           <div
             ref={fillRef}
             style={{
               width: "0%",
               transition: "width 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-              background: "linear-gradient(90deg, #2ED3C6, #2DA8FF)",
+              background: "linear-gradient(90deg, var(--color-success), var(--color-accent))",
             }}
             className="h-full rounded-full"
           />
@@ -68,10 +68,10 @@ export default function XpProgressBar({
 
         {/* XP labels */}
         <div className="flex justify-between mt-[3px]">
-          <span className="text-[10px] text-[#A6B3C2]">
+          <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
             {xpInLevel.toLocaleString()} XP
           </span>
-          <span className="text-[10px] text-[#A6B3C2]">
+          <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
             {isMaxLevel ? "MAX" : `${(xpInLevel + xpToNextLevel).toLocaleString()} XP`}
           </span>
         </div>

@@ -39,8 +39,16 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
             key={i}
             className={cn(
               "h-1.5 rounded-full transition-all duration-300",
-              i === index ? "w-6 bg-[#2ED3C6]" : seen.has(i) ? "w-2.5 bg-[#2ED3C6]/40" : "w-2.5 bg-white/[0.1]"
+              i === index ? "w-6" : "w-2.5"
             )}
+            style={{
+              background:
+                i === index
+                  ? "var(--color-success)"
+                  : seen.has(i)
+                  ? "color-mix(in srgb, var(--color-success) 40%, transparent)"
+                  : "var(--color-border)",
+            }}
           />
         ))}
       </div>
@@ -60,24 +68,24 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
         >
           {/* Front */}
           <div
-            className="absolute inset-0 rounded-2xl border border-white/[0.08] bg-[#0B2239] flex flex-col items-center justify-center gap-3 px-6 select-none"
-            style={{ backfaceVisibility: "hidden" }}
+            className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 px-6 select-none"
+            style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)", backfaceVisibility: "hidden" }}
           >
-            <p className="text-[28px] font-sora font-bold text-[#E6EDF3] text-center">{current.word}</p>
+            <p className="text-[28px] font-sora font-bold text-center" style={{ color: "var(--color-text)" }}>{current.word}</p>
             {current.pronunciation && (
-              <p className="text-[14px] text-[#A6B3C2]">{current.pronunciation}</p>
+              <p className="text-[14px]" style={{ color: "var(--color-text-secondary)" }}>{current.pronunciation}</p>
             )}
-            <p className="text-[11px] text-[#A6B3C2]/50 mt-2">Tap to reveal meaning</p>
+            <p className="text-[11px] mt-2" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 50%, transparent)" }}>Tap to reveal meaning</p>
           </div>
 
           {/* Back */}
           <div
-            className="absolute inset-0 rounded-2xl border border-[#2ED3C6]/20 bg-[#0B2239] flex flex-col items-center justify-center gap-3 px-6 select-none"
-            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-3 px-6 select-none"
+            style={{ border: "1px solid color-mix(in srgb, var(--color-success) 20%, transparent)", background: "var(--color-bg-card)", backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            <p className="text-[18px] font-semibold text-[#2ED3C6] text-center">{current.meaning}</p>
+            <p className="text-[18px] font-semibold text-center" style={{ color: "var(--color-success)" }}>{current.meaning}</p>
             {current.example_sentence && (
-              <p className="text-[12px] text-[#A6B3C2]/70 text-center italic">
+              <p className="text-[12px] text-center italic" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 70%, transparent)" }}>
                 &ldquo;{current.example_sentence}&rdquo;
               </p>
             )}
@@ -93,10 +101,13 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
             disabled={!seen.has(index)}
             className={cn(
               "flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200",
-              seen.has(index)
-                ? "bg-[#2ED3C6] text-[#071A2F] hover:opacity-90"
-                : "bg-white/[0.05] text-[#A6B3C2]/40 cursor-not-allowed"
+              !seen.has(index) && "cursor-not-allowed"
             )}
+            style={
+              seen.has(index)
+                ? { background: "var(--color-success)", color: "var(--color-bg)" }
+                : { background: "var(--color-primary-soft)", color: "color-mix(in srgb, var(--color-text-secondary) 40%, transparent)" }
+            }
           >
             Next →
           </button>
@@ -106,17 +117,20 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
             disabled={!allSeen}
             className={cn(
               "flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200",
-              allSeen
-                ? "bg-gradient-to-r from-[#2ED3C6] to-[#2DA8FF] text-[#071A2F] hover:opacity-90"
-                : "bg-white/[0.05] text-[#A6B3C2]/40 cursor-not-allowed"
+              !allSeen && "cursor-not-allowed"
             )}
+            style={
+              allSeen
+                ? { background: "linear-gradient(to right, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }
+                : { background: "var(--color-primary-soft)", color: "color-mix(in srgb, var(--color-text-secondary) 40%, transparent)" }
+            }
           >
             Continue
           </button>
         )}
       </div>
 
-      <p className="text-[12px] text-[#A6B3C2]/50">
+      <p className="text-[12px]" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 50%, transparent)" }}>
         {index + 1} / {items.length} words
       </p>
     </div>

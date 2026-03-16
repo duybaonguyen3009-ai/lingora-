@@ -30,24 +30,42 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
     <div
       className={cn(
         "rounded-[16px] p-[18px] relative overflow-hidden",
-        "border border-white/[0.07] bg-[#0B2239]",
+        "border",
         "transition-all duration-200 animate-fadeSlideUp",
-        isLocked ? "opacity-55 cursor-not-allowed" : "cursor-pointer hover:-translate-y-[2px] hover:border-[#2ED3C6]/20",
-        isCompleted   && "border-[#2ED3C6]/15",
-        isRecommended && "border-[#2DA8FF]/25",
+        isLocked ? "opacity-55 cursor-not-allowed" : "cursor-pointer hover:-translate-y-[2px]",
       )}
-      style={{ animationDelay: `${delay}ms` }}
+      style={{
+        animationDelay: `${delay}ms`,
+        backgroundColor: "var(--color-bg-card)",
+        borderColor: isCompleted
+          ? "rgba(46,211,198,0.15)"
+          : isRecommended
+            ? "rgba(45,168,255,0.25)"
+            : "var(--color-border)",
+        ...((!isLocked) ? {} : {}),
+      }}
       onClick={!isLocked ? onClick : undefined}
       onMouseEnter={(e) => {
-        if (!isLocked) (e.currentTarget as HTMLDivElement).style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
+        if (!isLocked) {
+          (e.currentTarget as HTMLDivElement).style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
+          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(46,211,198,0.2)";
+        }
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+        (e.currentTarget as HTMLDivElement).style.borderColor = isCompleted
+          ? "rgba(46,211,198,0.15)"
+          : isRecommended
+            ? "rgba(45,168,255,0.25)"
+            : "var(--color-border)";
       }}
     >
       {/* Recommended pill */}
       {isRecommended && (
-        <span className="absolute top-3 right-3.5 text-[9px] font-bold uppercase tracking-[0.8px] text-[#2DA8FF] bg-[#2DA8FF]/12 px-[7px] py-[2px] rounded-[5px]">
+        <span
+          className="absolute top-3 right-3.5 text-[9px] font-bold uppercase tracking-[0.8px] px-[7px] py-[2px] rounded-[5px]"
+          style={{ color: "var(--color-accent)", backgroundColor: "rgba(45,168,255,0.12)" }}
+        >
           Recommended
         </span>
       )}
@@ -74,12 +92,16 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
         </span>
 
         {/* Status icon */}
-        <div className={cn(
-          "w-6 h-6 rounded-full flex items-center justify-center text-[11px] flex-shrink-0",
-          isCompleted && "bg-[#2ED3C6]/15 text-[#2ED3C6]",
-          isLocked    && "bg-white/[0.06] text-[#A6B3C2]",
-          !isCompleted && !isLocked && "bg-[#2DA8FF]/15 text-[#2DA8FF]",
-        )}>
+        <div
+          className={cn(
+            "w-6 h-6 rounded-full flex items-center justify-center text-[11px] flex-shrink-0",
+          )}
+          style={{
+            ...(isCompleted ? { backgroundColor: "rgba(46,211,198,0.15)", color: "var(--color-success)" } : {}),
+            ...(isLocked ? { backgroundColor: "var(--color-border)", color: "var(--color-text-secondary)" } : {}),
+            ...(!isCompleted && !isLocked ? { backgroundColor: "rgba(45,168,255,0.15)", color: "var(--color-accent)" } : {}),
+          }}
+        >
           {isCompleted  && <IconCheck />}
           {isLocked     && <IconLock />}
           {!isCompleted && !isLocked && <IconPlay size={11} />}
@@ -92,7 +114,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       </div>
 
       {/* Meta */}
-      <div className="flex items-center gap-3 text-[11.5px] text-[#A6B3C2] mb-3">
+      <div className="flex items-center gap-3 text-[11.5px] mb-3" style={{ color: "var(--color-text-secondary)" }}>
         <span className="flex items-center gap-1">
           <IconClock size={11} />
           {lesson.duration} min
@@ -109,7 +131,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       </div>
 
       {/* Progress bar */}
-      <div className="h-[3px] bg-white/[0.05] rounded-full overflow-hidden">
+      <div className="h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-primary-soft)" }}>
         <div
           className={cn("h-full rounded-full", progressColor)}
           style={{

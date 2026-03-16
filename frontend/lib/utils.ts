@@ -9,7 +9,7 @@ export function getLessonTypeConfig(type: string) {
     vocabulary: {
       label: "Vocabulary",
       className: "bg-blue-500/10 text-blue-400",
-      color: "#2DA8FF",
+      color: "var(--color-accent)",
     },
     grammar: {
       label: "Grammar",
@@ -23,8 +23,8 @@ export function getLessonTypeConfig(type: string) {
     },
     speaking: {
       label: "Speaking",
-      className: "bg-[#2ED3C6]/10 text-[#2ED3C6]",
-      color: "#2ED3C6",
+      className: "bg-emerald-500/10 text-emerald-400",
+      color: "var(--color-success)",
     },
     reading: {
       label: "Reading",
@@ -37,19 +37,19 @@ export function getLessonTypeConfig(type: string) {
 
 export function getLessonProgressColor(type: string): string {
   const colors: Record<string, string> = {
-    vocabulary: "bg-gradient-to-r from-[#2DA8FF] to-[#82CAFF]",
-    grammar:    "bg-gradient-to-r from-[#FFA726] to-[#FFD54F]",
-    listening:  "bg-gradient-to-r from-[#A064FF] to-[#C8A0FF]",
-    speaking:   "bg-gradient-to-r from-[#2ED3C6] to-[#8BFFE8]",
-    reading:    "bg-gradient-to-r from-[#64DC82] to-[#A0F0B0]",
+    vocabulary: "bg-gradient-to-r from-blue-400 to-blue-300",
+    grammar:    "bg-gradient-to-r from-amber-400 to-yellow-300",
+    listening:  "bg-gradient-to-r from-purple-500 to-purple-300",
+    speaking:   "bg-gradient-to-r from-emerald-400 to-emerald-300",
+    reading:    "bg-gradient-to-r from-green-400 to-green-300",
   };
   return colors[type] ?? colors.vocabulary;
 }
 
 export function getStatColorConfig(color: string) {
   const configs: Record<string, { iconBg: string; barClass: string; trendClass?: string }> = {
-    cyan:   { iconBg: "bg-[#2ED3C6]/10 text-[#2ED3C6]", barClass: "bg-gradient-to-r from-[#2ED3C6] to-[#8BFFE8]" },
-    blue:   { iconBg: "bg-[#2DA8FF]/10 text-[#2DA8FF]", barClass: "bg-gradient-to-r from-[#2DA8FF] to-[#82CAFF]" },
+    cyan:   { iconBg: "bg-emerald-500/10 text-emerald-400", barClass: "bg-gradient-to-r from-emerald-400 to-emerald-300" },
+    blue:   { iconBg: "bg-blue-500/10 text-blue-400", barClass: "bg-gradient-to-r from-blue-400 to-blue-300" },
     amber:  { iconBg: "bg-amber-500/10 text-amber-400",  barClass: "bg-gradient-to-r from-amber-400 to-yellow-300"  },
     purple: { iconBg: "bg-purple-500/10 text-purple-400", barClass: "bg-gradient-to-r from-purple-500 to-purple-300" },
   };

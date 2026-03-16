@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
         <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
           <Image
             src="/lingora-logo.png"
-            alt="Lingora"
+            alt="Lingona"
             width={40}
             height={40}
             className="object-contain"
@@ -91,7 +91,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
               WebkitTextFillColor: "transparent",
             }}
           >
-            LINGORA
+            LINGONA
           </div>
           <div className="text-[9px] text-[#A6B3C2] tracking-[1px] uppercase mt-[1px] whitespace-nowrap">
             Learn English The Intelligent Way

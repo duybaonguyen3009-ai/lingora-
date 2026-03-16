@@ -12,10 +12,10 @@ interface PronunciationResultsProps {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 80) return "#2ED3C6"; // teal/green
-  if (score >= 60) return "#A064FF"; // purple
-  if (score >= 40) return "#F5A524"; // amber
-  return "#EF4444"; // red
+  if (score >= 80) return "var(--color-success)";
+  if (score >= 60) return "var(--color-primary)";
+  if (score >= 40) return "var(--color-warning)";
+  return "#EF4444";
 }
 
 function scoreLabel(score: number): string {
@@ -37,7 +37,7 @@ function ScoreCircle({ score }: { score: number }) {
 
     function animate(now: number) {
       const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
       setAnimatedScore(Math.round(eased * score));
       if (progress < 1) frame = requestAnimationFrame(animate);
     }
@@ -52,14 +52,12 @@ function ScoreCircle({ score }: { score: number }) {
   return (
     <div ref={ref} className="relative flex items-center justify-center">
       <svg width="128" height="128" viewBox="0 0 128 128">
-        {/* Background circle */}
         <circle
           cx="64" cy="64" r="54"
           fill="none"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--color-border)"
           strokeWidth="8"
         />
-        {/* Score arc */}
         <circle
           cx="64" cy="64" r="54"
           fill="none"
@@ -73,10 +71,10 @@ function ScoreCircle({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-[28px] font-bold text-[#E6EDF3] tabular-nums">
+        <span className="text-[28px] font-bold tabular-nums" style={{ color: "var(--color-text)" }}>
           {animatedScore}
         </span>
-        <span className="text-[11px] text-[#A6B3C2]">/ 100</span>
+        <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>/ 100</span>
       </div>
     </div>
   );
@@ -86,8 +84,8 @@ function SubScoreBar({ label, score }: { label: string; score: number }) {
   const color = scoreColor(score);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] text-[#A6B3C2] w-[100px] text-right">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
+      <span className="text-[11px] w-[100px] text-right" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
           style={{ width: `${score}%`, backgroundColor: color }}
@@ -107,18 +105,18 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
       <button
         onClick={onClick}
         className={cn(
-          "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 border",
-          isExpanded
-            ? "border-white/[0.15] bg-white/[0.08]"
-            : "border-transparent bg-white/[0.04] hover:bg-white/[0.08]"
+          "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 border"
         )}
-        style={{ color }}
+        style={{
+          color,
+          borderColor: isExpanded ? "var(--color-border)" : "transparent",
+          backgroundColor: isExpanded ? "var(--color-bg-card-hover)" : "var(--color-primary-soft)",
+        }}
       >
         {word.word}
         <span className="ml-1.5 text-[10px] opacity-60">{Math.round(word.score)}</span>
       </button>
 
-      {/* Expanded phoneme detail */}
       {isExpanded && word.phonemes.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1 px-1">
           {word.phonemes.map((p, i) => (
@@ -130,7 +128,7 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
               <span className="font-mono font-semibold" style={{ color: scoreColor(p.score) }}>
                 {p.phoneme}
               </span>
-              <span className="text-[9px] text-[#A6B3C2]">{Math.round(p.score)}</span>
+              <span className="text-[9px]" style={{ color: "var(--color-text-secondary)" }}>{Math.round(p.score)}</span>
             </div>
           ))}
         </div>
@@ -171,7 +169,7 @@ export default function PronunciationResults({
       {/* Word breakdown */}
       {result.words.length > 0 && (
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#A6B3C2]/60 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.8px] mb-2" style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}>
             Word Breakdown
           </p>
           <div className="flex flex-wrap gap-2">
@@ -184,7 +182,7 @@ export default function PronunciationResults({
               />
             ))}
           </div>
-          <p className="text-[10px] text-[#A6B3C2]/40 mt-2">
+          <p className="text-[10px] mt-2" style={{ color: "var(--color-text-secondary)", opacity: 0.4 }}>
             Tap a word to see phoneme details
           </p>
         </div>
@@ -194,18 +192,23 @@ export default function PronunciationResults({
       <div className="flex gap-3">
         <button
           onClick={onTryAgain}
-          className="flex-1 py-3 rounded-xl font-semibold text-[14px] bg-[#A064FF]/15 border border-[#A064FF]/20 text-[#A064FF] hover:bg-[#A064FF]/25 transition-all duration-200"
+          className="flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200"
+          style={{
+            backgroundColor: "var(--color-primary-soft)",
+            border: "1px solid var(--color-primary-glow)",
+            color: "var(--color-primary)",
+          }}
         >
           Try Again
         </button>
         <button
           onClick={onNext}
-          className={cn(
-            "flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200",
-            isLast
-              ? "bg-gradient-to-r from-[#2ED3C6] to-[#2DA8FF] text-[#071A2F] hover:opacity-90"
-              : "bg-[#A064FF]/20 border border-[#A064FF]/25 text-[#A064FF] hover:bg-[#A064FF]/30"
-          )}
+          className="flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200 text-white"
+          style={{
+            background: isLast
+              ? "linear-gradient(135deg, var(--color-primary), var(--color-accent))"
+              : "var(--color-primary)",
+          }}
         >
           {isLast ? "Finish Lesson" : "Next →"}
         </button>

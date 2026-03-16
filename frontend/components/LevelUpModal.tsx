@@ -38,8 +38,9 @@ export default function LevelUpModal({ level, onClose }: LevelUpModalProps) {
       aria-label={`Level up! You reached level ${level}`}
     >
       <div
-        className="relative flex flex-col items-center gap-5 px-10 py-10 rounded-[24px] border border-[#2ED3C6]/30 text-center max-w-xs w-full mx-4"
+        className="relative flex flex-col items-center gap-5 px-10 py-10 rounded-[24px] border text-center max-w-xs w-full mx-4"
         style={{
+          borderColor: "rgba(46,211,198,0.3)",
           background: "linear-gradient(145deg, #0B1E33 0%, #0D2137 100%)",
           boxShadow: "0 0 60px rgba(46,211,198,0.2), 0 0 0 1px rgba(46,211,198,0.1)",
         }}
@@ -54,31 +55,31 @@ export default function LevelUpModal({ level, onClose }: LevelUpModalProps) {
               animation: "pulse 1.5s ease-in-out infinite",
             }}
           >
-            ⚡
+            {"\u26A1"}
           </div>
         </div>
 
         <div className="space-y-1">
-          <p className="text-[#2ED3C6] text-[13px] font-semibold uppercase tracking-widest">
+          <p className="text-[13px] font-semibold uppercase tracking-widest" style={{ color: "var(--color-success)" }}>
             Level Up!
           </p>
-          <p className="text-[#E6EDF3] text-4xl font-bold font-sora leading-none">
+          <p className="text-4xl font-bold font-sora leading-none" style={{ color: "var(--color-text)" }}>
             Level {level}
           </p>
-          <p className="text-[#A6B3C2] text-[13px] mt-1">
+          <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
             You&apos;re on a roll — keep learning!
           </p>
         </div>
 
         <button
           onClick={onClose}
-          className="mt-1 px-6 py-2.5 rounded-[10px] text-[13px] font-semibold text-[#071A2F] transition-opacity hover:opacity-90"
-          style={{ background: "linear-gradient(135deg, #2ED3C6, #2DA8FF)" }}
+          className="mt-1 px-6 py-2.5 rounded-[10px] text-[13px] font-semibold transition-opacity hover:opacity-90"
+          style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
         >
           Continue
         </button>
 
-        <p className="text-[10px] text-[#4A6B80]">Closes automatically in 3 s</p>
+        <p className="text-[10px]" style={{ color: "#4A6B80" }}>Closes automatically in 3 s</p>
       </div>
 
       <style>{`
