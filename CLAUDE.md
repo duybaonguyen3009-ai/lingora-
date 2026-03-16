@@ -1,24 +1,24 @@
-# Lingora – Claude Code Instructions
+# Lingona – Claude Code Instructions
 
 ## Project Overview
-Lingora is an AI-powered language learning platform focused on speaking practice, writing improvement, and preparation for international language certifications. The platform combines AI conversation, pronunciation analysis, writing feedback, and exam simulation.
+Lingona is an AI-powered speaking coach for Vietnamese learners of English. The product focuses on speaking practice first — pronunciation, scenario conversations, and exam speaking — with writing and grammar as future expansions. The core philosophy is "Open → Speak → Improve → See it" — users should be speaking within 10 seconds of opening the app.
 
 Monorepo: `frontend/` (Next.js 14 + TS) and `backend/` (Node.js + Express + PostgreSQL).
 
 **Full technical roadmap:** `docs/technical-roadmap.md`
+**Brand name:** Lingona (not "Lingora" — fix any remaining references)
 
 ---
 
 ## Module Architecture
 
 ```
-speaking/
+speaking/                    ← CORE PRODUCT — build this first
   pronunciation_practice   — Audio upload, speech-to-text, phoneme-level AI feedback
   scenario_speaking        — AI role-play (interviews, travel, meetings, daily conversations)
-  exam_speaking            — IELTS speaking format with timers and rubric scoring
-  ai_dialogue              — (Experimental) Multi-turn open-ended AI conversation partner
+  exam_speaking            — IELTS speaking format with timers and rubric scoring (scenario variant)
 
-writing/
+writing/                     ← FUTURE EXPANSION — after speaking is fully shipped + monetized
   grammar_training         — AI grammar correction, sentence rewriting, advanced explanations
   exam_writing             — IELTS Writing Task 1 & 2 with rubric-based AI evaluation
   practical_writing        — Real-world writing (emails, letters, short essays)
@@ -29,18 +29,25 @@ core/
   progress                 — Lesson completion, scores, learning history
   gamification             — XP ledger, streaks, badges, leaderboard
 
+providers/                   ← External service abstractions
+  storage/                 — Mock / Cloudflare R2 (audio files)
+  speech/                  — Mock / Azure Speech (pronunciation scoring)
+  ai/                      — Mock / OpenAI (conversation AI) ← NEW in Phase 4
+
 platform/
-  exam_engine              — Exam session management, timers, scoring rubrics
-  cms                      — Browser-based lesson/vocab/exam content editor
+  cms                      — Browser-based lesson/vocab/scenario content editor
   payments                 — Stripe subscriptions (free / pro / exam prep packages)
   analytics                — Learning event log, heatmaps, observability
 ```
+
+### Key Architecture Decision: No Separate AI Orchestration Layer
+Conversation role-play is **core product logic**, not an AI add-on. The scenario engine (turn management, session state, scoring rubrics) lives inside `speaking/scenarios/` as a domain module. AI models are accessed through `providers/ai/` — same pattern as storage and speech providers. No separate "ClawDBot" or orchestration service until 10K+ DAU with real usage data.
 
 ---
 
 ## Architecture Philosophy — Modular Monolith
 
-Lingora follows a **modular monolith** architecture. The system runs as a single deployable unit today, but code is structured with strict domain boundaries to enable future extraction into independent microservices when scale demands it.
+Lingona follows a **modular monolith** architecture. The system runs as a single deployable unit today, but code is structured with strict domain boundaries to enable future extraction into independent microservices when scale demands it.
 
 ### Principles
 
@@ -101,14 +108,14 @@ When scale or team structure justifies extraction, these are the likely first ca
 | Deploy config + Sentry | ✅ Done — railway.toml, Next.js proxy rewrites, @sentry/node + @sentry/nextjs |
 | XP ledger + gamification | ✅ Done — xp_ledger, streaks, badges, leaderboard, fill-in-blank quiz |
 | Pronunciation practice | ✅ Done — provider abstraction, mock storage/speech, audio recorder, phoneme feedback UI |
-| Scenario speaking | ❌ Not started |
-| Exam speaking | ❌ Not started |
-| Grammar & sentence training | ❌ Not started |
-| Exam writing | ❌ Not started |
-| Practical writing | ❌ Not started |
-| AI dialogue | ❌ Not started |
+| UI/UX overhaul | ✅ Done — speaking-first homepage, dark/light theme (CSS variables + next-themes), BottomNav, simplified Topbar, ~294 color migrations |
+| Scenario speaking | ❌ Not started — **NEXT** |
+| Real providers (Azure Speech, R2, OpenAI) | ❌ Not started |
+| AI study coach (rules-based) | ❌ Not started |
 | Admin CMS | ❌ Not started |
 | Monetization | ❌ Not started |
+| Grammar & writing | ❌ Not started (delayed — speaking-first) |
+| Classrooms & teacher dashboard | ❌ Not started (delayed — needs proven product) |
 
 ---
 
@@ -160,19 +167,51 @@ no effect on request/response shapes, route paths, or calling code.
 
 ---
 
-## Active Phase: Phase 4 — Scenario Speaking
+## Active Phase: Phase 4 — Scenario Speaking (Core Conversations)
 
-**Goal:** AI role-play speaking scenarios — interview, travel, meetings, daily conversations.
+**Goal:** User selects a scenario, has multi-turn AI conversation, gets session score. This is the core product — conversation role-play is Lingona's primary value proposition, not an add-on.
+
+**Approach:** Mock-first (same pattern as Phase 3). AI provider returns scripted responses initially; real OpenAI integration follows in Phase 4b.
 
 Tasks in order:
-1. ⬅️ **NEXT** Design scenario data model (scenario templates, conversation turns, scoring rubrics)
-2. Backend: Scenario session management — start, continue, end session
-3. Backend: AI conversation integration — LLM-powered role-play responses
-4. Frontend: Scenario selection UI + conversation interface
-5. Frontend: Turn-by-turn speaking + AI response playback
-6. Frontend: Session summary with scoring feedback
+1. ⬅️ **NEXT** Design scenario data model — migration for `scenarios`, `scenario_sessions`, `conversation_turns` tables
+2. Backend: AI provider abstraction — `providers/ai/aiProvider.js` factory, `mockAi.js`, future `openaiProvider.js`
+3. Backend: Scenario domain module — `scenarioRepository`, `scenarioService`, `scenarioController`
+4. Backend: Scenario session management — start session, submit turn, get AI response, end session
+5. Backend: Seed 10–15 scenario templates (ordering food, job interview, hotel check-in, doctor visit, etc.)
+6. Frontend: Scenario selection page — category cards, difficulty indicators
+7. Frontend: Conversation UI — chat bubbles + audio recording per turn
+8. Frontend: Session summary with speaking metrics and score
 
-**Exit criteria:** User can select a scenario, engage in multi-turn speaking practice with AI, and receive a session-level score.
+**Exit criteria:** User can select a scenario, engage in multi-turn speaking practice with AI (mock), and receive a session-level score.
+
+**What this phase does NOT include:**
+- No real OpenAI API calls (mock-first)
+- No ClawDBot / AI orchestration layer
+- No multi-model routing
+- No personalized recommendations (rules-based comes in Phase 5)
+
+---
+
+## Completed: UI/UX Overhaul (between Phase 3 and Phase 4)
+
+**Goal:** Transform Lingona from dashboard-style app to action-first AI speaking coach. Speaking-first, not content-browsing-first.
+
+Changes applied:
+1. ✅ CSS variables theme system — dark/light mode with `next-themes`, ~294 hardcoded color references migrated to CSS variables across 30+ files
+2. ✅ Homepage redesign — `StartSpeakingCard` hero, `PracticeScenarios` (3 scenario cards), `CoachTipCard` (dismissible, non-blocking)
+3. ✅ Navigation — replaced 8-item Sidebar with 4-item `BottomNav` (Home / Speak / Practice / Profile)
+4. ✅ Topbar simplified — streak badge + "Lingona" brand + ThemeToggle + avatar (removed XP badge, search, notification bell, hamburger)
+5. ✅ `SpeakingSection` redesign — conversation-thread layout with chat bubbles, scores hidden during live speaking (shown only on CompletionScreen)
+6. ✅ Splash screen — logo + "LINGONA" text + loading bar (needs animated logo asset later)
+7. ✅ Branding — text references updated from "Lingora" to "Lingona"
+
+**Design principles locked:**
+- Homepage guides to speaking in <10 seconds
+- No XP-heavy UI on homepage
+- Coaching tips are non-blocking (dismissible cards, not modals)
+- Scoring stays out of live speaking flow
+- Homepage stays minimal (~3-4 sections max, not a dashboard)
 
 ---
 
@@ -267,10 +306,16 @@ Tasks in order:
 | Writing evaluation | AI rubric scoring (e.g., IELTS band descriptors) | Consistent, explainable scores aligned to exam standards |
 | State management | Zustand (add in Phase 1 for auth) | Lightweight, works with Next.js App Router |
 | Monolith vs services | Stay monolith until 50K+ DAU. Exception: media never goes through API server | Premature extraction adds ops overhead |
+| AI conversation provider | OpenAI GPT-4o-mini via `providers/ai/` abstraction (mock-first) | Cost-effective; single model until data proves multi-model value |
+| No AI orchestration layer | Scenario engine is core product logic in `speaking/scenarios/`, not a separate service | ClawDBot-style orchestration is premature; adds latency + failure modes |
+| Theme system | CSS custom properties + `next-themes` for dark/light mode | SSR-safe, zero JS bundle cost, no heavy dependency |
+| Frontend navigation | BottomNav (Home/Speak/Practice/Profile) — mobile-first | Action-first; replaces 8-item sidebar dashboard pattern |
 
 ---
 
-## Phase Roadmap Summary
+## Phase Roadmap Summary (Revised)
+
+> Phases reordered after strategy review. Speaking-first direction: ship the core speaking coach, monetize, then expand to writing/grammar.
 
 | Phase | Goal | Status |
 |---|---|---|
@@ -278,15 +323,24 @@ Tasks in order:
 | 1 – Auth + Infra | JWT auth, migrations, CI/CD, deploy | ✅ Done |
 | 2 – Gamification | XP ledger, streaks, badges, leaderboard | ✅ Done |
 | 3 – Pronunciation Practice | Audio upload, speech-to-text, AI pronunciation scoring, phoneme feedback | ✅ Done (mock providers) |
-| 4 – Scenario Speaking | AI role-play speaking scenarios (interview, travel, meetings, daily conversations) | ⬅️ Next |
-| 5 – Exam Speaking | Speaking exam simulator (IELTS format with timers and scoring) | ⬜ |
-| 6 – Grammar & Sentence Training | AI grammar correction, sentence rewriting, advanced grammar explanations | ⬜ |
-| 7 – Exam Writing | Writing evaluation with rubric scoring (IELTS Writing Task 1 and Task 2) | ⬜ |
-| 8 – Practical Writing | Real-world writing tasks (emails, letters, short essays) | ⬜ |
-| 9 – AI Dialogue (Experimental) | Multi-turn AI conversation partner for open-ended discussions | ⬜ |
-| 10 – Admin CMS | Browser-based lesson, vocabulary, and exam content editor | ⬜ |
-| 11 – Monetization | Stripe subscriptions (free / pro plans, exam prep packages) | ⬜ |
-| 12 – Hardening | Load testing, observability, analytics, accessibility improvements | ⬜ |
+| — UI/UX Overhaul | Speaking-first homepage, dark/light theme, new navigation, branding | ✅ Done |
+| **4 – Scenario Speaking** | **AI role-play conversations (mock-first): scenario domain, AI provider, 10-15 templates, conversation UI** | **⬅️ Next** |
+| 4b – Real Providers + Exam Speaking | Wire real Azure Speech + R2 + OpenAI; add IELTS speaking as scenario variant; speaking metrics | ⬜ |
+| 5 – AI Study Coach (Rules-Based) | Homepage "Today's Focus" based on weakest scores; quick practice actions; no LLM needed | ⬜ |
+| 6 – Admin CMS | Browser-based lesson/vocab/scenario content editor | ⬜ |
+| 7 – Monetization | Stripe subscriptions, free tier limits, pro tier unlocks | ⬜ |
+| 8 – Grammar & Writing | Grammar correction, sentence rewriting, exam writing (IELTS Task 1 & 2) | ⬜ Delayed |
+| 9 – Classrooms & Teachers | Schools, classrooms, assignments, teacher progress view | ⬜ Delayed |
+| 10 – Hardening | Load testing, Redis, read replicas, WCAG, observability | ⬜ |
+| 11+ – Advanced AI | Personalized recommendations, AI-generated scenarios, model routing | ⬜ Future |
+
+### What changed from original roadmap and why
+- **Exam Speaking** (was Phase 5) → merged into Phase 4b. It's a scenario template variant, not a separate backend phase.
+- **AI Dialogue** (was Phase 9) → absorbed into Phase 4. Multi-turn AI conversation IS scenario speaking — not a separate feature.
+- **Grammar & Writing** (were Phases 6–8) → pushed to Phase 8. Different skill domain; build after speaking is validated and monetized.
+- **Classrooms** (was Phase 4 in technical-roadmap.md) → pushed to Phase 9. Needs proven product before B2B adoption.
+- **AI Study Coach** (new Phase 5) → rules-based "what to practice next", addresses UX report without adding AI service complexity.
+- **No ClawDBot orchestration layer** — premature at current stage. Revisit at 10K+ DAU.
 
 ---
 
@@ -385,3 +439,9 @@ Tasks in order:
 | `backend/src/routes/pronunciationRoutes.js` | Pronunciation routes — all JWT protected |
 | `frontend/components/LessonModal/AudioRecorder.tsx` | Browser MediaRecorder — mic permission, pulsing recording UI |
 | `frontend/components/LessonModal/PronunciationResults.tsx` | Animated score circle, subscore bars, word pills, phoneme expansion |
+| `frontend/components/StartSpeakingCard.tsx` | Homepage hero — "Ready to speak?" CTA with mic icon |
+| `frontend/components/PracticeScenarios.tsx` | Homepage scenario recommendation cards (3 scenarios) |
+| `frontend/components/CoachTipCard.tsx` | Dismissible coaching tip card (non-blocking) |
+| `frontend/components/BottomNav.tsx` | Mobile-first bottom navigation — Home / Speak / Practice / Profile |
+| `frontend/components/ThemeToggle.tsx` | Dark/light mode toggle button using next-themes |
+| `frontend/components/SplashScreen.tsx` | Logo animation splash — shown once per session via sessionStorage |
