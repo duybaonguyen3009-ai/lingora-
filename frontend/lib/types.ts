@@ -115,7 +115,27 @@ export interface Scenario {
   emoji: string;
   tags: string[];
   expected_turns: number;
+  exam_type?: "ielts" | null;
   created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// IELTS types
+// ---------------------------------------------------------------------------
+
+export type IeltsPhase =
+  | "loading"
+  | "part1"
+  | "part2_prep"
+  | "part2_speaking"
+  | "part3"
+  | "ending"
+  | "summary"
+  | "error";
+
+export interface IeltsCueCard {
+  topic: string;
+  prompts: string[]; // 3–4 bullet points
 }
 
 export interface ScenarioDetail extends Scenario {

@@ -26,6 +26,7 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
     "node-pg-migrate": "^7.0.0",
+    "openai": "^6.31.0",
     "pg": "^8.20.0"
   },
   "devDependencies": {

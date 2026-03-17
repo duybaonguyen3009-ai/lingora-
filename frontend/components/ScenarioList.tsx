@@ -27,6 +27,7 @@ const CATEGORIES = [
   { key: "work", label: "Work" },
   { key: "social", label: "Social" },
   { key: "academic", label: "Academic" },
+  { key: "exam", label: "🎓 Exam" },
 ] as const;
 
 // ─── Difficulty badge colors ──────────────────────────────────────────
@@ -124,13 +125,16 @@ export default function ScenarioList({ onSelect }: ScenarioListProps) {
 
           {scenarios.map((scenario) => {
             const dc = difficultyColor(scenario.difficulty);
+            const isIelts = scenario.exam_type === "ielts";
             return (
               <button
                 key={scenario.id}
                 onClick={() => onSelect(scenario)}
                 style={{
                   background: "var(--color-bg-card)",
-                  border: "1px solid var(--color-border)",
+                  border: isIelts
+                    ? "1px solid rgba(251, 191, 36, 0.5)"
+                    : "1px solid var(--color-border)",
                 }}
                 className="flex items-center gap-3 p-4 rounded-xl text-left hover:opacity-90 transition-opacity"
               >
@@ -158,7 +162,18 @@ export default function ScenarioList({ onSelect }: ScenarioListProps) {
                   </div>
 
                   {/* Meta row */}
-                  <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    {isIelts && (
+                      <span
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: "rgba(251, 191, 36, 0.15)",
+                          color: "#fbbf24",
+                        }}
+                      >
+                        EXAM
+                      </span>
+                    )}
                     <span
                       className="text-[10px] font-medium px-2 py-0.5 rounded-full"
                       style={{ background: dc.bg, color: dc.text }}

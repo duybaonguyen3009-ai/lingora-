@@ -20,7 +20,7 @@ async function findAllScenarios(category) {
   if (category) {
     const result = await query(
       `SELECT id, title, description, category, difficulty,
-              emoji, tags, expected_turns, created_at
+              emoji, tags, expected_turns, exam_type, created_at
          FROM scenarios
         WHERE category = $1
         ORDER BY title`,
@@ -31,7 +31,7 @@ async function findAllScenarios(category) {
 
   const result = await query(
     `SELECT id, title, description, category, difficulty,
-            emoji, tags, expected_turns, created_at
+            emoji, tags, expected_turns, exam_type, created_at
        FROM scenarios
       ORDER BY category, title`
   );
@@ -48,7 +48,7 @@ async function findScenarioById(id) {
   const result = await query(
     `SELECT id, title, description, category, difficulty,
             system_prompt, opening_message, emoji, tags,
-            expected_turns, created_at
+            expected_turns, exam_type, created_at
        FROM scenarios
       WHERE id = $1`,
     [id]

@@ -10,6 +10,7 @@ import LessonsPage from "@/components/LessonsPage";
 import LessonsSection from "@/components/LessonsSection";
 import ScenarioList from "@/components/ScenarioList";
 import ScenarioConversation from "@/components/ScenarioConversation";
+import IeltsConversation from "@/components/IeltsConversation";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
@@ -20,6 +21,7 @@ import type { Scenario } from "@/lib/types";
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
+  const [ieltsScenario, setIeltsScenario] = useState<Scenario | null>(null);
 
   const userId = useCurrentUserId();
   const { progress } = useProgress(userId);
@@ -37,8 +39,11 @@ export default function HomePage() {
     if (typeof scenarioOrId === "string") {
       // From homepage PracticeScenarios — switch to speak tab
       setActiveTab("speak");
+    } else if (scenarioOrId.exam_type === "ielts") {
+      // IELTS scenario — open dedicated IELTS conversation UI
+      setIeltsScenario(scenarioOrId);
     } else {
-      // From ScenarioList — open conversation
+      // Regular scenario — open standard conversation
       setActiveScenario(scenarioOrId);
     }
   };
@@ -51,7 +56,18 @@ export default function HomePage() {
     refetchGamification();
   };
 
-  // Full-screen conversation overlay
+  // Full-screen IELTS overlay
+  if (ieltsScenario) {
+    return (
+      <IeltsConversation
+        scenario={ieltsScenario}
+        onClose={() => { setIeltsScenario(null); }}
+        onComplete={handleConversationComplete}
+      />
+    );
+  }
+
+  // Full-screen regular scenario overlay
   if (activeScenario) {
     return (
       <ScenarioConversation
