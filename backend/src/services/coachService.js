@@ -85,6 +85,7 @@ function buildPronunciationRec(weakPrompt) {
     description:  `Your average score is ${score}/100 — this is your biggest improvement area.`,
     actionLabel:  'Practice',
     actionTarget: 'practice',
+    lessonId:     weakPrompt.lessonId || undefined,
   };
 }
 
@@ -99,15 +100,18 @@ function buildNoRecentScenarioRec() {
   };
 }
 
-function buildLowScenarioRec(recentAvg) {
+function buildLowScenarioRec(recentAvg, worstSession) {
   const score = Math.round(recentAvg);
   return {
     type:         'scenario',
     label:        'Speaking',
-    title:        'Keep improving your conversations',
+    title:        worstSession
+      ? `Retry "${truncate(worstSession.title, 30)}" conversation`
+      : 'Keep improving your conversations',
     description:  `Recent average: ${score}/100. More practice sessions will boost your fluency.`,
     actionLabel:  'Practice',
     actionTarget: 'speak',
+    scenarioId:   worstSession?.scenarioId || undefined,
   };
 }
 
@@ -172,14 +176,16 @@ async function getFocusRecommendations(userId) {
       recommendations.length < MAX_RECOMMENDATIONS &&
       recentSessions.length > 0
     ) {
-      const validScores = recentSessions
-        .map((s) => s.overallScore)
-        .filter((s) => s !== null);
+      const scoredSessions = recentSessions.filter((s) => s.overallScore !== null);
 
-      if (validScores.length > 0) {
-        const recentAvg = avg(validScores);
+      if (scoredSessions.length > 0) {
+        const recentAvg = avg(scoredSessions.map((s) => s.overallScore));
         if (recentAvg < WEAK_SCENARIO_THRESHOLD) {
-          recommendations.push(buildLowScenarioRec(recentAvg));
+          // Find the lowest-scoring session to deep-link to
+          const worstSession = scoredSessions.reduce((worst, s) =>
+            s.overallScore < worst.overallScore ? s : worst,
+          );
+          recommendations.push(buildLowScenarioRec(recentAvg, worstSession));
         }
       }
     }

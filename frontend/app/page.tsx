@@ -20,7 +20,8 @@ import { useUserStats } from "@/hooks/useUserStats";
 import { useGamification } from "@/hooks/useGamification";
 import { useSpeakingMetrics } from "@/hooks/useSpeakingMetrics";
 import { useTodayFocus }      from "@/hooks/useTodayFocus";
-import type { Scenario } from "@/lib/types";
+import { getScenarios } from "@/lib/api";
+import type { Scenario, FocusRecommendation } from "@/lib/types";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("home");
@@ -62,9 +63,24 @@ export default function HomePage() {
     refetchGamification();
   };
 
-  // Coach card action — navigate to the target tab
-  const handleFocusAction = (target: string) => {
-    setActiveTab(target);
+  // Coach card action — deep-link to specific scenario when possible, else navigate to tab
+  const handleFocusAction = async (rec: FocusRecommendation) => {
+    // Deep-link: open a specific scenario conversation directly
+    if (rec.scenarioId && rec.actionTarget === "speak") {
+      try {
+        const scenarios = await getScenarios();
+        const match = scenarios.find((s) => s.id === rec.scenarioId);
+        if (match) {
+          handleScenarioSelect(match);
+          return;
+        }
+      } catch {
+        // Fall through to tab navigation on any fetch error
+      }
+    }
+
+    // Default: navigate to the target tab
+    setActiveTab(rec.actionTarget);
   };
 
   // Full-screen IELTS overlay

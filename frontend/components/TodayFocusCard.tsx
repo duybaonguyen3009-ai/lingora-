@@ -4,8 +4,7 @@
  * TodayFocusCard.tsx
  *
  * Homepage coach card — shows 1–2 personalised "Today's Focus" recommendations.
- * Renders nothing when there are no recommendations (new user with no data
- * is handled by the first_lesson rule in coachService; fully silent on error).
+ * Shows a minimal positive empty state when the user has no weak spots.
  *
  * Design principles:
  *  - Scannable in under 3 seconds
@@ -48,7 +47,7 @@ function RecommendationRow({
   onAction,
 }: {
   rec:      FocusRecommendation;
-  onAction: (target: string) => void;
+  onAction: (rec: FocusRecommendation) => void;
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -71,7 +70,7 @@ function RecommendationRow({
 
       {/* Action button */}
       <button
-        onClick={() => onAction(rec.actionTarget)}
+        onClick={() => onAction(rec)}
         className="shrink-0 flex items-center gap-1 text-xs font-semibold rounded-lg px-3 py-1.5 transition-all active:scale-95"
         style={{
           background: "var(--color-primary)",
@@ -100,8 +99,8 @@ function RecommendationRow({
 interface TodayFocusCardProps {
   recommendations: FocusRecommendation[];
   loading:         boolean;
-  /** Called when the user taps an action button — receives the actionTarget string */
-  onAction:        (target: string) => void;
+  /** Called when the user taps an action button — receives the full recommendation */
+  onAction:        (rec: FocusRecommendation) => void;
 }
 
 export default function TodayFocusCard({
@@ -109,8 +108,8 @@ export default function TodayFocusCard({
   loading,
   onAction,
 }: TodayFocusCardProps) {
-  // Don't render anything during initial load or when there's nothing to show
-  if (loading || recommendations.length === 0) return null;
+  // Hide card entirely while the initial fetch is in-flight (no flash)
+  if (loading) return null;
 
   return (
     <div
@@ -130,6 +129,16 @@ export default function TodayFocusCard({
           Today&apos;s Focus
         </h2>
       </div>
+
+      {/* Positive empty state when the user has no weak spots */}
+      {recommendations.length === 0 && (
+        <p
+          className="text-xs leading-relaxed"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          You&apos;re doing great today! Keep practicing to maintain your streak.
+        </p>
+      )}
 
       {/* Recommendation rows — separated by a subtle divider if there are 2 */}
       {recommendations.map((rec, i) => (

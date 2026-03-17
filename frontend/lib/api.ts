@@ -443,7 +443,8 @@ export async function getSpeakingMetrics(userId: string): Promise<SpeakingMetric
 export async function getTodayFocus(userId: string): Promise<TodayFocusData> {
   try {
     return await apiFetchAuth<TodayFocusData>(`/users/${userId}/coach/focus`);
-  } catch {
+  } catch (err) {
+    console.warn("[getTodayFocus] Failed to fetch focus recommendations:", err);
     return { recommendations: [] };
   }
 }

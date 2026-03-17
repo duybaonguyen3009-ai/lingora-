@@ -36,18 +36,19 @@ async function getPronunciationAttemptCount(userId) {
  * Returns null if the user has no pronunciation attempts.
  *
  * @param {string} userId
- * @returns {Promise<{ promptId: string, promptText: string, avgScore: number } | null>}
+ * @returns {Promise<{ promptId: string, promptText: string, avgScore: number, lessonId: string } | null>}
  */
 async function getWeakestPronunciationPrompt(userId) {
   const { rows } = await db.query(
     `SELECT
        sp.id           AS prompt_id,
+       sp.lesson_id    AS lesson_id,
        sp.prompt_text  AS prompt_text,
        AVG(pa.overall_score)::numeric(5,1) AS avg_score
      FROM pronunciation_attempts pa
      JOIN speaking_prompts sp ON pa.prompt_id = sp.id
      WHERE pa.user_id = $1
-     GROUP BY sp.id, sp.prompt_text
+     GROUP BY sp.id, sp.lesson_id, sp.prompt_text
      ORDER BY avg_score ASC
      LIMIT 1`,
     [userId],
@@ -55,6 +56,7 @@ async function getWeakestPronunciationPrompt(userId) {
   if (rows.length === 0) return null;
   return {
     promptId:   rows[0].prompt_id,
+    lessonId:   rows[0].lesson_id,
     promptText: rows[0].prompt_text,
     avgScore:   parseFloat(rows[0].avg_score),
   };
@@ -87,11 +89,12 @@ async function getCompletedScenarioCount(userId) {
  *
  * @param {string} userId
  * @param {number} days  – look-back window (default 7)
- * @returns {Promise<Array<{ overallScore: number, category: string, title: string, emoji: string }>>}
+ * @returns {Promise<Array<{ scenarioId: string, overallScore: number|null, category: string, title: string, emoji: string }>>}
  */
 async function getRecentScenarioSessions(userId, days = 7) {
   const { rows } = await db.query(
     `SELECT
+       ss.scenario_id    AS scenario_id,
        ss.overall_score  AS overall_score,
        s.category        AS category,
        s.title           AS title,
@@ -106,6 +109,7 @@ async function getRecentScenarioSessions(userId, days = 7) {
     [userId, days],
   );
   return rows.map((r) => ({
+    scenarioId:   r.scenario_id,
     overallScore: r.overall_score != null ? parseFloat(r.overall_score) : null,
     category:     r.category,
     title:        r.title,

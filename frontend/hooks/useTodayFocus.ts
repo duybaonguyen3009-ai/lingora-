@@ -8,7 +8,8 @@
  * re-fetching, since recommendations only change after new practice activity.
  *
  * Returns an empty array while loading or on error so the homepage card
- * degrades gracefully (renders nothing) without any error state.
+ * degrades gracefully (shows positive empty state). Errors are logged
+ * to the console for visibility.
  */
 
 import { useState, useEffect } from "react";
@@ -28,6 +29,9 @@ export function useTodayFocus(userId: string | null) {
     getTodayFocus(userId)
       .then((data) => {
         if (!cancelled) setRecommendations(data.recommendations);
+      })
+      .catch((err) => {
+        console.warn("[useTodayFocus] Fetch failed:", err);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

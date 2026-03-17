@@ -242,6 +242,8 @@ export interface FocusRecommendation {
   description:  string;   // 1-sentence supporting detail
   actionLabel:  string;   // button text, e.g. "Practice" | "Explore"
   actionTarget: string;   // navigation target, e.g. "practice" | "speak"
+  scenarioId?:  string;   // deep-link: open this scenario directly
+  lessonId?:    string;   // deep-link: (future) auto-open this lesson
 }
 
 export interface TodayFocusData {
