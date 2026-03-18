@@ -100,7 +100,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh" style={{ backgroundColor: "var(--color-bg)" }}>
+    <div className={`flex flex-col min-h-dvh ${activeTab === "home" ? "bg-home" : activeTab === "speak" ? "bg-speak" : activeTab === "exam" ? "bg-exam" : activeTab === "practice" ? "bg-practice" : ""}`} style={{ backgroundColor: "var(--color-bg)" }}>
       <Topbar streak={displayStreak} />
 
       <main className="flex-1 overflow-y-auto pb-24">

@@ -149,11 +149,11 @@ function clearSession() {
 
 // ─── Part indicator ─────────────────────────────────────────────────────────
 
-function PartIndicator({ phase }: { phase: IeltsPhase }) {
+function PartIndicator({ phase, part1TurnCount, part3TurnCount }: { phase: IeltsPhase; part1TurnCount: number; part3TurnCount: number }) {
   const parts = [
-    { key: "part1", label: "Part 1" },
-    { key: "part2", label: "Part 2" },
-    { key: "part3", label: "Part 3" },
+    { key: "part1", label: "Introduction", number: 1 },
+    { key: "part2", label: "Long Turn", number: 2 },
+    { key: "part3", label: "Discussion", number: 3 },
   ];
 
   function getActivePart(p: IeltsPhase): string {
@@ -164,8 +164,16 @@ function PartIndicator({ phase }: { phase: IeltsPhase }) {
 
   const active = getActivePart(phase);
 
+  function getQuestionLabel(): string | null {
+    if (active === "part1") return `Q${part1TurnCount + 1} of ${PART1_MAX_TURNS}`;
+    if (active === "part3") return `Q${part3TurnCount + 1} of ${PART3_MAX_TURNS}`;
+    return null;
+  }
+
+  const qLabel = getQuestionLabel();
+
   return (
-    <div className="flex items-center justify-center gap-3 py-3 px-4">
+    <div className="flex items-center justify-center gap-2 py-4 px-5">
       {parts.map((p, i) => {
         const isActive = p.key === active;
         const isPast =
@@ -173,38 +181,126 @@ function PartIndicator({ phase }: { phase: IeltsPhase }) {
           (p.key === "part2" && active === "part3");
         return (
           <React.Fragment key={p.key}>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1.5">
               <div
-                className="w-3 h-3 rounded-full transition-all duration-300"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-300"
                 style={{
                   background: isActive
                     ? "var(--color-primary)"
                     : isPast
                     ? "var(--color-success)"
                     : "var(--color-border)",
-                  boxShadow: isActive ? "0 0 8px var(--color-primary-glow)" : "none",
+                  color: isActive || isPast ? "#fff" : "var(--color-text-secondary)",
+                  boxShadow: isActive ? "0 0 12px var(--color-primary-glow)" : "none",
                 }}
-              />
+              >
+                {isPast ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ) : (
+                  p.number
+                )}
+              </div>
               <span
                 className="text-[10px] font-semibold"
-                style={{
-                  color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
-                }}
+                style={{ color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)" }}
               >
                 {p.label}
               </span>
+              {isActive && qLabel && (
+                <span className="text-[9px] font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                  {qLabel}
+                </span>
+              )}
             </div>
             {i < parts.length - 1 && (
               <div
-                className="flex-1 h-px max-w-[48px]"
-                style={{
-                  background: isPast ? "var(--color-success)" : "var(--color-border)",
-                }}
+                className="flex-1 h-0.5 max-w-[40px] rounded-full mt-[-20px]"
+                style={{ background: isPast ? "var(--color-success)" : "var(--color-border)" }}
               />
             )}
           </React.Fragment>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Exam UI components ─────────────────────────────────────────────────────
+
+function extractQAPairs(turns: ConversationTurn[]): {
+  pairs: Array<{ question: string; answer: string; index: number }>;
+  latestQuestion: string | null;
+} {
+  const pairs: Array<{ question: string; answer: string; index: number }> = [];
+  let latestQuestion: string | null = null;
+  let qIndex = 0;
+
+  for (let i = 0; i < turns.length; i++) {
+    const turn = turns[i];
+    if (turn.role === "assistant") {
+      const nextTurn = turns[i + 1];
+      if (nextTurn && nextTurn.role === "user") {
+        qIndex++;
+        pairs.push({ question: turn.content, answer: nextTurn.content, index: qIndex });
+        i++;
+      } else {
+        latestQuestion = turn.content;
+      }
+    }
+  }
+
+  return { pairs, latestQuestion };
+}
+
+function ExamQuestionBlock({ content }: { content: string }) {
+  return (
+    <div
+      className="mx-5 rounded-2xl p-5 animate-message-in"
+      style={{
+        background: "var(--color-bg-card)",
+        border: "1px solid var(--color-border)",
+        borderLeft: "4px solid var(--color-primary)",
+      }}
+    >
+      <div
+        className="text-[11px] font-bold uppercase tracking-wider mb-2"
+        style={{ color: "var(--color-primary)" }}
+      >
+        Question
+      </div>
+      <p
+        className="text-[16px] font-medium leading-relaxed"
+        style={{ color: "var(--color-text)" }}
+      >
+        {content}
+      </p>
+    </div>
+  );
+}
+
+function CompactQAHistory({ pairs }: { pairs: Array<{ question: string; answer: string; index: number }> }) {
+  if (pairs.length === 0) return null;
+  return (
+    <div
+      className="mx-5 rounded-2xl p-4 flex flex-col gap-3 max-h-[200px] overflow-y-auto"
+      style={{
+        background: "var(--color-bg-card)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
+      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+        Previous Questions
+      </div>
+      {pairs.map((pair) => (
+        <div key={pair.index} className="flex flex-col gap-0.5">
+          <div className="text-[12px] font-medium" style={{ color: "var(--color-text-secondary)" }}>
+            Q{pair.index}: {pair.question}
+          </div>
+          <div className="text-[12px]" style={{ color: "var(--color-text-secondary)", opacity: 0.7 }}>
+            A: {pair.answer}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -502,6 +598,49 @@ export default function IeltsConversation({
     if (sessionId) handleEndSession(sessionId);
   }, [sessionId, handleEndSession]);
 
+  const handleNewTest = useCallback(async () => {
+    clearSession();
+    setPhase("loading");
+    setTurns([]);
+    setCueCard(null);
+    setPart1TurnCount(0);
+    setPart3TurnCount(0);
+    setInputText("");
+    setScores(null);
+    setErrorMsg(null);
+    setIsTyping(false);
+    startTimeRef.current = Date.now();
+    try {
+      const result = await startScenarioSession(scenario.id);
+      const mappedTurns: ConversationTurn[] = (result.turns ?? []).map((t: { turnIndex: number; role: string; content: string; createdAt: string }) => ({
+        id: `init-${t.turnIndex}`,
+        turnIndex: t.turnIndex,
+        role: t.role as "user" | "assistant",
+        content: t.content,
+        audioStorageKey: null,
+        scores: null,
+        feedback: null,
+        createdAt: t.createdAt,
+      }));
+      setSessionId(result.sessionId);
+      setTurns(mappedTurns);
+      setPhase("part1");
+      saveSession({
+        scenarioId: scenario.id,
+        sessionId: result.sessionId,
+        phase: "part1",
+        turns: mappedTurns,
+        cueCard: null,
+        part1TurnCount: 0,
+        part3TurnCount: 0,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to start session";
+      setErrorMsg(msg);
+      setPhase("error");
+    }
+  }, [scenario.id]);
+
   // ─── Render ──────────────────────────────────────────────────────────────
 
   if (phase === "summary" && scores) {
@@ -514,7 +653,7 @@ export default function IeltsConversation({
   return (
     <div
       style={{ background: "var(--color-bg)" }}
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col bg-exam"
     >
       {/* ── Header ── */}
       <div
@@ -534,12 +673,28 @@ export default function IeltsConversation({
           </button>
           <div className="flex-1 min-w-0">
             <div style={{ color: "var(--color-text)" }} className="font-semibold text-[15px] truncate">
-              IELTS Speaking Practice
+              IELTS Speaking Test
             </div>
             <div style={{ color: "var(--color-text-secondary)" }} className="text-[12px]">
-              Advanced · Exam
+              {phase === "part1" ? "Part 1 — Introduction"
+                : phase === "part2_prep" || phase === "part2_speaking" ? "Part 2 — Long Turn"
+                : phase === "part3" ? "Part 3 — Discussion"
+                : "Exam"}
             </div>
           </div>
+          {phase !== "loading" && phase !== "ending" && phase !== "summary" && (
+            <button
+              onClick={handleNewTest}
+              style={{
+                background: "var(--color-bg-secondary)",
+                color: "var(--color-text-secondary)",
+                border: "1px solid var(--color-border)",
+              }}
+              className="px-3 py-2 rounded-xl text-[12px] font-semibold hover:opacity-80 transition-opacity shrink-0"
+            >
+              New Test
+            </button>
+          )}
           {showEndButton && (
             <button
               onClick={handleManualEnd}
@@ -552,7 +707,7 @@ export default function IeltsConversation({
         </div>
 
         {(phase === "part1" || phase === "part2_prep" || phase === "part2_speaking" || phase === "part3") && (
-          <PartIndicator phase={phase} />
+          <PartIndicator phase={phase} part1TurnCount={part1TurnCount} part3TurnCount={part3TurnCount} />
         )}
       </div>
 
@@ -614,8 +769,29 @@ export default function IeltsConversation({
           </div>
         )}
 
-        {/* Chat bubbles */}
-        {(phase === "part1" || phase === "part2_speaking" || phase === "part3") && (
+        {/* Exam Q&A interface (Parts 1 & 3) */}
+        {(phase === "part1" || phase === "part3") && (() => {
+          const { pairs, latestQuestion } = extractQAPairs(turns);
+          return (
+            <div className="flex flex-col gap-4 py-5">
+              <CompactQAHistory pairs={pairs} />
+              {latestQuestion && <ExamQuestionBlock content={latestQuestion} />}
+              {isTyping && (
+                <div className="flex justify-center py-3">
+                  <div className="flex gap-1.5">
+                    {[0, 200, 400].map((delay) => (
+                      <span key={delay} style={{ background: "var(--color-text-secondary)", animationDelay: `${delay}ms` }} className="w-2 h-2 rounded-full animate-typing-dot" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          );
+        })()}
+
+        {/* Part 2 speaking — keep chat style for free-form talk */}
+        {phase === "part2_speaking" && (
           <div className="px-5 py-5 space-y-4">
             {turns.map((turn) => (
               <div
@@ -664,6 +840,15 @@ export default function IeltsConversation({
           style={{ background: "var(--color-bg-card)", borderTop: "1px solid var(--color-border)" }}
           className="px-5 py-4 shrink-0"
         >
+          {phase !== "part2_speaking" && (
+            <div
+              className="text-[11px] font-bold uppercase tracking-wider mb-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Your Answer
+            </div>
+          )}
+
           {phase === "part2_speaking" && (
             <div style={{ color: "var(--color-text-secondary)" }} className="text-[12px] text-center mb-3">
               Tap the mic to speak, or type your response below
@@ -708,40 +893,29 @@ export default function IeltsConversation({
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={
-                voice.isSupported
-                  ? "Type or use mic..."
-                  : phase === "part1"
-                  ? "Answer the examiner's question..."
-                  : phase === "part2_speaking"
-                  ? "Type your long turn response..."
-                  : "Discuss the topic..."
-              }
-              rows={1}
-              disabled={isTyping || voice.isRecording}
+              placeholder="Answer the question above..."
+              rows={2}
+              disabled={isTyping}
               style={{
                 background: "var(--color-primary-soft)",
                 color: "var(--color-text)",
                 border: "1px solid var(--color-border)",
-                opacity: voice.isRecording ? 0.5 : 1,
               }}
               className="flex-1 resize-none rounded-xl px-4 py-3 text-[15px] outline-none focus:border-[color:var(--color-primary)] transition-colors placeholder:opacity-50"
             />
-
-            <button
-              onClick={() => handleSend()}
-              disabled={!inputText.trim() || isTyping || voice.isRecording}
-              style={{
-                background: inputText.trim() && !isTyping && !voice.isRecording ? "var(--color-primary)" : "var(--color-border)",
-                color: inputText.trim() && !isTyping && !voice.isRecording ? "#fff" : "var(--color-text-secondary)",
-              }}
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors disabled:opacity-50"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </button>
           </div>
+
+          <button
+            onClick={() => handleSend()}
+            disabled={!inputText.trim() || isTyping}
+            style={{
+              background: inputText.trim() && !isTyping ? "var(--color-primary)" : "var(--color-border)",
+              color: inputText.trim() && !isTyping ? "#fff" : "var(--color-text-secondary)",
+            }}
+            className="w-full mt-3 py-3 rounded-xl font-semibold text-[14px] transition-colors disabled:opacity-50"
+          >
+            Submit Answer
+          </button>
 
           {!voice.isSupported && (
             <p className="text-[11px] mt-2 text-center" style={{ color: "var(--color-text-secondary)" }}>

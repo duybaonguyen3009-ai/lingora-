@@ -143,3 +143,62 @@ body {
   0%   { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.08); filter: blur(8px); }
 }
+
+/* ─── Layered Background System ─────────────────────────────────────────── */
+
+.bg-home {
+  background:
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(109, 74, 232, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 85%, rgba(59, 130, 246, 0.07) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='1' fill='rgba(0,0,0,0.04)'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+}
+
+.bg-speak {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(109, 74, 232, 0.08) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='100' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 15 Q25 5 50 15 T100 15' fill='none' stroke='rgba(0,0,0,0.03)' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100px 20px;
+}
+
+.bg-exam {
+  background:
+    radial-gradient(ellipse 50% 30% at 50% 10%, rgba(109, 74, 232, 0.05) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0 L0 0 0 40' fill='none' stroke='rgba(0,0,0,0.025)' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 40px 40px;
+}
+
+.bg-practice {
+  background:
+    url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='0.8' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+  background-size: 24px 24px;
+}
+
+/* Dark mode overrides for backgrounds */
+.dark .bg-home {
+  background:
+    radial-gradient(ellipse 60% 50% at 85% 15%, rgba(124, 92, 252, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 85%, rgba(56, 189, 248, 0.10) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='1' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+}
+
+.dark .bg-speak {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(124, 92, 252, 0.12) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='100' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 15 Q25 5 50 15 T100 15' fill='none' stroke='rgba(255,255,255,0.025)' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100px 20px;
+}
+
+.dark .bg-exam {
+  background:
+    radial-gradient(ellipse 50% 30% at 50% 10%, rgba(124, 92, 252, 0.08) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0 L0 0 0 40' fill='none' stroke='rgba(255,255,255,0.02)' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 40px 40px;
+}
+
+.dark .bg-practice {
+  background:
+    url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='0.8' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E");
+  background-size: 24px 24px;
+}

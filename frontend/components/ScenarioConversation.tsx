@@ -188,7 +188,7 @@ export default function ScenarioConversation({
   return (
     <div
       style={{ background: "var(--color-bg)" }}
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col bg-speak"
     >
       {/* ── Header ── */}
       <div
@@ -406,23 +406,22 @@ export default function ScenarioConversation({
               onKeyDown={handleKeyDown}
               placeholder={voice.isSupported ? "Type or use mic..." : "Type your reply..."}
               rows={1}
-              disabled={sending || voice.isRecording}
+              disabled={sending}
               style={{
                 background: "var(--color-primary-soft)",
                 color: "var(--color-text)",
                 border: "1px solid var(--color-border)",
-                opacity: voice.isRecording ? 0.5 : 1,
               }}
               className="flex-1 resize-none rounded-xl px-4 py-3 text-[15px] outline-none focus:border-[color:var(--color-primary)] transition-colors placeholder:opacity-50"
             />
             <button
               onClick={handleSend}
-              disabled={!inputText.trim() || sending || voice.isRecording}
+              disabled={!inputText.trim() || sending}
               style={{
-                background: inputText.trim() && !sending && !voice.isRecording
+                background: inputText.trim() && !sending
                   ? "var(--color-primary)"
                   : "var(--color-border)",
-                color: inputText.trim() && !sending && !voice.isRecording
+                color: inputText.trim() && !sending
                   ? "#fff"
                   : "var(--color-text-secondary)",
               }}
