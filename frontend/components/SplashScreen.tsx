@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import LingonaLogo from "./LingonaLogo";
 
 const BRAND_NAME = "LINGONA";
 const TOTAL_DURATION = 3200; // total splash ms before fade-out starts
@@ -121,17 +122,15 @@ export default function SplashScreen() {
         <OrbitRing delay={0.8} size={210} duration={2.2} />
 
         {/* Logo — bouncy drop-in */}
-        <img
-          src="/lingona-logo.png"
-          alt="Lingona mascot"
-          className="relative z-10 object-contain"
+        <div
+          className="relative z-10"
           style={{
-            width: 100,
-            height: 100,
             opacity: 0,
             animation: "splashLogoDrop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards",
           }}
-        />
+        >
+          <LingonaLogo size={100} className="rounded-[22px]" />
+        </div>
 
         {/* Glow behind logo */}
         <div

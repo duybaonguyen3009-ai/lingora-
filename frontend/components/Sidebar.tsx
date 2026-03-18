@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import LingonaLogo from "./LingonaLogo";
 import {
   IconDashboard, IconBook, IconZap, IconPen, IconOpenBook,
   IconHeadphones, IconMic, IconBarChart, IconSettings, IconChevronLeft,
@@ -68,14 +69,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
       {/* Brand */}
       <div className="flex items-center gap-[10px] px-4 pt-5 pb-4 border-b border-white/[0.07] min-h-[72px] flex-shrink-0">
         <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
-          <Image
-            src="/lingona-logo.png"
-            alt="Lingona"
-            width={40}
-            height={40}
-            className="object-contain"
-            priority
-          />
+          <LingonaLogo size={40} />
         </div>
         <div
           className={cn(

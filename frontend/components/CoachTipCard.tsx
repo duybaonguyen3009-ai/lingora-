@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconX } from "./Icons";
+import LingonaLogo from "./LingonaLogo";
 
 const TIPS = [
   "Try speaking for 5 minutes each morning — consistency beats long sessions.",
@@ -26,11 +27,7 @@ export default function CoachTipCard() {
         borderLeft: "3px solid var(--color-primary)",
       }}
     >
-      <img
-        src="/lingona-logo.png"
-        alt=""
-        className="w-9 h-9 object-contain flex-shrink-0 mt-0.5"
-      />
+      <LingonaLogo size={36} className="flex-shrink-0 mt-0.5" />
 
       <div className="flex-1 min-w-0">
         <p
