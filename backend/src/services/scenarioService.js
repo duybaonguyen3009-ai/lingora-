@@ -141,6 +141,7 @@ async function submitTurn(sessionId, userId, content) {
   conversationHistory.push({ role: "user", content });
 
   // Generate AI response
+  console.log(`[ai] session: ${sessionId} | category: ${session.category} | turns: ${conversationHistory.length}`);
   const aiContent = await ai.generateResponse(
     session.system_prompt,
     conversationHistory,
@@ -208,6 +209,7 @@ async function endSession(sessionId, userId, durationMs) {
   }));
 
   // Score the conversation via AI provider
+  console.log(`[ai] scoring session: ${sessionId} | turns: ${conversationHistory.length}`);
   const scoreResult = await ai.scoreConversation(
     session.system_prompt,
     conversationHistory

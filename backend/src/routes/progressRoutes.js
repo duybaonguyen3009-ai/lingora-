@@ -11,7 +11,7 @@
  */
 
 const { Router }     = require("express");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, logOwnership } = require("../middleware/auth");
 const progressController = require("../controllers/progressController");
 
 const router = Router();
@@ -20,7 +20,7 @@ const router = Router();
 router.post("/lessons/:lessonId/complete", verifyToken, progressController.completeLesson);
 
 // Retrieve all completed lessons for a user.
-router.get("/users/:userId/progress",      verifyToken, progressController.getProgress);
+router.get("/users/:userId/progress",      verifyToken, logOwnership, progressController.getProgress);
 
 // Migrate guest-UUID progress into the authenticated user's account.
 // Called once, right after login/register, when the browser has a guest UUID.

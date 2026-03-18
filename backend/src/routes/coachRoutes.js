@@ -7,11 +7,11 @@
 
 const { Router }    = require('express');
 const { getFocus }  = require('../controllers/coachController');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, logOwnership } = require('../middleware/auth');
 
 const router = Router();
 
 // GET /api/v1/users/:userId/coach/focus
-router.get('/:userId/coach/focus', verifyToken, getFocus);
+router.get('/:userId/coach/focus', verifyToken, logOwnership, getFocus);
 
 module.exports = router;

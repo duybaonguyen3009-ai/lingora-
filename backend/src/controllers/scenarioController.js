@@ -216,9 +216,13 @@ async function synthesizeSpeech(req, res, next) {
     const { createTtsProvider } = require("../providers/tts/ttsProvider");
     const tts = createTtsProvider();
 
-    if (!tts.isAvailable()) {
-      console.log("[tts] Provider not available — returning 204");
-      return res.status(204).end(); // No audio available (mock mode)
+    const available = tts.isAvailable();
+    console.log(`[tts] provider: ${process.env.TTS_PROVIDER || "mock"}`);
+    console.log(`[tts] available: ${available}`);
+
+    if (!available) {
+      console.log(`[tts] status: FAILED — provider not available, returning 204`);
+      return res.status(204).end();
     }
 
     const { text, voice } = req.body;
@@ -226,14 +230,15 @@ async function synthesizeSpeech(req, res, next) {
       return sendError(res, { status: 400, message: "text is required (max 2000 chars)" });
     }
 
-    console.log(`[tts] Synthesizing ${text.length} chars, voice=${voice || "default"}`);
+    console.log(`[tts] chars: ${text.length}`);
     const audioBuffer = await tts.synthesize(text, { voice });
-    console.log(`[tts] Audio generated — ${audioBuffer.length} bytes`);
+    console.log(`[tts] bytes: ${audioBuffer.length}`);
+    console.log(`[tts] status: OK`);
     res.set("Content-Type", "audio/mpeg");
     res.set("Content-Length", audioBuffer.length);
     return res.send(audioBuffer);
   } catch (err) {
-    console.error(`[tts] synthesizeSpeech FAILED: ${err.message}`);
+    console.log(`[tts] status: FAILED — ${err.message}`);
     next(err);
   }
 }

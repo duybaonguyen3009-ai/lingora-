@@ -1,25 +1,21 @@
 /**
  * middleware/auth.js
  *
- * Two reusable middleware functions that protect routes:
+ * Three reusable middleware functions that protect routes:
  *
- *   verifyToken   – validates the Bearer JWT in the Authorization header
- *                   and attaches the decoded payload to req.user.
+ *   verifyToken      – validates the Bearer JWT in the Authorization header
+ *                      and attaches the decoded payload to req.user.
  *
- *   requireRole   – factory that returns a middleware enforcing that
- *                   req.user has one of the allowed roles.
+ *   requireRole      – factory that returns a middleware enforcing that
+ *                      req.user has one of the allowed roles.
+ *
+ *   logOwnership     – diagnostic middleware: logs token user vs route param
+ *                      user on every /users/:userId/* request.
  *
  * Usage:
- *   const { verifyToken, requireRole } = require("../middleware/auth");
+ *   const { verifyToken, requireRole, logOwnership } = require("../middleware/auth");
  *
- *   // Require any authenticated user:
- *   router.get("/me", verifyToken, controller.getMe);
- *
- *   // Require a specific role:
- *   router.post("/admin/lessons", verifyToken, requireRole("admin"), controller.createLesson);
- *
- *   // Require one of several roles:
- *   router.get("/classrooms", verifyToken, requireRole("teacher", "admin"), controller.list);
+ *   router.get("/:userId/gamification", verifyToken, logOwnership, controller.get);
  */
 
 const jwt    = require("jsonwebtoken");
@@ -53,6 +49,7 @@ function verifyToken(req, res, next) {
     const token = extractBearerToken(req.headers.authorization);
 
     if (!token) {
+      console.log(`[auth] 401 — no Bearer token | ${req.method} ${req.originalUrl}`);
       const err  = new Error("Authentication required. Please include a Bearer token.");
       err.status = 401;
       return next(err);
@@ -62,6 +59,7 @@ function verifyToken(req, res, next) {
     try {
       payload = jwt.verify(token, config.jwt.accessSecret);
     } catch (jwtErr) {
+      console.log(`[auth] 401 — ${jwtErr.name} | ${req.method} ${req.originalUrl}`);
       const err  = new Error(
         jwtErr.name === "TokenExpiredError"
           ? "Access token has expired. Please refresh your session."
@@ -82,6 +80,32 @@ function verifyToken(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+/**
+ * logOwnership middleware
+ *
+ * Diagnostic middleware for /users/:userId/* routes.
+ * Logs the authenticated user ID from the JWT vs the userId from the
+ * route params so identity mismatches are immediately visible.
+ *
+ * Must be placed AFTER verifyToken.
+ */
+function logOwnership(req, res, next) {
+  const tokenUser = req.user?.id || "(none)";
+  const routeUser = req.params.userId || "(none)";
+  const match     = tokenUser === routeUser;
+
+  // Capture response status after it's sent
+  const origEnd = res.end;
+  res.end = function (...args) {
+    console.log(
+      `[auth] token user: ${tokenUser} | route user: ${routeUser} | match: ${match} | status: ${res.statusCode} | ${req.method} ${req.originalUrl}`
+    );
+    origEnd.apply(this, args);
+  };
+
+  next();
 }
 
 /**
@@ -115,4 +139,4 @@ function requireRole(...allowedRoles) {
   };
 }
 
-module.exports = { verifyToken, requireRole };
+module.exports = { verifyToken, requireRole, logOwnership };

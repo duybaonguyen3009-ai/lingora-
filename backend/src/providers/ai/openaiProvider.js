@@ -123,7 +123,10 @@ async function generateResponse(systemPrompt, conversationHistory, options = {})
       ...conversationHistory,
     ];
 
-    console.log(`[ai] generateResponse — sending ${messages.length} messages to ${_model}`);
+    console.log(`[ai] provider: openai`);
+    console.log(`[ai] model: ${_model}`);
+    console.log(`[ai] messages: ${messages.length} total (system + ${conversationHistory.length} conversation)`);
+    console.log(`[ai] messages payload: ${JSON.stringify(messages.map(m => ({ role: m.role, content: m.content.slice(0, 120) + (m.content.length > 120 ? "..." : "") })))}`);
 
     const response = await withTimeout(
       openai.chat.completions.create({
@@ -137,14 +140,17 @@ async function generateResponse(systemPrompt, conversationHistory, options = {})
     const text = response.choices?.[0]?.message?.content?.trim() || "";
 
     if (!text) {
-      console.warn("[ai] OpenAI returned empty response — falling back to mock for generateResponse");
+      console.log(`[ai] response: (empty)`);
+      console.log(`[ai] status: FAILED — empty response, falling back to mock`);
       return mockAi.generateResponse(systemPrompt, conversationHistory, options);
     }
 
-    console.log(`[ai] generateResponse OK — ${text.length} chars`);
+    console.log(`[ai] response: ${text.slice(0, 200)}${text.length > 200 ? "..." : ""}`);
+    console.log(`[ai] status: OK`);
     return text;
   } catch (err) {
-    console.error(`[ai] generateResponse FAILED: ${err.message}`);
+    console.log(`[ai] response: (error)`);
+    console.log(`[ai] status: FAILED — ${err.message}`);
     return mockAi.generateResponse(systemPrompt, conversationHistory, options);
   }
 }
@@ -203,7 +209,9 @@ Scenario context: ${systemPrompt}`;
       ...conversationHistory,
     ];
 
-    console.log(`[ai] scoreConversation — sending ${messages.length} messages to ${_model}`);
+    console.log(`[ai] provider: openai (scoring)`);
+    console.log(`[ai] model: ${_model}`);
+    console.log(`[ai] messages: ${messages.length} total for scoring`);
 
     const response = await withTimeout(
       openai.chat.completions.create({
@@ -218,7 +226,8 @@ Scenario context: ${systemPrompt}`;
     const text = response.choices?.[0]?.message?.content?.trim() || "";
 
     if (!text) {
-      console.warn("[ai] OpenAI returned empty score response — using safe defaults");
+      console.log(`[ai] response: (empty)`);
+      console.log(`[ai] status: FAILED — empty score response, using defaults`);
       return { ...SAFE_SCORE_DEFAULTS };
     }
 
@@ -226,19 +235,23 @@ Scenario context: ${systemPrompt}`;
     try {
       parsed = JSON.parse(text);
     } catch {
-      console.warn("[ai] OpenAI score response is not valid JSON — using safe defaults");
+      console.log(`[ai] response: ${text.slice(0, 200)}`);
+      console.log(`[ai] status: FAILED — invalid JSON, using defaults`);
       return { ...SAFE_SCORE_DEFAULTS };
     }
 
     if (!validateScoreResult(parsed)) {
-      console.warn("[ai] OpenAI score response failed validation — using safe defaults");
+      console.log(`[ai] response: ${text.slice(0, 200)}`);
+      console.log(`[ai] status: FAILED — validation failed, using defaults`);
       return { ...SAFE_SCORE_DEFAULTS };
     }
 
-    console.log(`[ai] scoreConversation OK — overall: ${parsed.overallScore}`);
+    console.log(`[ai] response: overall=${parsed.overallScore} fluency=${parsed.fluency} vocab=${parsed.vocabulary} grammar=${parsed.grammar}`);
+    console.log(`[ai] status: OK`);
     return parsed;
   } catch (err) {
-    console.error(`[ai] scoreConversation FAILED: ${err.message}`);
+    console.log(`[ai] response: (error)`);
+    console.log(`[ai] status: FAILED — ${err.message}`);
     return { ...SAFE_SCORE_DEFAULTS };
   }
 }
