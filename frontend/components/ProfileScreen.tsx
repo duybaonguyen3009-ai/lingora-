@@ -81,7 +81,7 @@ function StreakCard({ current, longest }: { current: number; longest: number }) 
   );
 }
 
-function BadgeGrid({ badges }: { badges: Array<{ slug: string; name: string; earnedAt: string }> }) {
+function BadgeGrid({ badges }: { badges: Array<{ slug: string; name: string; awarded_at?: string }> }) {
   if (badges.length === 0) return null;
 
   const BADGE_ICONS: Record<string, string> = {

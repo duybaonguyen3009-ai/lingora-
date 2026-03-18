@@ -9,8 +9,10 @@
  */
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { IconMic, IconHeadphones, IconOpenBook, IconPen } from "./Icons";
 import { getScenarios } from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
 import type { Scenario } from "@/lib/types";
 
 interface ExamScreenProps {
@@ -67,6 +69,9 @@ const EXAM_MODULES: ExamModule[] = [
 ];
 
 export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => !!s.user);
+  const authReady = !useAuthStore((s) => s.isLoading);
   const [ieltsScenario, setIeltsScenario] = useState<Scenario | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +90,15 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
     return () => { cancelled = true; };
   }, []);
 
+  /** Gate exam start behind authentication */
+  function handleStartExam(scenario: Scenario) {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+    onStartIelts(scenario);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -100,6 +114,31 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
         </p>
       </div>
 
+      {/* Auth prompt for guests */}
+      {authReady && !isAuthenticated && (
+        <button
+          onClick={() => router.push("/login")}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 hover:scale-[1.01]"
+          style={{
+            background: "var(--color-examiner)12",
+            border: "1px solid var(--color-examiner)30",
+          }}
+        >
+          <span className="text-[20px]">🔒</span>
+          <div className="flex-1">
+            <span className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+              Sign in to start exam practice
+            </span>
+            <span className="block text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+              Create a free account to track your progress
+            </span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-examiner)" }}>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
+
       {/* IELTS Speaking — featured card */}
       {EXAM_MODULES.filter(m => m.available).map((mod) => {
         const isLoading = mod.id === "speaking" && loading;
@@ -107,7 +146,7 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
           <button
             key={mod.id}
             onClick={() => {
-              if (ieltsScenario) onStartIelts(ieltsScenario);
+              if (ieltsScenario) handleStartExam(ieltsScenario);
             }}
             disabled={isLoading || (mod.id === "speaking" && !ieltsScenario)}
             className="relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-200 card-hover disabled:cursor-default disabled:hover:transform-none"

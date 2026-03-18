@@ -137,13 +137,19 @@ async function apiFetchAuth<T>(path: string): Promise<T> {
       cache:       "no-store",
     });
 
-  let res = await makeReq(useAuthStore.getState().accessToken);
+  const initialToken = useAuthStore.getState().accessToken;
+  let res = await makeReq(initialToken);
 
   if (res.status === 401) {
     const ok = await tryRefresh();
     if (!ok) {
       useAuthStore.getState().clearAuth();
-      throw new Error("Session expired. Please log in again.");
+      // Distinguish "never logged in" from "session expired"
+      throw new Error(
+        initialToken
+          ? "Session expired. Please log in again."
+          : "Please log in to continue."
+      );
     }
     res = await makeReq(useAuthStore.getState().accessToken);
   }
@@ -169,13 +175,19 @@ async function apiPostAuth<T>(path: string, body: unknown): Promise<T> {
       cache:       "no-store",
     });
 
-  let res = await makeReq(useAuthStore.getState().accessToken);
+  const initialToken = useAuthStore.getState().accessToken;
+  let res = await makeReq(initialToken);
 
   if (res.status === 401) {
     const ok = await tryRefresh();
     if (!ok) {
       useAuthStore.getState().clearAuth();
-      throw new Error("Session expired. Please log in again.");
+      // Distinguish "never logged in" from "session expired"
+      throw new Error(
+        initialToken
+          ? "Session expired. Please log in again."
+          : "Please log in to continue."
+      );
     }
     res = await makeReq(useAuthStore.getState().accessToken);
   }

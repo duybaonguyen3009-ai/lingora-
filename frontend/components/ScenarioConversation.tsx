@@ -9,11 +9,13 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   startScenarioSession,
   submitScenarioTurn,
   endScenarioSession,
 } from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
 import type {
   Scenario,
   ConversationTurn,
@@ -52,6 +54,8 @@ export default function ScenarioConversation({
   onClose,
   onComplete,
 }: ScenarioConversationProps) {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => !!s.user);
   const [phase, setPhase] = useState<Phase>("loading");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
@@ -81,6 +85,13 @@ export default function ScenarioConversation({
   // Start session on mount
   useEffect(() => {
     let cancelled = false;
+
+    // Gate behind authentication
+    if (!useAuthStore.getState().accessToken) {
+      setError("Please log in to start a conversation.");
+      setPhase("error");
+      return;
+    }
 
     startScenarioSession(scenario.id)
       .then((result) => {
@@ -261,9 +272,21 @@ export default function ScenarioConversation({
 
           {/* Error */}
           {phase === "error" && (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <div style={{ color: "var(--color-warning)" }} className="text-lg">{error || "Something went wrong"}</div>
-              <button onClick={onClose} style={{ color: "var(--color-primary)" }} className="underline text-[15px]">Go back</button>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="text-[40px]">{!isAuthenticated ? "🔒" : "⚠️"}</div>
+              <div style={{ color: "var(--color-warning)" }} className="text-lg font-medium text-center">{error || "Something went wrong"}</div>
+              <div className="flex gap-3">
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-6 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
+                    style={{ background: "var(--color-success)", color: "#fff" }}
+                  >
+                    Sign In
+                  </button>
+                )}
+                <button onClick={onClose} style={{ color: "var(--color-primary)" }} className="underline text-[15px]">Go back</button>
+              </div>
             </div>
           )}
 

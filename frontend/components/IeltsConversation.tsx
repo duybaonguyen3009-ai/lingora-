@@ -16,11 +16,14 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   startScenarioSession,
   submitScenarioTurn,
   endScenarioSession,
+  synthesizeSpeech,
 } from "@/lib/api";
+import { useAuthStore } from "@/lib/stores/authStore";
 import type {
   Scenario,
   ConversationTurn,
@@ -39,6 +42,10 @@ const PART3_MAX_TURNS = 5;
 const PREP_SECONDS     = 60;
 const SPEAKING_SECONDS = 120;
 const STORAGE_KEY      = "ielts-session";
+
+/** Natural delay range (ms) before showing examiner response — feels human */
+const EXAMINER_DELAY_MIN = 1200;
+const EXAMINER_DELAY_MAX = 2400;
 
 const SAFE_SCORE_DEFAULTS: EndSessionResult = {
   overallScore:  60,
@@ -397,6 +404,8 @@ export default function IeltsConversation({
   onClose,
   onComplete,
 }: IeltsConversationProps) {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => !!s.user);
   const [phase, setPhase]               = useState<IeltsPhase>("loading");
   const [sessionId, setSessionId]       = useState<string | null>(null);
   const [turns, setTurns]               = useState<ConversationTurn[]>([]);
@@ -412,6 +421,9 @@ export default function IeltsConversation({
   const scrollRef     = useRef<HTMLDivElement>(null);
   const inputRef      = useRef<HTMLTextAreaElement>(null);
 
+  const [examinerSpeaking, setExaminerSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   // Voice input — populates inputText, user sends manually
   const voice = useVoiceInput(
     useCallback((transcript: string) => {
@@ -426,12 +438,71 @@ export default function IeltsConversation({
     }
   }, [turns, isTyping, phase]);
 
+  /**
+   * Play examiner's question aloud via TTS, then optionally auto-start mic.
+   * Gracefully falls back to no audio if TTS is unavailable.
+   */
+  const playExaminerVoice = useCallback(async (text: string, autoMic = true) => {
+    setExaminerSpeaking(true);
+    try {
+      const blob = await synthesizeSpeech(text);
+      if (blob && blob.size > 0) {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          setExaminerSpeaking(false);
+          audioRef.current = null;
+          // Auto-start mic after examiner finishes speaking
+          if (autoMic && voice.isSupported && !voice.isRecording) {
+            voice.startRecording();
+          }
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          setExaminerSpeaking(false);
+          audioRef.current = null;
+        };
+        await audio.play().catch(() => setExaminerSpeaking(false));
+      } else {
+        // No TTS — just clear speaking state after a brief moment
+        setTimeout(() => setExaminerSpeaking(false), 800);
+      }
+    } catch {
+      setExaminerSpeaking(false);
+    }
+  }, [voice]);
+
+  /** Natural delay — returns a promise that resolves after a random human-like pause */
+  function examinerDelay(): Promise<void> {
+    const ms = EXAMINER_DELAY_MIN + Math.random() * (EXAMINER_DELAY_MAX - EXAMINER_DELAY_MIN);
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // Cleanup TTS audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   // ── Session init ──────────────────────────────────────────────────────────
 
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // Gate behind authentication — exam features require a logged-in user
+      if (!useAuthStore.getState().accessToken) {
+        setErrorMsg("Please log in to start the exam.");
+        setPhase("error");
+        return;
+      }
+
       const saved = loadSession(scenario.id);
       if (saved && saved.sessionId) {
         if (!cancelled) {
@@ -462,6 +533,11 @@ export default function IeltsConversation({
 
         setSessionId(result.sessionId);
         setTurns(mappedTurns);
+
+        // Brief pause before revealing part 1 — feels like entering an exam room
+        await examinerDelay();
+        if (cancelled) return;
+
         setPhase("part1");
         saveSession({
           scenarioId: scenario.id,
@@ -472,6 +548,12 @@ export default function IeltsConversation({
           part1TurnCount: 0,
           part3TurnCount: 0,
         });
+
+        // Auto-play TTS for the first examiner question
+        const firstAi = mappedTurns.find((t) => t.role === "assistant");
+        if (firstAi) {
+          playExaminerVoice(firstAi.content, true);
+        }
       } catch (err: unknown) {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : "Failed to start session";
@@ -482,7 +564,7 @@ export default function IeltsConversation({
 
     init();
     return () => { cancelled = true; };
-  }, [scenario.id]);
+  }, [scenario.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── End session ───────────────────────────────────────────────────────────
 
@@ -491,8 +573,12 @@ export default function IeltsConversation({
     clearSession();
     try {
       const durationMs = Date.now() - startTimeRef.current;
-      const result = await endScenarioSession(sid, durationMs);
-      setScores(result);
+      // Start scoring + show ending UI for at least 2.5s (feels like real analysis)
+      const [result] = await Promise.all([
+        endScenarioSession(sid, durationMs),
+        new Promise((r) => setTimeout(r, 2500)),
+      ]);
+      setScores(result as EndSessionResult);
       onComplete?.();
     } catch {
       setScores({ ...SAFE_SCORE_DEFAULTS });
@@ -507,9 +593,12 @@ export default function IeltsConversation({
     const content = inputText.trim();
     if (!sessionId || !content || isTyping) return;
 
-    // Stop recording if active
-    if (voice.isRecording) {
-      voice.stopRecording();
+    // Stop recording and TTS if active
+    if (voice.isRecording) voice.stopRecording();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setExaminerSpeaking(false);
     }
 
     setInputText("");
@@ -534,33 +623,47 @@ export default function IeltsConversation({
     try {
       const result = await submitScenarioTurn(sessionId, content);
 
-      const confirmedTurns: ConversationTurn[] = [
-        {
-          id: `user-${result.userTurn.turnIndex}`,
-          turnIndex: result.userTurn.turnIndex,
-          role: "user",
-          content: result.userTurn.content,
-          audioStorageKey: null,
-          scores: null,
-          feedback: null,
-          createdAt: result.userTurn.createdAt,
-        },
-        {
-          id: `ai-${result.aiTurn.turnIndex}`,
-          turnIndex: result.aiTurn.turnIndex,
-          role: "assistant",
-          content: result.aiTurn.content,
-          audioStorageKey: null,
-          scores: null,
-          feedback: null,
-          createdAt: result.aiTurn.createdAt,
-        },
-      ];
+      // Show user turn immediately, but hold back AI response for natural feel
+      const userTurn: ConversationTurn = {
+        id: `user-${result.userTurn.turnIndex}`,
+        turnIndex: result.userTurn.turnIndex,
+        role: "user",
+        content: result.userTurn.content,
+        audioStorageKey: null,
+        scores: null,
+        feedback: null,
+        createdAt: result.userTurn.createdAt,
+      };
 
+      // Replace optimistic user message with confirmed
       setTurns((prev) => {
         const withoutTemp = prev.filter((t) => t.id !== tempId);
+        return [...withoutTemp, userTurn];
+      });
+
+      // Natural examiner thinking delay
+      await examinerDelay();
+
+      const aiTurn: ConversationTurn = {
+        id: `ai-${result.aiTurn.turnIndex}`,
+        turnIndex: result.aiTurn.turnIndex,
+        role: "assistant",
+        content: result.aiTurn.content,
+        audioStorageKey: null,
+        scores: null,
+        feedback: null,
+        createdAt: result.aiTurn.createdAt,
+      };
+
+      const confirmedTurns = [userTurn, aiTurn];
+
+      setTurns((prev) => {
+        const withoutTemp = prev.filter((t) => t.id !== tempId && t.id !== userTurn.id);
         return [...withoutTemp, ...confirmedTurns];
       });
+
+      // Play examiner response via TTS (auto-starts mic after)
+      playExaminerVoice(result.aiTurn.content, true);
 
       if (phase === "part1") setPart1TurnCount(newPart1Count);
       if (phase === "part3") setPart3TurnCount(newPart3Count);
@@ -799,39 +902,85 @@ export default function IeltsConversation({
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="max-w-xl mx-auto px-4 py-5 flex flex-col gap-5">
 
-          {/* Loading */}
+          {/* Loading — entering the exam room */}
           {phase === "loading" && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 animate-phase-in">
-              <ExaminerAvatar size="md" speaking />
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20 animate-phase-in">
+              <div className="relative">
+                <ExaminerAvatar size="md" speaking />
+                <div className="absolute -inset-3 rounded-full animate-examiner-pulse" style={{ background: "var(--color-examiner-soft)", opacity: 0.3 }} />
+              </div>
               <div className="text-center">
-                <p className="text-[15px] font-medium" style={{ color: "var(--color-text)" }}>
-                  Preparing your speaking test...
+                <p className="font-sora font-bold text-[17px]" style={{ color: "var(--color-text)" }}>
+                  Entering exam room...
                 </p>
-                <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                  Your examiner will be with you shortly
+                <p className="text-[13px] mt-2 max-w-[280px] mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                  Your examiner is reviewing your profile. The test will begin shortly.
                 </p>
               </div>
-              <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "var(--color-border)", borderTopColor: "var(--color-examiner)" }} />
+              <div className="flex gap-1.5 mt-2">
+                {[0, 200, 400].map((delay) => (
+                  <span key={delay} style={{ background: "var(--color-examiner)", animationDelay: `${delay}ms` }} className="w-2 h-2 rounded-full animate-typing-dot opacity-60" />
+                ))}
+              </div>
             </div>
           )}
 
           {/* Error */}
           {phase === "error" && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-20">
-              <div style={{ color: "var(--color-warning)" }} className="text-lg">{errorMsg || "Something went wrong"}</div>
-              <button onClick={onClose} style={{ color: "var(--color-examiner)" }} className="underline text-[15px]">Go back</button>
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+              <div className="text-[40px]">{!isAuthenticated ? "🔒" : "⚠️"}</div>
+              <div style={{ color: "var(--color-warning)" }} className="text-lg font-medium text-center">
+                {errorMsg || "Something went wrong"}
+              </div>
+              <div className="flex gap-3">
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-6 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
+                    style={{ background: "var(--color-examiner)", color: "#fff" }}
+                  >
+                    Sign In
+                  </button>
+                )}
+                <button onClick={onClose} style={{ color: "var(--color-examiner)" }} className="underline text-[15px]">
+                  Go back
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Ending */}
+          {/* Ending — score analysis moment */}
           {phase === "ending" && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 animate-phase-in">
-              <ExaminerAvatar speaking />
-              <div className="text-center">
-                <p className="text-[15px] font-medium" style={{ color: "var(--color-text)" }}>Analysing your performance...</p>
-                <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>Your examiner is reviewing your answers</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20 animate-phase-in">
+              <div className="relative">
+                <ExaminerAvatar speaking />
+                <div className="absolute -inset-4 rounded-full" style={{ background: "var(--color-examiner-soft)", opacity: 0.15, animation: "examinerPulse 2s ease-in-out infinite" }} />
               </div>
-              <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "var(--color-border)", borderTopColor: "var(--color-examiner)" }} />
+              <div className="text-center">
+                <p className="font-sora font-bold text-[17px]" style={{ color: "var(--color-text)" }}>
+                  That concludes the speaking test
+                </p>
+                <p className="text-[13px] mt-2 max-w-[260px] mx-auto leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                  Your examiner is analysing your fluency, vocabulary, and grammar...
+                </p>
+              </div>
+              {/* Animated score bars loading */}
+              <div className="w-48 flex flex-col gap-2 mt-2">
+                {["Fluency", "Vocabulary", "Grammar"].map((label, i) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-[10px] w-16 text-right" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          background: "var(--color-examiner)",
+                          animation: `scoreBarLoad 2s ease-in-out ${i * 0.3}s infinite`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -914,7 +1063,7 @@ export default function IeltsConversation({
 
                 {/* Current question from examiner */}
                 {latestQuestion && (
-                  <ExaminerQuestion content={latestQuestion} isSpeaking={!isTyping} />
+                  <ExaminerQuestion content={latestQuestion} isSpeaking={examinerSpeaking} />
                 )}
 
                 {/* Thinking indicator */}

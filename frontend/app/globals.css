@@ -256,6 +256,82 @@ body {
   background-size: 100% 100%, 28px 28px;
 }
 
+/* ─── Animated Gradient Blobs ────────────────────────────────────── */
+/* CSS-only animated blobs — low opacity, blurred, 8-15s loops */
+
+@keyframes blobFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-10px, 15px) scale(0.95); }
+  75% { transform: translate(20px, 10px) scale(1.02); }
+}
+@keyframes blobFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 20px) scale(1.08); }
+  66% { transform: translate(15px, -15px) scale(0.93); }
+}
+@keyframes blobFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(-20px, -25px) scale(1.04); }
+  40% { transform: translate(25px, 10px) scale(0.97); }
+  60% { transform: translate(-10px, 20px) scale(1.06); }
+  80% { transform: translate(15px, -10px) scale(0.98); }
+}
+
+.animated-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.blob-1 {
+  width: 300px; height: 300px;
+  top: -5%; right: -5%;
+  background: radial-gradient(circle, rgba(124,92,252,0.15) 0%, transparent 70%);
+  animation: blobFloat1 12s ease-in-out infinite;
+}
+.blob-2 {
+  width: 250px; height: 250px;
+  bottom: 10%; left: -8%;
+  background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
+  animation: blobFloat2 10s ease-in-out infinite;
+}
+.blob-3 {
+  width: 200px; height: 200px;
+  top: 40%; right: 10%;
+  background: radial-gradient(circle, rgba(52,211,153,0.10) 0%, transparent 70%);
+  animation: blobFloat3 14s ease-in-out infinite;
+}
+
+/* Center glow behind main content card */
+.center-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,92,252,0.08) 0%, transparent 60%);
+  filter: blur(60px);
+  pointer-events: none;
+  animation: blobFloat1 15s ease-in-out infinite;
+}
+
+/* Dark mode — slightly higher opacity for blobs */
+.dark .blob-1 {
+  background: radial-gradient(circle, rgba(124,92,252,0.22) 0%, transparent 70%);
+}
+.dark .blob-2 {
+  background: radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 70%);
+}
+.dark .blob-3 {
+  background: radial-gradient(circle, rgba(52,211,153,0.14) 0%, transparent 70%);
+}
+.dark .center-glow {
+  background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 60%);
+}
+
 /* ─── IELTS Exam Specific ─────────────────────────────────────────── */
 
 .exam-question-appear {
@@ -281,4 +357,26 @@ body {
 }
 .animate-timer-urgent {
   animation: timerUrgent 1s ease-in-out infinite;
+}
+
+/* Score bar loading animation (ending phase) */
+@keyframes scoreBarLoad {
+  0% { width: 10%; opacity: 0.4; }
+  50% { width: 80%; opacity: 1; }
+  100% { width: 30%; opacity: 0.4; }
+}
+
+/* Examiner entrance glow */
+@keyframes examinerGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(124,92,252,0.15); }
+  50% { box-shadow: 0 0 40px rgba(124,92,252,0.3); }
+}
+
+/* Part transition slide */
+@keyframes partTransitionIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-part-transition {
+  animation: partTransitionIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }

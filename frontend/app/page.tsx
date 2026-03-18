@@ -14,6 +14,7 @@ import ScenarioConversation from "@/components/ScenarioConversation";
 import IeltsConversation from "@/components/IeltsConversation";
 import ExamScreen from "@/components/ExamScreen";
 import ProfileScreen from "@/components/ProfileScreen";
+import AnimatedBackground from "@/components/AnimatedBackground";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
@@ -105,11 +106,21 @@ export default function HomePage() {
     activeTab === "exam" ? "bg-exam" :
     activeTab === "practice" ? "bg-practice" : "";
 
+  const blobVariant: "expressive" | "subtle" | "minimal" | "none" =
+    activeTab === "home" ? "expressive" :
+    activeTab === "speak" ? "subtle" :
+    activeTab === "exam" ? "minimal" :
+    activeTab === "practice" ? "subtle" : "none";
+
   return (
-    <div className={`flex flex-col min-h-dvh ${bgClass}`} style={{ backgroundColor: "var(--color-bg)" }}>
+    <div className={`flex flex-col min-h-dvh ${bgClass} relative`} style={{ backgroundColor: "var(--color-bg)" }}>
+      <AnimatedBackground
+        variant={blobVariant}
+        centerGlow={activeTab === "home" || activeTab === "speak"}
+      />
       <Topbar streak={displayStreak} />
 
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="flex-1 overflow-y-auto pb-24 relative z-10">
         <div className="max-w-xl mx-auto px-5 py-6">
 
           {/* ── HOME TAB ── */}

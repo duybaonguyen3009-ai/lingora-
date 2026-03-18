@@ -109,9 +109,14 @@ When scale or team structure justifies extraction, these are the likely first ca
 | XP ledger + gamification | ✅ Done — xp_ledger, streaks, badges, leaderboard, fill-in-blank quiz |
 | Pronunciation practice | ✅ Done — provider abstraction, mock storage/speech, audio recorder, phoneme feedback UI |
 | UI/UX overhaul | ✅ Done — speaking-first homepage, dark/light theme (CSS variables + next-themes), BottomNav, simplified Topbar, ~294 color migrations |
-| Scenario speaking | ❌ Not started — **NEXT** |
-| Real providers (Azure Speech, R2, OpenAI) | ❌ Not started |
-| AI study coach (rules-based) | ❌ Not started |
+| Scenario speaking | ✅ Done — 12 scenarios, AI conversation, session lifecycle |
+| Real providers (Azure Speech, R2, OpenAI) | ✅ Done (R2 pending credentials) — Azure Speech REST, OpenAI GPT-4o-mini + TTS |
+| AI study coach (rules-based) | ✅ Done — rules engine, homepage TodayFocusCard, deep-linking |
+| IELTS Speaking exam | ✅ Done — 3-part simulation, cue cards, timers, voice input |
+| Auth gate for protected features | ✅ Done — exam/scenario start requires login, login prompt UI |
+| TTS examiner voice | ✅ Done — OpenAI TTS provider, auto-play + auto-mic |
+| Animated background system | ✅ Done — CSS blob animations, center glow, per-tab variants |
+| Profile section | ✅ Done — LevelBadge, StreakCard, BadgeGrid, speaking metrics |
 | Admin CMS | ❌ Not started |
 | Monetization | ❌ Not started |
 | Grammar & writing | ❌ Not started (delayed — speaking-first) |
@@ -230,6 +235,20 @@ Changes applied:
 **Remaining in Phase 4b:**
 - ⬜ Real Cloudflare R2 storage (`r2Storage.js`) — do when user has R2 credentials
 - ⬜ Ensure audio stored as WAV for best Azure Speech accuracy (MediaRecorder records WebM by default)
+
+**Also completed (product refinement pass):**
+- ✅ Auth gate on exam/scenario features — guest users see "Sign in to start" prompt instead of cryptic "Session expired" error
+- ✅ Improved error messages in `api.ts` — distinguishes "Please log in" (never had session) from "Session expired" (had session, lost it)
+- ✅ ExamScreen login prompt banner for unauthenticated users
+- ✅ IeltsConversation + ScenarioConversation error states show "Sign In" button when not authenticated
+- ✅ Natural examiner delays (1.2–2.4s random pause before AI response appears) — feels human
+- ✅ TTS auto-play for examiner questions (via `synthesizeSpeech` API) + auto-start mic after playback ends
+- ✅ Exam room intro sequence ("Entering exam room...") instead of instant question
+- ✅ Ending phase shows animated score bar analysis UI with 2.5s minimum display
+- ✅ AnimatedBackground component — CSS-only gradient blobs (8-15s loops), 3 variants (expressive/subtle/minimal), center glow option
+- ✅ Per-tab blob variants: home=expressive, speak/practice=subtle, exam=minimal
+- ✅ ProfileScreen BadgeGrid type fix (`earnedAt` → `awarded_at` to match `Badge` type)
+- ✅ Hero.tsx unescaped entities fix (build error)
 
 ---
 
@@ -535,3 +554,8 @@ Tasks in order:
 | `backend/src/routes/coachRoutes.js` | Coach routes — mounted at `/api/v1/users` |
 | `frontend/hooks/useTodayFocus.ts` | Fetches focus recommendations; returns empty array on error (graceful) |
 | `frontend/components/TodayFocusCard.tsx` | Homepage coach card — colour-coded label pills, action buttons, renders nothing when empty |
+| `frontend/components/AnimatedBackground.tsx` | CSS-only animated gradient blobs — 3 variants (expressive/subtle/minimal), center glow |
+| `frontend/components/ProfileScreen.tsx` | Profile tab — LevelBadge, StreakCard, BadgeGrid, speaking metrics chart |
+| `frontend/components/ExamScreen.tsx` | Exam hub — IELTS featured card, coming soon modules, auth gate |
+| `backend/src/providers/tts/ttsProvider.js` | TTS factory — returns mock or OpenAI provider based on TTS_PROVIDER env |
+| `backend/src/providers/tts/openaiTts.js` | OpenAI TTS — Audio API, 6 voice options, mp3 output |

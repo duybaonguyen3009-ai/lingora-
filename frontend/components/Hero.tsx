@@ -61,7 +61,7 @@ export default function Hero() {
           </div>
 
           <p className="text-[12.5px] text-[#A6B3C2] italic leading-[1.4] mb-5 max-w-[380px]">
-            "Consistency is the key to mastery. Every lesson you complete moves you closer to fluency."
+            &ldquo;Consistency is the key to mastery. Every lesson you complete moves you closer to fluency.&rdquo;
           </p>
 
           <button
