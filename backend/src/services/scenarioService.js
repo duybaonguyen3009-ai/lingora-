@@ -20,8 +20,13 @@ const ai = createAiProvider();
 // IELTS Constants
 // ---------------------------------------------------------------------------
 
-const IELTS_PART1_QUESTIONS = 5;
-const IELTS_PART3_QUESTIONS = 5;
+const IELTS_PART1_QUESTIONS_PER_BLOCK = 3;
+const IELTS_PART1_TOPIC_BLOCKS = 2;
+const IELTS_PART1_TOTAL_QUESTIONS = IELTS_PART1_QUESTIONS_PER_BLOCK * IELTS_PART1_TOPIC_BLOCKS; // 6
+const IELTS_PART3_QUESTIONS = 4;
+
+// Part 3 discussion tiers — each question escalates
+const PART3_TIERS = ["concrete", "comparative", "analytical", "evaluative"];
 
 // ---------------------------------------------------------------------------
 // IELTS Part 1 Topic Sets — diverse personal/familiar topics
@@ -142,18 +147,34 @@ const IELTS_CUE_CARDS = [
  * Create the initial IELTS state for a new session.
  */
 function createInitialIeltsState(cueCardIndex) {
-  const topicSetIndex = Math.floor(Math.random() * IELTS_PART1_TOPIC_SETS.length);
+  // Select 2 different topic sets for Part 1 topic blocks
+  const allIndices = Array.from({ length: IELTS_PART1_TOPIC_SETS.length }, (_, i) => i);
+  const shuffled = allIndices.sort(() => Math.random() - 0.5);
+  const topicSetIndices = [shuffled[0], shuffled[1]];
+
   return {
     part: 1,
-    phase: "question",
+    phase: "opening",         // NEW: starts with opening, not question
     questionIndex: 0,
     cueCardIndex,
-    topicSetIndex,
-    // Track user response quality for Part 3 adaptive difficulty
-    userWordCounts: [],       // word count per real user turn
-    userResponses: [],        // raw text of real user turns (for vocabulary analysis)
-    userResponseCount: 0,     // number of substantive user turns
-    transitionHistory: ["init → part1:question:0"],
+
+    // ── Examiner Brain: Part 1 Topic Engine ──
+    topicSetIndices,          // 2 topic set indices for 2 blocks
+    currentTopicBlock: 0,     // which topic block we're in (0 or 1)
+
+    // ── Examiner Brain: Response Policy ──
+    lastAcknowledgment: "",   // tracks last acknowledgment to avoid repetition
+    questionsAskedSummary: [], // brief angles already covered
+
+    // ── Examiner Brain: Part 3 Discussion Ladder ──
+    part3Tier: 0,             // 0=concrete, 1=comparative, 2=analytical, 3=evaluative
+    part3PrevWordCount: 0,    // word count of previous Part 3 answer (for de-escalation)
+
+    // ── Quality tracking ──
+    userWordCounts: [],
+    userResponses: [],
+    userResponseCount: 0,
+    transitionHistory: ["init → part1:opening:0"],
   };
 }
 
@@ -168,16 +189,35 @@ function advanceIeltsState(currentState) {
   const next = { ...currentState, transitionHistory: [...currentState.transitionHistory] };
   const from = `part${next.part}:${next.phase}:${next.questionIndex}`;
 
+  // ── Part 1: opening → id_check ──
+  if (next.part === 1 && next.phase === "opening") {
+    next.phase = "id_check";
+    next.transitionHistory.push(`${from} → part1:id_check:0`);
+    return next;
+  }
+
+  // ── Part 1: id_check → question:0 (first topic block) ──
+  if (next.part === 1 && next.phase === "id_check") {
+    next.phase = "question";
+    next.questionIndex = 0;
+    next.transitionHistory.push(`${from} → part1:question:0`);
+    return next;
+  }
+
   // ── Part 1: question → question → ... → transition_to_part2 ──
   if (next.part === 1 && next.phase === "question") {
-    if (next.questionIndex + 1 >= IELTS_PART1_QUESTIONS) {
+    if (next.questionIndex + 1 >= IELTS_PART1_TOTAL_QUESTIONS) {
       // All Part 1 questions asked → transition to Part 2
       next.part = 2;
       next.phase = "transition_to_part2";
       next.questionIndex = 0;
     } else {
-      // Next Part 1 question
       next.questionIndex += 1;
+      // Update topic block when crossing boundary
+      const newBlock = Math.floor(next.questionIndex / IELTS_PART1_QUESTIONS_PER_BLOCK);
+      if (newBlock !== next.currentTopicBlock) {
+        next.currentTopicBlock = newBlock;
+      }
     }
     next.transitionHistory.push(`${from} → part${next.part}:${next.phase}:${next.questionIndex}`);
     return next;
@@ -216,6 +256,7 @@ function advanceIeltsState(currentState) {
   // ── Part 3: transition_to_part3 → question_p3 ──
   if (next.part === 3 && next.phase === "transition_to_part3") {
     next.phase = "question_p3";
+    next.part3Tier = 0; // Start at concrete tier
     next.transitionHistory.push(`${from} → part3:question_p3:0`);
     return next;
   }
@@ -226,6 +267,14 @@ function advanceIeltsState(currentState) {
       next.phase = "complete";
     } else {
       next.questionIndex += 1;
+      // ── Discussion Ladder: advance tier ──
+      const baseTier = next.questionIndex; // 0→0, 1→1, 2→2, 3→3
+      // De-escalation: if previous answer was very short (<15 words), drop one tier
+      if (next.part3PrevWordCount > 0 && next.part3PrevWordCount < 15 && baseTier > 0) {
+        next.part3Tier = Math.max(0, baseTier - 1);
+      } else {
+        next.part3Tier = Math.min(baseTier, PART3_TIERS.length - 1);
+      }
     }
     next.transitionHistory.push(`${from} → part${next.part}:${next.phase}:${next.questionIndex}`);
     return next;
@@ -290,12 +339,56 @@ function analyzeResponseQuality(state) {
   return { level, avgWords, vocabRatio, complexityAvg };
 }
 
+// ---------------------------------------------------------------------------
+// Examiner Brain — Helper functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Get the current topic set for the active Part 1 block.
+ */
+function getCurrentTopicSet(state) {
+  const blockIdx = state.currentTopicBlock || 0;
+  const indices = state.topicSetIndices || [0, 1];
+  const topicIdx = indices[Math.min(blockIdx, indices.length - 1)];
+  return IELTS_PART1_TOPIC_SETS[topicIdx % IELTS_PART1_TOPIC_SETS.length];
+}
+
+/**
+ * Get the question hint for the current position within the current topic block.
+ */
+function getQuestionHint(state) {
+  const topicSet = getCurrentTopicSet(state);
+  const posInBlock = state.questionIndex % IELTS_PART1_QUESTIONS_PER_BLOCK;
+  return topicSet.questions[Math.min(posInBlock, topicSet.questions.length - 1)];
+}
+
+/**
+ * Check if we're at the start of a new topic block (topic transition needed).
+ */
+function isTopicTransition(state) {
+  return state.questionIndex > 0 && state.questionIndex % IELTS_PART1_QUESTIONS_PER_BLOCK === 0;
+}
+
+/**
+ * Build anti-repetition context for the examiner prompt.
+ */
+function buildAntiRepetitionContext(state) {
+  const parts = [];
+  if (state.lastAcknowledgment) {
+    parts.push(`Your last acknowledgment was "${state.lastAcknowledgment}". You MUST use a DIFFERENT one this time.`);
+  }
+  if (state.questionsAskedSummary && state.questionsAskedSummary.length > 0) {
+    parts.push(`Angles already covered in this session (do NOT repeat): ${state.questionsAskedSummary.join(", ")}.`);
+  }
+  return parts.join("\n");
+}
+
 /**
  * Build a strict IELTS examiner system prompt based on current state.
+ * The examiner brain provides specific decision context — not generic instructions.
  */
 function buildIeltsSystemPrompt(state) {
   const cueCard = IELTS_CUE_CARDS[state.cueCardIndex % IELTS_CUE_CARDS.length];
-  const topicSet = IELTS_PART1_TOPIC_SETS[state.topicSetIndex % IELTS_PART1_TOPIC_SETS.length];
 
   const base = `You are a certified IELTS Speaking examiner conducting an official IELTS Speaking test in a quiet examination room. You have years of experience. You are calm, professional, and genuinely attentive to what the candidate says.
 
@@ -303,16 +396,6 @@ EXAMINER PERSONALITY:
 - You are a real person, not a machine. You have warmth but maintain professional distance.
 - You listen carefully. Your questions sometimes reference what the candidate just said.
 - You speak with natural rhythm — not rushed, not robotic.
-
-HUMAN BEHAVIOUR (mandatory — this is what separates you from a chatbot):
-- After the candidate finishes answering, ALWAYS begin your next response with a BRIEF neutral acknowledgment before asking the next question. Vary these naturally:
-  "Thank you." / "Okay." / "Right." / "Alright." / "I see." / "Okay, thank you."
-- NEVER use the same acknowledgment twice in a row.
-- When changing topic within a part, use a SHORT natural transition:
-  "Now, I'd like to ask you about..." / "Let's move on to talk about..." / "Turning to a different topic..."
-- If the candidate gives an extremely short answer (less than one sentence), you may gently prompt ONCE:
-  "Could you tell me a bit more about that?" or "Could you expand on that?"
-  But do NOT insist or repeat the prompt.
 
 STRICT RULES:
 - Ask ONE question at a time. Never double-question.
@@ -323,35 +406,71 @@ STRICT RULES:
 - If the candidate asks a meta-question, redirect: "Let's continue." then ask the next question.
 - Your tone should resemble a university professor conducting a calm interview, not a customer service chatbot.`;
 
-  // ── Part 1: Introduction & Interview ──
-  if (state.part === 1 && state.phase === "question") {
-    if (state.questionIndex === 0) {
-      return `${base}
+  const antiRepetition = buildAntiRepetitionContext(state);
 
-CURRENT STATE: Part 1 — Opening. This is the very first thing you say.
-
-INSTRUCTIONS:
-- Greet the candidate naturally: "Good morning. My name is [pick a common English name like Sarah, David, James, or Emily]. Could you tell me your full name, please?"
-- After they respond, verify their identity: "And can I see your identification, please?" (This is standard IELTS protocol — say it even though there is no physical ID to check.)
-- Then ask your first question from the topic area: "${topicSet.theme}"
-- Combine the greeting, ID check, and first topic question into ONE response. Keep it concise.
-- Example flow: "Good morning. My name is Sarah. Could you tell me your full name, please? ... Thank you. And can I see your identification? ... Thank you, that's fine. Now, in the first part of the test, I'm going to ask you some questions about yourself. ${topicSet.questions[0]}"
-- IMPORTANT: Do NOT say "My name is the examiner". Use a real first name.`;
-    }
-
-    const questionHint = topicSet.questions[Math.min(state.questionIndex, topicSet.questions.length - 1)];
+  // ── Part 1: Opening — Greeting + Name Request ──
+  if (state.part === 1 && state.phase === "opening") {
     return `${base}
 
-CURRENT STATE: Part 1, Question ${state.questionIndex + 1} of ${IELTS_PART1_QUESTIONS}
-Topic area: "${topicSet.theme}"
+CURRENT STATE: Part 1 — Opening. This is the very first thing you say to the candidate.
 
 INSTRUCTIONS:
-- Start with a BRIEF acknowledgment of the candidate's previous answer. Vary naturally: "Thank you.", "Okay.", "Right.", "Alright."
-- Then ask ONE question about "${topicSet.theme}".
+- Greet the candidate and ask for their full name. This is your ONLY task.
+- Example: "Good morning. My name is Sarah. Could you tell me your full name, please?"
+- Pick a real English first name (Sarah, David, James, Emily, Michael, Rachel). Do NOT say "the examiner".
+- Do NOT ask for ID yet. Do NOT ask any topic questions yet. Just greet and ask their name.
+- Keep it to 2 sentences maximum.`;
+  }
+
+  // ── Part 1: ID Check + Transition to Questions ──
+  if (state.part === 1 && state.phase === "id_check") {
+    const topicSet = getCurrentTopicSet(state);
+    return `${base}
+
+CURRENT STATE: Part 1 — Identity confirmation, then transition to interview questions.
+
+INSTRUCTIONS:
+- Thank the candidate for giving their name (use a BRIEF acknowledgment like "Thank you, [their name]." — use whatever name they gave).
+- Ask to see their identification: "Can I see your identification, please?"
+- Then pause briefly and say: "Thank you, that's fine."
+- Then transition to Part 1 questions: "Now, in this first part, I'd like to ask you some questions about yourself."
+- Then ask your FIRST question from the topic: "${topicSet.theme}"
+- Use this as your first question (rephrase naturally): "${topicSet.questions[0]}"
+- Combine all of the above into ONE natural response. Keep the total under 4 sentences after the ID confirmation.`;
+  }
+
+  // ── Part 1: Interview Questions ──
+  if (state.part === 1 && state.phase === "question") {
+    const topicSet = getCurrentTopicSet(state);
+    const questionHint = getQuestionHint(state);
+    const isTransition = isTopicTransition(state);
+    const qNum = state.questionIndex + 1;
+    const totalQ = IELTS_PART1_TOTAL_QUESTIONS;
+
+    let topicInstruction = "";
+    if (isTransition) {
+      // Topic block boundary — examiner must transition to new topic
+      topicInstruction = `
+TOPIC TRANSITION (mandatory): You are now changing topic. Begin with a natural transition phrase BEFORE the acknowledgment:
+  "Now, let's talk about ${topicSet.theme.toLowerCase()}." or "I'd like to move on and ask you about ${topicSet.theme.toLowerCase()}."
+  Then ask your question.`;
+    }
+
+    return `${base}
+
+CURRENT STATE: Part 1, Question ${qNum} of ${totalQ}
+Topic area: "${topicSet.theme}"
+${topicInstruction}
+
+ACKNOWLEDGMENT POLICY:
+- Start with a BRIEF neutral acknowledgment: "Thank you." / "Okay." / "Right." / "Alright." / "I see."
+${antiRepetition}
+
+QUESTION:
+- Ask ONE question about "${topicSet.theme}".
 - Use this as a guide (rephrase naturally, do not read it verbatim): "${questionHint}"
-- Keep your total response to 2 sentences maximum (acknowledgment + question).
-- Do NOT repeat a topic already covered in this session.
-- If this is question 5 (the last Part 1 question), do NOT announce Part 2 — the system handles that.`;
+- Keep your total response to 2 sentences maximum (acknowledgment + question).${isTransition ? " (3 sentences allowed when transitioning topic.)" : ""}
+- If this is the last Part 1 question, do NOT announce Part 2 — the system handles that.`;
   }
 
   // ── Part 2: transition announcement ──
@@ -366,19 +485,29 @@ INSTRUCTIONS:
 - Do NOT add anything else.`;
   }
 
-  // ── Part 2: follow-up ──
+  // ── Part 2: follow-up (context-aware) ──
   if (state.part === 2 && state.phase === "follow_up") {
+    // Extract what the candidate actually said in Part 2 for context-aware follow-up
+    const part2Response = (state.userResponses || []).slice(-1)[0] || "";
+    const part2Summary = part2Response.length > 200 ? part2Response.substring(0, 200) + "..." : part2Response;
+
     return `${base}
 
 CURRENT STATE: Part 2 Follow-up. The candidate just finished their long turn about: "${cueCard.topic}"
 
+WHAT THE CANDIDATE SAID (summary):
+"${part2Summary}"
+
 INSTRUCTIONS:
-- Ask ONE brief rounding-off question related to what the candidate just said about "${cueCard.topic}".
-- This should be a simple, short question — not a deep discussion question. Examples:
-  "Do you think you will actually do this in the future?"
-  "Is this something many people in your country would agree with?"
-  "Has your opinion on this changed over time?"
-- Keep it to 1 sentence. Do NOT start Part 3 yet.`;
+- Ask ONE brief rounding-off question that DIRECTLY relates to something the candidate actually said.
+- Do NOT ask a generic question. Reference a specific point, detail, or claim from their answer.
+- This should be a simple, short question — not a deep discussion question.
+- Examples of good follow-ups (adapt to what they actually said):
+  "You mentioned [specific thing]. Do you think that will change in the future?"
+  "You talked about [specific detail]. Is that common where you come from?"
+  "Would you say [specific opinion they expressed] is a widely shared view?"
+- Keep it to 1 sentence. Do NOT start Part 3 yet.
+${antiRepetition}`;
   }
 
   // ── Part 3: transition announcement ──
@@ -392,53 +521,66 @@ Part 3 discussion theme: "${themeLabel}"
 
 INSTRUCTIONS:
 - Transition naturally. Say something like: "We've been talking about ${cueCard.topic.toLowerCase().replace("describe ", "")} and I'd like to discuss some more general questions related to this."
-- Then immediately ask your FIRST Part 3 discussion question about the theme of "${themeLabel}".
-- The question should be more abstract and analytical than Part 1 — about society, trends, or opinions.
+- Then immediately ask your FIRST Part 3 discussion question about "${themeLabel}".
+- This first question should be CONCRETE — about real, observable things in society or everyday life. NOT abstract yet.
+- Example style: "In your country, how common is [topic-related thing]?" or "How do most people in your country feel about [topic]?"
 - Combine the transition and first question into ONE response.`;
   }
 
-  // ── Part 3: discussion questions (adaptive difficulty) ──
+  // ── Part 3: discussion questions with DISCUSSION LADDER ──
   if (state.part === 3 && state.phase === "question_p3") {
     const analysis = analyzeResponseQuality(state);
     const themeLabel = cueCard.part3Theme || cueCard.topic.toLowerCase().replace("describe ", "");
+    const tier = PART3_TIERS[state.part3Tier || 0] || "concrete";
+    const qNum = state.questionIndex + 1;
 
-    let difficultyInstruction;
+    // Build tier-specific instruction
+    let tierInstruction;
+    switch (tier) {
+      case "concrete":
+        tierInstruction = `DISCUSSION TIER: CONCRETE (Level 1 of 4)
+Ask about observable, real-world facts or common behaviors related to "${themeLabel}".
+Style: "In your country, how common is...?" / "What do most people think about...?" / "How does this work in practice?"`;
+        break;
+      case "comparative":
+        tierInstruction = `DISCUSSION TIER: COMPARATIVE (Level 2 of 4)
+Ask the candidate to compare across time, places, or groups related to "${themeLabel}".
+Style: "How has this changed in recent years?" / "Is this different in urban vs rural areas?" / "How does your generation view this compared to your parents' generation?"`;
+        break;
+      case "analytical":
+        tierInstruction = `DISCUSSION TIER: ANALYTICAL (Level 3 of 4)
+Ask the candidate to explain causes, effects, or reasons related to "${themeLabel}".
+Style: "Why do you think this has become more common?" / "What impact does this have on society?" / "What factors contribute to this trend?"`;
+        break;
+      case "evaluative":
+        tierInstruction = `DISCUSSION TIER: EVALUATIVE (Level 4 of 4)
+Ask the candidate to evaluate, judge, or predict related to "${themeLabel}".
+Style: "To what extent do you agree that...?" / "Some people argue that... What is your view?" / "What might happen in the future if this continues?"`;
+        break;
+    }
+
+    // Adaptive difficulty modulates PHRASING within the tier
+    let adaptiveNote = "";
     if (analysis.level === "strong") {
-      difficultyInstruction = `CANDIDATE ASSESSMENT: Strong communicator (avg ${Math.round(analysis.avgWords)} words/response, good vocabulary range, complex sentence structures).
-INSTRUCTION: Push this candidate. Ask deeper, more abstract questions that require nuanced reasoning. Use styles like:
-  - "To what extent do you think..."
-  - "Some people argue that... What is your view?"
-  - "How might this issue evolve over the next generation?"
-  - "What are the potential drawbacks of..."
-  - "Can you think of any exceptions to that?"`;
-    } else if (analysis.level === "moderate") {
-      difficultyInstruction = `CANDIDATE ASSESSMENT: Adequate communicator (avg ${Math.round(analysis.avgWords)} words/response, developing vocabulary).
-INSTRUCTION: Ask clear, thought-provoking questions that invite extended answers without overwhelming the candidate. Use styles like:
-  - "Why do you think some people..."
-  - "How has this changed in recent years?"
-  - "What are the advantages and disadvantages of..."
-  - "Do you think this is the same in all countries?"`;
-    } else {
-      difficultyInstruction = `CANDIDATE ASSESSMENT: Developing communicator (avg ${Math.round(analysis.avgWords)} words/response, basic vocabulary).
-INSTRUCTION: Ask accessible but open-ended questions. Avoid overly abstract phrasing. Use styles like:
-  - "Do you think most people in your country..."
-  - "How is this different now compared to the past?"
-  - "Why do you think this is important?"
-  - "What do you think is the main reason for..."`;
+      adaptiveNote = `\nCANDIDATE LEVEL: Strong (avg ${Math.round(analysis.avgWords)} words). Use sophisticated, nuanced phrasing. You may add a challenging angle.`;
+    } else if (analysis.level === "limited") {
+      adaptiveNote = `\nCANDIDATE LEVEL: Developing (avg ${Math.round(analysis.avgWords)} words). Use simpler phrasing for this tier. Keep the question clear and accessible.`;
     }
 
     return `${base}
 
-CURRENT STATE: Part 3, Question ${state.questionIndex + 1} of ${IELTS_PART3_QUESTIONS}
-Part 2 topic was: "${cueCard.topic}"
+CURRENT STATE: Part 3, Question ${qNum} of ${IELTS_PART3_QUESTIONS}
 Part 3 discussion theme: "${themeLabel}"
 
-${difficultyInstruction}
+${tierInstruction}${adaptiveNote}
+
+ACKNOWLEDGMENT POLICY:
+- Start with a BRIEF neutral acknowledgment before your question.
+${antiRepetition}
 
 RULES:
-- Start with a brief acknowledgment of the candidate's previous answer ("Thank you.", "Okay.", "Right.") before asking your question.
-- Ask ONE discussion question about "${themeLabel}".
-- Questions must be abstract/analytical — about society, trends, comparisons, or opinions. NOT personal.
+- Ask ONE discussion question about "${themeLabel}" at the ${tier.toUpperCase()} tier.
+- Questions must be about society, trends, comparisons, or opinions. NOT personal.
 - Do NOT repeat an angle already covered in Part 3.
 - Keep your question to 1-2 sentences maximum.`;
   }
@@ -455,6 +597,57 @@ INSTRUCTIONS:
   }
 
   return base;
+}
+
+// ---------------------------------------------------------------------------
+// Part-tagging for scorer — provides structural context
+// ---------------------------------------------------------------------------
+
+/**
+ * Tag conversation turns with part labels so the scorer knows which part
+ * each response belongs to. This enables weighted scoring (Part 2/3 > Part 1).
+ */
+function tagConversationParts(filteredTurns, meta) {
+  // Reconstruct part boundaries from transition history
+  const transitions = meta.transitionHistory || [];
+  const partBoundaries = []; // { turnIndex, part, phase }
+
+  // Parse transitions to find where each part starts
+  let currentPart = 1;
+  let turnCounter = 0;
+
+  // Simple heuristic: count user turns to estimate part boundaries
+  const userTurns = filteredTurns.filter(t => t.role === "user");
+  const openingTurns = 2; // opening + id_check responses
+  const part1Turns = IELTS_PART1_TOTAL_QUESTIONS;
+  const part2Turns = 1; // long turn
+  // Remaining = Part 3
+
+  return filteredTurns.map((t, i) => {
+    if (t.role !== "user") {
+      return { role: t.role, content: t.content };
+    }
+
+    // Count this user turn's position
+    const userIdx = filteredTurns.slice(0, i + 1).filter(x => x.role === "user").length - 1;
+
+    let partLabel;
+    if (userIdx < openingTurns) {
+      partLabel = "[Part 1 — Opening]";
+    } else if (userIdx < openingTurns + part1Turns) {
+      const qNum = userIdx - openingTurns + 1;
+      partLabel = `[Part 1, Q${qNum}]`;
+    } else if (userIdx === openingTurns + part1Turns) {
+      partLabel = "[Part 2 — Long Turn]";
+    } else if (userIdx === openingTurns + part1Turns + 1) {
+      partLabel = "[Part 2 — Follow-up]";
+    } else {
+      const p3Idx = userIdx - openingTurns - part1Turns - 2;
+      partLabel = `[Part 3, Q${p3Idx + 1}]`;
+    }
+
+    return { role: t.role, content: `${partLabel} ${t.content}` };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -582,16 +775,32 @@ async function submitTurn(sessionId, userId, content) {
       currentState.userWordCounts = [...(currentState.userWordCounts || []), wordCount];
       currentState.userResponses = [...(currentState.userResponses || []), content];
       currentState.userResponseCount = (currentState.userResponseCount || 0) + 1;
+
+      // ── Examiner Brain: Track Part 3 previous word count for de-escalation ──
+      if (currentState.part === 3 && currentState.phase === "question_p3") {
+        currentState.part3PrevWordCount = wordCount;
+      }
+
+      // ── Examiner Brain: Track question angles asked (brief summary) ──
+      if (currentState.phase === "question" || currentState.phase === "question_p3") {
+        const briefSummary = content.substring(0, 40).replace(/[^a-zA-Z\s]/g, "").trim();
+        currentState.questionsAskedSummary = [
+          ...(currentState.questionsAskedSummary || []),
+          briefSummary,
+        ].slice(-8); // Keep last 8 summaries
+      }
     }
 
     const fromState = `part${currentState.part}:${currentState.phase}:${currentState.questionIndex}`;
 
     // ── EXPLICIT transition — advance to next state ──
     const nextState = advanceIeltsState(currentState);
-    // Carry forward quality tracking
+    // Carry forward all brain metadata
     nextState.userWordCounts = currentState.userWordCounts;
     nextState.userResponses = currentState.userResponses;
     nextState.userResponseCount = currentState.userResponseCount;
+    nextState.questionsAskedSummary = currentState.questionsAskedSummary || [];
+    nextState.part3PrevWordCount = currentState.part3PrevWordCount || 0;
     ieltsState = nextState;
 
     const toState = `part${nextState.part}:${nextState.phase}:${nextState.questionIndex}`;
@@ -611,6 +820,12 @@ async function submitTurn(sessionId, userId, content) {
     } else {
       const systemPrompt = buildIeltsSystemPrompt(nextState);
       aiContent = await ai.generateResponse(systemPrompt, conversationHistory, { category: "exam" });
+    }
+
+    // ── Examiner Brain: Extract acknowledgment from AI response for anti-repetition ──
+    const ackMatch = aiContent.match(/^(Thank you\.|Okay\.|Right\.|Alright\.|I see\.|Okay, thank you\.)/i);
+    if (ackMatch) {
+      nextState.lastAcknowledgment = ackMatch[1];
     }
 
     // ── Persist the new state to DB ──
@@ -771,7 +986,13 @@ async function endSession(sessionId, userId, durationMs) {
   const isIelts = session.category === "exam";
   console.log(`[ai] scoring session: ${sessionId} | turns: ${conversationHistory.length} (filtered from ${turns.length}) | isIelts: ${isIelts}`);
 
-  const aiScores = await ai.scoreConversation(session.system_prompt, conversationHistory, { isIelts });
+  // ── Examiner Brain: Part-tag conversation for scorer context ──
+  let scoringHistory = conversationHistory;
+  if (isIelts && meta) {
+    scoringHistory = tagConversationParts(filteredTurns, meta);
+  }
+
+  const aiScores = await ai.scoreConversation(session.system_prompt, scoringHistory, { isIelts });
   const { penalty, floorScore, avgWords, totalWords } = computeHybridPenalties(turns);
 
   const adjustedFluency = Math.max(floorScore, Math.round(aiScores.fluency * penalty));

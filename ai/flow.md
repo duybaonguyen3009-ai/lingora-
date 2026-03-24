@@ -34,26 +34,29 @@ entering → part1 → part2_intro → part2_prep → part2_speak → part3 → 
 
 | part | phase | description |
 |---|---|---|
-| 1 | `question` | Asking Part 1 interview questions (index 0–4) |
+| 1 | `opening` | Examiner greets + asks candidate's name |
+| 1 | `id_check` | Examiner confirms ID + transitions to Part 1 questions |
+| 1 | `question` | Asking Part 1 interview questions (index 0–5, 2 topic blocks × 3) |
 | 2 | `transition_to_part2` | Examiner announces "Now let's move to Part 2" |
 | 2 | `cue_card` | Showing cue card, user has 60s prep time |
 | 2 | `long_turn` | User speaks for up to 2 minutes |
-| 2 | `follow_up` | Examiner asks one follow-up question after long turn |
+| 2 | `follow_up` | Examiner asks one context-aware follow-up question |
 | 3 | `transition_to_part3` | Examiner announces "Now let's move to Part 3" |
-| 3 | `question_p3` | Discussion questions (index 0–4) |
+| 3 | `question_p3` | Discussion questions with ladder tiers (index 0–3) |
 | 3 | `complete` | Exam done — trigger scoring |
 
 ### State Transitions (from `advanceIeltsState()`)
 
 ```
-part1:question:0 → part1:question:1 → ... → part1:question:4
+part1:opening:0 → part1:id_check:0 → part1:question:0
+  → part1:question:1 → ... → part1:question:5
   → part2:transition_to_part2:0
   → part2:cue_card:0          (triggered by "[READY FOR PART 2]" placeholder)
   → part2:long_turn:0         (triggered by user submitting their prep response)
   → part2:follow_up:0         (triggered by user finishing long turn)
   → part3:transition_to_part3:0
   → part3:question_p3:0       (triggered by "[READY FOR PART 3]" placeholder)
-  → part3:question_p3:1 → ... → part3:question_p3:4
+  → part3:question_p3:1 → ... → part3:question_p3:3  (4 questions with discussion ladder)
   → part3:complete
 ```
 
@@ -102,12 +105,21 @@ type ExamPhase =
 - Sets `sessionId`, `turns`, `cueCard`, `phase = "part1"`.
 - Plays TTS for first examiner question (`playTTS(firstAi.content, true)`).
 
-### Step 1: Part 1 Q&A (5 questions)
+### Step 0b: Opening Sequence (Examiner Brain)
+- Backend starts at `part1:opening` (not `part1:question`).
+- Examiner greets + asks name. User responds.
+- Backend advances to `part1:id_check`.
+- Examiner confirms ID + transitions to Part 1 + asks first topic question.
+- User responds → backend advances to `part1:question:0`.
+- Total: 2 exchanges before Part 1 questions begin.
+
+### Step 1: Part 1 Q&A (6 questions, 2 topic blocks)
 - User speaks or types answer.
 - `handleSend()` called.
 - Backend returns `result` with `result.ieltsState`.
-- If `state.phase === "question"` (still Part 1): play TTS, `autoMic = true`.
-- After 5th user answer: backend returns `state.phase = "transition_to_part2"`.
+- If `state.phase === "question"` or `"opening"` or `"id_check"`: play TTS, `autoMic = true`.
+- At question index 3: backend crosses topic block boundary → prompt includes topic transition instruction.
+- After 6th user answer: backend returns `state.phase = "transition_to_part2"`.
 
 ### Step 2: Transition to Part 2
 - Frontend detects `state.phase === "transition_to_part2"`.
@@ -152,9 +164,11 @@ type ExamPhase =
 - Backend returns first Part 3 question.
 - Plays TTS, `autoMic = true`.
 
-### Step 7: Part 3 Q&A (5 questions)
-- Same as Part 1 — user answers 5 discussion questions.
-- After 5th answer: backend returns `state.phase = "complete"`.
+### Step 7: Part 3 Q&A (4 questions with Discussion Ladder)
+- 4 questions with escalating tiers: concrete → comparative → analytical → evaluative.
+- `part3Tier` advances with each question. De-escalation if previous answer < 15 words.
+- Adaptive difficulty modulates phrasing WITHIN each tier based on `analyzeResponseQuality()`.
+- After 4th answer: backend returns `state.phase = "complete"`.
 
 ### Step 8: Ending → Summary
 - Frontend detects `state.phase === "complete"`.
@@ -238,8 +252,8 @@ playTTS(text, autoMic=true)
 
 | Constant | Value | Location |
 |---|---|---|
-| `PART1_QUESTIONS` | 5 | `IeltsConversation.tsx` + `scenarioService.js` |
-| `PART3_QUESTIONS` | 5 | `IeltsConversation.tsx` + `scenarioService.js` |
+| `PART1_QUESTIONS` | 6 (2 blocks × 3) | `IeltsConversation.tsx` + `scenarioService.js` |
+| `PART3_QUESTIONS` | 4 | `IeltsConversation.tsx` + `scenarioService.js` |
 | `PREP_SECONDS` | 60 | `IeltsConversation.tsx` |
 | `SPEAK_SECONDS` | 120 | `IeltsConversation.tsx` |
 | Entering pause | 2000ms | `IeltsConversation.tsx` init |

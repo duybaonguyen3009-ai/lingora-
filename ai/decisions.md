@@ -151,6 +151,10 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 | Grammar progress is localStorage-only | Clearing browser data loses all grammar progress; XP not in backend `xp_ledger` | Add backend grammar progress API when grammar is validated |
 | Grammar XP separate from Profile XP | Profile tab shows backend XP, Grammar shows its own XP counter | Unify when backend grammar tracking is added |
 | `PracticeTab` still exists but is no longer rendered | Dead component — still importable but not wired | Remove or re-purpose when grammar direction is confirmed |
+| Acknowledgment tracking is post-hoc regex | AI might not start with expected pattern | Acceptable — regex is lenient, covers common variations |
+| Part 2 silence detection not implemented | No awareness of pauses during long turn | Requires audio-level analysis — future work |
+| Pronunciation score is text-analysis only | Cannot assess actual speech quality | Requires real audio pipeline (Azure Speech + scored audio) |
+| Discussion ladder de-escalation uses word count only | A short but sophisticated answer might trigger unnecessary de-escalation | Acceptable at current scale — revisit with user feedback |
 
 ---
 
@@ -272,6 +276,47 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 **Why:** Word count alone is a poor proxy. A user who writes many short simple sentences gets "strong" on word count but is actually "moderate". Adding vocabulary and grammar complexity signals produces more accurate difficulty calibration.
 
 **Implementation:** `analyzeResponseQuality(state)` reads `userResponses[]` stored in session meta. Composite score: word count (0-3 points) + vocab ratio (0-2 points) + complexity avg (0-2 points). Score >= 5 = strong, >= 3 = moderate, else limited.
+
+---
+
+## IELTS Examiner Brain — Decision Layer (Not Prompt Layer)
+
+**Decision:** Examiner behavior is controlled by backend decision logic, not by prompt instructions alone. The state machine provides structured context to each AI call.
+
+**Why:** Prompt-only control means the AI decides everything: when to acknowledge, when to transition topics, when to follow up. This makes the examiner feel random. The backend must decide WHAT to do, and the AI decides HOW to phrase it.
+
+**Implementation — Six modules:**
+
+### A. Opening Orchestrator
+- State phases `opening` → `id_check` → `question` (separate exchanges)
+- Greeting and name request are one exchange; ID check + Part 1 transition are another
+- The candidate has a real back-and-forth before questions start
+
+### B. Part 1 Topic Engine
+- 2 topic blocks selected at session start (`topicSetIndices: [idx1, idx2]`)
+- 3 questions per block, 6 total Part 1 questions
+- Backend detects topic block boundary (`isTopicTransition()`) and instructs examiner to transition
+- Topic transition phrasing is mandatory when crossing block boundary
+
+### C. Part 2 Context-Aware Follow-up
+- Follow-up prompt includes actual candidate speech summary (not just cue card topic)
+- Examiner references specific things the candidate said
+
+### D. Part 3 Discussion Ladder
+- 4 tiers: concrete → comparative → analytical → evaluative
+- `part3Tier` advances with `questionIndex` (Q1=concrete, Q2=comparative, etc.)
+- De-escalation: if previous Part 3 answer < 15 words, tier drops by 1
+- Adaptive difficulty modulates phrasing WITHIN each tier (simple vs sophisticated)
+
+### E. Anti-Repetition Policy
+- `lastAcknowledgment` tracked in state; prompt says "your last was X, use different"
+- `questionsAskedSummary` tracks covered angles; injected into prompt
+
+### F. Part-Tagged Scoring
+- `tagConversationParts()` labels each user turn: `[Part 1, Q2]`, `[Part 2 — Long Turn]`, etc.
+- Scoring prompt weights Part 2/3 more heavily than Part 1
+
+**Constraint:** The state machine (`advanceIeltsState`) is the authority. The examiner brain metadata rides alongside it but never overrides transitions.
 
 ---
 

@@ -44,8 +44,8 @@ type ExamPhase =
   | "summary"      // results
   | "error";
 
-const PART1_QUESTIONS = 5;
-const PART3_QUESTIONS = 5;
+const PART1_QUESTIONS = 6; // 2 topic blocks × 3 questions
+const PART3_QUESTIONS = 4;
 const PREP_SECONDS = 60;
 const SPEAK_SECONDS = 120;
 
@@ -417,6 +417,10 @@ export default function IeltsConversation({
           await new Promise((r) => setTimeout(r, 1000));
           await handleEndSession(sessionId);
 
+        } else if (state.phase === "id_check" || state.phase === "opening") {
+          // Opening / ID check phases — examiner speaks, candidate responds
+          await new Promise((r) => setTimeout(r, 600));
+          playTTS(result.aiTurn.content, true);
         } else {
           // Normal question (Part 1 or Part 3) — play TTS
           await new Promise((r) => setTimeout(r, 600));
@@ -663,7 +667,7 @@ export default function IeltsConversation({
               IELTS Speaking Test
             </div>
             <div className="text-[11px] text-white/50">
-              {phase === "part1" ? "Part 1 — Introduction" :
+              {phase === "part1" ? "Part 1 — Interview" :
                phase.startsWith("part2") ? "Part 2 — Long Turn" :
                phase === "part3" ? "Part 3 — Discussion" :
                ""}

@@ -247,6 +247,12 @@ EVIDENCE REQUIREMENT (CRITICAL):
 - notableVocabulary: 3-8 genuinely strong words/phrases/collocations the candidate used. NOT basic words.
 - improvementVocabulary: 2-5 words/phrases that were weak, overused, or incorrect. Examples: overusing "very", misusing a collocation, etc.
 
+PART WEIGHTING (CRITICAL):
+- User messages are tagged with part labels like [Part 1, Q2], [Part 2 — Long Turn], [Part 3, Q1].
+- Part 2 (Long Turn) and Part 3 answers demonstrate the candidate's true ability and should carry MORE weight in scoring.
+- Part 1 answers are short and introductory — they contribute less to the overall assessment.
+- If the Part 2 Long Turn is very short or missing, this should significantly lower Fluency & Coherence.
+
 Rules:
 - overallScore = average of fluency, vocabulary, grammar, pronunciation (rounded)
 - turnFeedback: include 2-4 entries for user turns with the most room for improvement
@@ -295,7 +301,7 @@ Scenario context: ${systemPrompt}`;
       openai.chat.completions.create({
         model: _model,
         messages,
-        max_tokens: 500,
+        max_tokens: 800,
         temperature: 0.3,
         response_format: { type: "json_object" },
       })
