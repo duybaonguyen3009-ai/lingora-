@@ -13,6 +13,7 @@
 
 const { createAiProvider } = require("../providers/ai/aiProvider");
 const scenarioRepository = require("../repositories/scenarioRepository");
+const { analyzeSpeechFlow, aggregateSpeechFlow } = require("./speechAnalyzer");
 
 const ai = createAiProvider();
 
@@ -726,7 +727,7 @@ async function startSession(scenarioId, userId) {
   };
 }
 
-async function submitTurn(sessionId, userId, content) {
+async function submitTurn(sessionId, userId, content, speechMetrics = null) {
   const session = await scenarioRepository.findSessionById(sessionId);
   if (!session) {
     const err = new Error("Session not found");
@@ -776,6 +777,15 @@ async function submitTurn(sessionId, userId, content) {
       currentState.userResponses = [...(currentState.userResponses || []), content];
       currentState.userResponseCount = (currentState.userResponseCount || 0) + 1;
 
+      // ── Audio Intelligence: Store speechMetrics per turn ──
+      if (speechMetrics) {
+        currentState.turnSpeechMetrics = [
+          ...(currentState.turnSpeechMetrics || []),
+          { turnIndex: nextIndex, ...speechMetrics },
+        ];
+        console.log(`[speech] session=${sessionId} | wpm=${speechMetrics.wordsPerMinute} | pauses=${speechMetrics.pauseCount} | ratio=${speechMetrics.speakingRatio}`);
+      }
+
       // ── Examiner Brain: Track Part 3 previous word count for de-escalation ──
       if (currentState.part === 3 && currentState.phase === "question_p3") {
         currentState.part3PrevWordCount = wordCount;
@@ -801,6 +811,7 @@ async function submitTurn(sessionId, userId, content) {
     nextState.userResponseCount = currentState.userResponseCount;
     nextState.questionsAskedSummary = currentState.questionsAskedSummary || [];
     nextState.part3PrevWordCount = currentState.part3PrevWordCount || 0;
+    nextState.turnSpeechMetrics = currentState.turnSpeechMetrics || [];
     ieltsState = nextState;
 
     const toState = `part${nextState.part}:${nextState.phase}:${nextState.questionIndex}`;
@@ -986,22 +997,53 @@ async function endSession(sessionId, userId, durationMs) {
   const isIelts = session.category === "exam";
   console.log(`[ai] scoring session: ${sessionId} | turns: ${conversationHistory.length} (filtered from ${turns.length}) | isIelts: ${isIelts}`);
 
+  // ── Audio Intelligence: Analyze speech flow across all user turns ──
+  const realUserTurnsForAnalysis = filteredTurns
+    .filter(t => t.role === "user" && !isPlaceholderTurn(t.content));
+
+  const turnSpeechMetricsMap = new Map();
+  if (meta?.turnSpeechMetrics) {
+    for (const m of meta.turnSpeechMetrics) {
+      turnSpeechMetricsMap.set(m.turnIndex, m);
+    }
+  }
+
+  const turnsForAggregation = realUserTurnsForAnalysis.map(t => ({
+    text: t.content,
+    speechMetrics: turnSpeechMetricsMap.get(t.turn_index) || null,
+  }));
+
+  const speechFlow = aggregateSpeechFlow(turnsForAggregation);
+  console.log(`[speech] session=${sessionId} | fillers=${speechFlow.totalFillerCount} | corrections=${speechFlow.totalSelfCorrections} | hesitation=${speechFlow.hesitationLevel} | fluencyEst=${speechFlow.fluencyEstimate}${speechFlow.avgWordsPerMinute ? ` | wpm=${speechFlow.avgWordsPerMinute}` : ""}`);
+
   // ── Examiner Brain: Part-tag conversation for scorer context ──
   let scoringHistory = conversationHistory;
   if (isIelts && meta) {
     scoringHistory = tagConversationParts(filteredTurns, meta);
   }
 
-  const aiScores = await ai.scoreConversation(session.system_prompt, scoringHistory, { isIelts });
+  const aiScores = await ai.scoreConversation(session.system_prompt, scoringHistory, {
+    isIelts,
+    speechFlow, // Pass speech analysis to scoring prompt
+  });
   const { penalty, floorScore, avgWords, totalWords } = computeHybridPenalties(turns);
 
-  const adjustedFluency = Math.max(floorScore, Math.round(aiScores.fluency * penalty));
+  // ── Audio Intelligence: Speech-aware fluency modifier ──
+  // If speech analysis detected high hesitation, apply additional fluency penalty
+  let speechFluencyModifier = 1.0;
+  if (speechFlow.hesitationLevel === "high") {
+    speechFluencyModifier = 0.85; // 15% penalty for high hesitation
+  } else if (speechFlow.hesitationLevel === "medium") {
+    speechFluencyModifier = 0.93; // 7% penalty for medium hesitation
+  }
+
+  const adjustedFluency = Math.max(floorScore, Math.round(aiScores.fluency * penalty * speechFluencyModifier));
   const adjustedVocab = Math.max(floorScore, Math.round(aiScores.vocabulary * penalty));
   const adjustedGrammar = Math.max(floorScore, Math.round(aiScores.grammar * penalty));
   const adjustedPronunciation = Math.max(floorScore, Math.round((aiScores.pronunciation || aiScores.fluency) * penalty));
   const adjustedOverall = Math.round((adjustedFluency + adjustedVocab + adjustedGrammar + adjustedPronunciation) / 4);
 
-  console.log(`[scoring] AI: ${aiScores.overallScore} | penalty: ${penalty} | avgWords: ${avgWords.toFixed(1)} | adjusted: ${adjustedOverall}`);
+  console.log(`[scoring] AI: ${aiScores.overallScore} | penalty: ${penalty} | speechMod: ${speechFluencyModifier} | avgWords: ${avgWords.toFixed(1)} | adjusted: ${adjustedOverall}`);
 
   let coachFeedback = aiScores.coachFeedback;
   if (adjustedOverall < 30) {
@@ -1034,6 +1076,17 @@ async function endSession(sessionId, userId, durationMs) {
     durationMs: durationMs || 0,
   });
 
+  // ── Audio Intelligence: Build speech insights for frontend ──
+  const speechInsights = {
+    hesitationLevel: speechFlow.hesitationLevel,
+    fluencyEstimate: speechFlow.fluencyEstimate,
+    fillerSummary: speechFlow.fillerSummary,
+    totalFillerCount: speechFlow.totalFillerCount,
+    totalSelfCorrections: speechFlow.totalSelfCorrections,
+    avgWordsPerMinute: speechFlow.avgWordsPerMinute,
+    avgSpeakingRatio: speechFlow.avgSpeakingRatio,
+  };
+
   return {
     overallScore: adjustedOverall,
     fluency: adjustedFluency,
@@ -1046,6 +1099,7 @@ async function endSession(sessionId, userId, durationMs) {
     turnFeedback: aiScores.turnFeedback,
     notableVocabulary,
     improvementVocabulary,
+    speechInsights,
     turnCount,
     wordCount,
     durationMs: durationMs || 0,

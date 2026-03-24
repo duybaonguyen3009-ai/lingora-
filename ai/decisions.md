@@ -152,7 +152,7 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 | Grammar XP separate from Profile XP | Profile tab shows backend XP, Grammar shows its own XP counter | Unify when backend grammar tracking is added |
 | `PracticeTab` still exists but is no longer rendered | Dead component — still importable but not wired | Remove or re-purpose when grammar direction is confirmed |
 | Acknowledgment tracking is post-hoc regex | AI might not start with expected pattern | Acceptable — regex is lenient, covers common variations |
-| Part 2 silence detection not implemented | No awareness of pauses during long turn | Requires audio-level analysis — future work |
+| ~~Part 2 silence detection not implemented~~ | ~~No awareness of pauses during long turn~~ | **DONE** — 4s silence timer + auto-restart mic + nudge messages |
 | Pronunciation score is text-analysis only | Cannot assess actual speech quality | Requires real audio pipeline (Azure Speech + scored audio) |
 | Discussion ladder de-escalation uses word count only | A short but sophisticated answer might trigger unnecessary de-escalation | Acceptable at current scale — revisit with user feedback |
 
@@ -325,3 +325,56 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 **Decision:** The scoring prompt requires `criteriaFeedback` — per-criterion explanations that cite specific words/phrases from the candidate's actual responses. Generic feedback like "You spoke well" is not acceptable.
 
 **Why:** Evidence-based feedback is what separates a useful IELTS simulator from a toy. Users need to know exactly which of THEIR words/phrases contributed to their score. This makes the feedback actionable.
+
+---
+
+## Audio Intelligence Layer — Speech-Aware Scoring
+
+**Decision:** Add real signal-based speech flow analysis to IELTS scoring. NOT fake audio intelligence — operates on measurable signals: transcript text analysis + frontend timing metadata from Web Speech API.
+
+**Why:** Text-only evaluation ignores HOW the user speaks. Filler words ("um", "you know"), self-corrections, fragmented speech, and pause patterns are critical IELTS fluency signals. Without detecting these, the system scores a hesitant speaker the same as a fluent one if they use the same words.
+
+**Architecture — 7 modules:**
+
+### 1. Speech Flow Analyzer (`speechAnalyzer.js`)
+- Text-based: filler word detection (um, uh, you know, basically, like-as-filler), self-correction patterns ("I mean", "no wait"), repetition ratio, sentence fragmentation
+- Timing-based (when frontend provides data): words per minute, pause count, speaking ratio
+- Outputs: `hesitationLevel` (low/medium/high), `fluencyEstimate` (0-100), `fillerSummary`
+
+### 2. Speech Timing Hook (`useSpeechTiming.ts`)
+- Frontend hook tracking recording start/end timestamps per voice input segment
+- Calculates: WPM, gaps between segments, segment count, speaking ratio
+- `finalizeTurn()` returns `SpeechMetrics` or null (text-only input)
+
+### 3. Silence/Pause Detection (Part 2)
+- 4-second silence timer during Part 2 long turn
+- Gentle nudge: "You can continue speaking." after first silence
+- Stronger nudge after 3+ consecutive short segments: "Try to keep speaking."
+- Auto-restart mic after nudge (2s delay)
+
+### 4. Part 2 Duration Control
+- Now checks BOTH word count (≥ 30) AND speaking duration (≥ 30s)
+- Either failing triggers nudge on manual end
+- Timer expiry bypasses all checks (unchanged)
+
+### 5. Speech-Aware Scoring Modifier
+- High hesitation → 15% fluency penalty
+- Medium hesitation → 7% fluency penalty
+- Applied as multiplier alongside existing word-count penalty
+
+### 6. Scorer Context Injection
+- `speechFlow` data passed to OpenAI scoring prompt
+- Prompt includes: filler count, speaking rate, hesitation level, speaking ratio
+- Scorer instructed to reference speech flow in fluency feedback
+
+### 7. Speech Insights Display
+- New `SpeechInsights` section in ScenarioSummary
+- Shows: hesitation level, WPM, filler word breakdown, self-correction count
+
+**Data pipeline:** Frontend sends optional `speechMetrics` with each `submitTurn` call. Backend stores in `turnSpeechMetrics[]` array in session metadata. On `endSession`, `aggregateSpeechFlow()` combines all turns. Backward compatible — old sessions without metrics still score correctly.
+
+**What this does NOT do (honest limitations):**
+- Does NOT analyze actual audio waveforms (would need AudioRecorder + Azure Speech in IELTS flow)
+- Does NOT detect pronunciation errors at phoneme level
+- Does NOT measure intonation or stress patterns
+- Silence detection relies on Web Speech API auto-stop behavior, which varies by browser

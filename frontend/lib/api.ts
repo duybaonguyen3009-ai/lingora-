@@ -560,8 +560,18 @@ export async function startScenarioSession(scenarioId: string): Promise<StartSes
 export async function submitScenarioTurn(
   sessionId: string,
   content: string,
+  speechMetrics?: {
+    totalDurationMs: number;
+    wordsPerMinute: number;
+    pauseCount: number;
+    longestPauseMs: number;
+    segmentCount: number;
+    speakingRatio: number;
+  } | null,
 ): Promise<SubmitTurnResult> {
-  return apiPostAuth<SubmitTurnResult>(`/scenarios/sessions/${sessionId}/turns`, { content });
+  const body: Record<string, unknown> = { content };
+  if (speechMetrics) body.speechMetrics = speechMetrics;
+  return apiPostAuth<SubmitTurnResult>(`/scenarios/sessions/${sessionId}/turns`, body);
 }
 
 /** POST /api/v1/scenarios/sessions/:sessionId/end — end session and get scores. */

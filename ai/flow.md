@@ -261,4 +261,41 @@ playTTS(text, autoMic=true)
 | Part 3 transition wait | 2000ms | `IeltsConversation.tsx` |
 | Min ending display | 3000ms | `handleEndSession` parallel promise |
 | TTS → mic delay | 300ms | `playTTS` onended |
+| Part 2 silence timer | 4000ms | `IeltsConversation.tsx` silence detection |
+| Silence nudge display | 2000ms | Before auto-restart mic |
+| Part 2 min speaking duration | 30000ms (30s) | `handlePart2End` duration check |
+| Part 2 min word count | 30 | `handlePart2End` word check |
 | Examiner natural delay | 600–800ms | Various `await new Promise` calls |
+
+---
+
+## Audio Intelligence Layer
+
+### Speech Timing (Frontend → Backend)
+- `useSpeechTiming.ts` hook tracks recording start/end per voice segment
+- Each `submitScenarioTurn` call includes optional `speechMetrics`:
+  `{ totalDurationMs, wordsPerMinute, pauseCount, longestPauseMs, segmentCount, speakingRatio }`
+- Backend stores in `session_meta.turnSpeechMetrics[]`
+- Text-only input sends `null` — backward compatible
+
+### Part 2 Silence Detection
+- When voice auto-stops during `part2_speak` phase:
+  1. 4-second silence timer starts
+  2. If user doesn't restart: show nudge "You can continue speaking."
+  3. Auto-restart mic after 2s
+  4. If 3+ consecutive short segments: stronger nudge "Try to keep speaking."
+- All nudges are non-blocking — user can still click "Finish Speaking"
+- Timer expiry bypasses all nudges (unchanged)
+
+### Speech Flow Analysis (Backend)
+- `speechAnalyzer.js` runs on all real user turns at `endSession`
+- Text signals: filler words, self-corrections, repetition ratio, fragmentation
+- Timing signals (when available): WPM, pause count, speaking ratio
+- Outputs `hesitationLevel` and `fluencyEstimate`
+- High hesitation → 15% fluency score penalty; medium → 7%
+
+### Scoring Integration
+- `speechFlow` data injected into OpenAI scoring prompt as context
+- Scorer references filler count, speaking ratio, hesitation level
+- Speech insights returned to frontend in `EndSessionResult.speechInsights`
+- ScenarioSummary displays: hesitation level, WPM, filler breakdown, self-corrections

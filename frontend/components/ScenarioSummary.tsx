@@ -173,6 +173,73 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
           })}
         </div>
 
+        {/* Speech Flow Insights */}
+        {result.speechInsights && result.speechInsights.hesitationLevel !== "unknown" && (
+          <div
+            className="rounded-2xl p-5"
+            style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
+          >
+            <div className="text-[12px] font-bold mb-3" style={{ color: "var(--color-primary)" }}>
+              Speaking Flow
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Hesitation */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Hesitation</span>
+                <span className={`text-[14px] font-semibold ${
+                  result.speechInsights.hesitationLevel === "low" ? "text-emerald-400" :
+                  result.speechInsights.hesitationLevel === "medium" ? "text-amber-400" :
+                  "text-red-400"
+                }`}>
+                  {result.speechInsights.hesitationLevel === "low" ? "Low" :
+                   result.speechInsights.hesitationLevel === "medium" ? "Moderate" : "High"}
+                </span>
+              </div>
+              {/* WPM */}
+              {result.speechInsights.avgWordsPerMinute && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Speaking Rate</span>
+                  <span className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>
+                    {result.speechInsights.avgWordsPerMinute} wpm
+                  </span>
+                </div>
+              )}
+              {/* Fillers */}
+              {result.speechInsights.totalFillerCount > 0 && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Filler Words</span>
+                  <span className="text-[14px] font-semibold text-amber-400">
+                    {result.speechInsights.totalFillerCount} detected
+                  </span>
+                </div>
+              )}
+              {/* Self-corrections */}
+              {result.speechInsights.totalSelfCorrections > 0 && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Self-corrections</span>
+                  <span className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>
+                    {result.speechInsights.totalSelfCorrections}
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Filler breakdown */}
+            {result.speechInsights.fillerSummary.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {result.speechInsights.fillerSummary.map((f, i) => (
+                  <span
+                    key={i}
+                    className="px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ background: "rgba(251, 191, 36, 0.08)", color: "#fbbf24", border: "1px solid rgba(251, 191, 36, 0.15)" }}
+                  >
+                    {f}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Coach feedback */}
         {result.coachFeedback && (
           <div

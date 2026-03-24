@@ -204,6 +204,16 @@ export interface CriteriaFeedback {
   pronunciation: string;
 }
 
+export interface SpeechInsights {
+  hesitationLevel: "low" | "medium" | "high" | "unknown";
+  fluencyEstimate: number;
+  fillerSummary: string[];
+  totalFillerCount: number;
+  totalSelfCorrections: number;
+  avgWordsPerMinute: number | null;
+  avgSpeakingRatio: number | null;
+}
+
 export interface EndSessionResult {
   overallScore: number;
   fluency: number;
@@ -216,6 +226,7 @@ export interface EndSessionResult {
   turnFeedback: TurnFeedback[];
   notableVocabulary?: string[];
   improvementVocabulary?: string[];
+  speechInsights?: SpeechInsights | null;
   turnCount: number;
   wordCount: number;
   durationMs: number;

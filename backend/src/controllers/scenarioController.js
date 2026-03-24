@@ -96,14 +96,14 @@ async function startSession(req, res, next) {
 /**
  * Submit a user turn and receive the AI response.
  *
- * Body: { content: string }
+ * Body: { content: string, speechMetrics?: object }
  * Response: { userTurn, aiTurn }
  */
 async function submitTurn(req, res, next) {
   try {
     const { sessionId } = req.params;
     const userId = req.user.id;
-    const { content } = req.body;
+    const { content, speechMetrics } = req.body;
 
     if (!UUID_RE.test(sessionId)) {
       return sendError(res, { status: 400, message: "Valid sessionId (UUID) is required" });
@@ -112,7 +112,12 @@ async function submitTurn(req, res, next) {
       return sendError(res, { status: 400, message: "content is required" });
     }
 
-    const result = await scenarioService.submitTurn(sessionId, userId, content.trim());
+    // Validate speechMetrics if provided (optional — frontend may not send it)
+    const validMetrics = speechMetrics && typeof speechMetrics === "object"
+      ? speechMetrics
+      : null;
+
+    const result = await scenarioService.submitTurn(sessionId, userId, content.trim(), validMetrics);
 
     return sendSuccess(res, {
       data: result,

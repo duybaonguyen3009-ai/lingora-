@@ -185,6 +185,27 @@ async function scoreConversation(systemPrompt, conversationHistory, options = {}
 
   try {
     const isIelts = options.isIelts || false;
+    const speechFlow = options.speechFlow || null;
+
+    // Build speech flow context for the scorer (only if data available)
+    let speechFlowContext = "";
+    if (isIelts && speechFlow && speechFlow.hesitationLevel !== "unknown") {
+      const parts = [];
+      parts.push(`\nSPEECH FLOW ANALYSIS (measured from actual speaking session):`);
+      parts.push(`- Hesitation level: ${speechFlow.hesitationLevel.toUpperCase()}`);
+      parts.push(`- Filler words detected: ${speechFlow.totalFillerCount}${speechFlow.fillerSummary?.length ? ` (${speechFlow.fillerSummary.join(", ")})` : ""}`);
+      parts.push(`- Self-corrections: ${speechFlow.totalSelfCorrections}`);
+      if (speechFlow.avgWordsPerMinute) {
+        parts.push(`- Average speaking rate: ${speechFlow.avgWordsPerMinute} words/minute`);
+      }
+      if (speechFlow.avgSpeakingRatio !== null && speechFlow.avgSpeakingRatio !== undefined) {
+        const ratioPercent = Math.round(speechFlow.avgSpeakingRatio * 100);
+        parts.push(`- Speaking ratio: ${ratioPercent}% of time was active speech (${ratioPercent < 50 ? "very fragmented — many long pauses" : ratioPercent < 70 ? "some noticeable pauses" : "generally continuous"})`);
+      }
+      parts.push(`- Fluency estimate (system): ${speechFlow.fluencyEstimate}/100`);
+      parts.push(`\nUSE THIS DATA to inform your Fluency & Coherence score. Mention relevant speech flow observations in criteriaFeedback.fluency and coachFeedback.`);
+      speechFlowContext = parts.join("\n");
+    }
 
     const scoringInstruction = isIelts
       ? `You are a certified IELTS Speaking examiner producing a detailed score report for a completed IELTS Speaking test. \
@@ -256,7 +277,8 @@ PART WEIGHTING (CRITICAL):
 Rules:
 - overallScore = average of fluency, vocabulary, grammar, pronunciation (rounded)
 - turnFeedback: include 2-4 entries for user turns with the most room for improvement
-- If a criterion has no clear evidence, default to 55 and explain why evidence was limited`
+- If a criterion has no clear evidence, default to 55 and explain why evidence was limited
+${speechFlowContext}`
       : `You are an English speaking coach evaluating a practice conversation. \
 Analyze the LEARNER's messages (role: "user") in the conversation and return ONLY a valid JSON object \
 with this exact structure — no extra text, no markdown:

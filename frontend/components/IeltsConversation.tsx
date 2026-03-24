@@ -30,6 +30,8 @@ import type {
 } from "@/lib/types";
 import ScenarioSummary from "./ScenarioSummary";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useSpeechTiming } from "@/hooks/useSpeechTiming";
+import type { SpeechMetrics } from "@/hooks/useSpeechTiming";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -106,12 +108,75 @@ export default function IeltsConversation({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const micEnabledRef = useRef(true);
 
-  // Voice input
+  // Speech timing tracker
+  const speechTiming = useSpeechTiming();
+
+  // Part 2 pause detection
+  const [part2SilenceNudge, setPart2SilenceNudge] = useState<string | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const consecutiveShortSegmentsRef = useRef(0);
+
+  // Voice input — with timing hooks
   const voice = useVoiceInput(
     useCallback((transcript: string) => {
+      // Track timing when transcript arrives
+      speechTiming.onRecordingEnd(transcript);
+
+      // Clear silence timer
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+
+      // Track short segments for Part 2 fragmentation detection
+      const words = transcript.trim().split(/\s+/).filter(Boolean).length;
+      if (words < 5) {
+        consecutiveShortSegmentsRef.current += 1;
+      } else {
+        consecutiveShortSegmentsRef.current = 0;
+      }
+
       setInputText((prev) => (prev ? prev + " " + transcript : transcript));
-    }, [])
+    }, [speechTiming])
   );
+
+  // ── Smart mic start: wraps voice.startRecording with timing tracking ──
+  const startMicWithTiming = useCallback(() => {
+    speechTiming.onRecordingStart();
+    voice.startRecording();
+
+    // Part 2 silence detection: if mic auto-stops and user doesn't restart within 4s
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+  }, [voice, speechTiming]);
+
+  // ── Part 2 silence detection: when voice auto-stops during speaking phase ──
+  useEffect(() => {
+    // Only active during Part 2 speaking, and only when NOT recording but timer is still going
+    if (phase !== "part2_speak" || voice.isRecording || !timerActive || isProcessing) return;
+
+    // Voice just stopped — start a 4-second silence timer
+    silenceTimerRef.current = setTimeout(() => {
+      if (consecutiveShortSegmentsRef.current >= 3) {
+        setPart2SilenceNudge("Try to keep speaking. Think about the points on your card.");
+      } else {
+        setPart2SilenceNudge("You can continue speaking.");
+      }
+      // Auto-restart mic after nudge
+      if (voice.isSupported) {
+        setTimeout(() => {
+          startMicWithTiming();
+          setPart2SilenceNudge(null);
+        }, 2000);
+      }
+    }, 4000);
+
+    return () => {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    };
+  }, [phase, voice.isRecording, timerActive, isProcessing, voice.isSupported, startMicWithTiming]);
 
   // ── Auto-scroll ──
   useEffect(() => {
@@ -140,6 +205,7 @@ export default function IeltsConversation({
     return () => {
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
       if (timerRef.current) clearInterval(timerRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
   }, []);
 
@@ -157,7 +223,7 @@ export default function IeltsConversation({
       setExaminerSpeaking(false);
       micEnabledRef.current = true;
       if (autoMic && voice.isSupported && !voice.isRecording) {
-        setTimeout(() => voice.startRecording(), 300);
+        setTimeout(() => startMicWithTiming(), 300);
       }
     };
 
@@ -190,7 +256,7 @@ export default function IeltsConversation({
     } catch {
       tryStartMic();
     }
-  }, [voice]);
+  }, [voice, startMicWithTiming]);
 
   // ─── Session Init ───────────────────────────────────────────────────────
 
@@ -289,6 +355,9 @@ export default function IeltsConversation({
       setExaminerSpeaking(false);
     }
 
+    // Finalize speech timing for this turn
+    const metrics = speechTiming.finalizeTurn();
+
     setInputText("");
     setIsProcessing(true);
 
@@ -307,7 +376,7 @@ export default function IeltsConversation({
     setTurns((prev) => [...prev, optimistic]);
 
     try {
-      const result = await submitScenarioTurn(sessionId, content);
+      const result = await submitScenarioTurn(sessionId, content, metrics);
 
       const userTurn: ConversationTurn = {
         id: `user-${result.userTurn.turnIndex}`,
@@ -438,7 +507,7 @@ export default function IeltsConversation({
       setIsProcessing(false);
       inputRef.current?.focus();
     }
-  }, [sessionId, inputText, isProcessing, turns, userTurnCount, voice, playTTS, handleEndSession]);
+  }, [sessionId, inputText, isProcessing, turns, userTurnCount, voice, playTTS, handleEndSession, speechTiming]);
 
   // ── Key handler ──
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -458,27 +527,42 @@ export default function IeltsConversation({
 
     const content = inputText.trim() || "[Speaking completed]";
     const wordCount = content.split(/\s+/).filter(Boolean).length;
+    const speakingDurationMs = speechTiming.getCurrentSpeakingDurationMs();
 
-    // Enforce minimum speaking: if user manually ends (not timer) with < 30 words, nudge them
+    // Enforce minimum speaking: word count AND duration check
     const isTimerExpiry = part2EndByTimerRef.current;
     part2EndByTimerRef.current = false;
 
-    if (!isTimerExpiry && wordCount < 30 && content !== "[Speaking completed]") {
-      setPart2Nudge("You still have time. In the real IELTS test, you should speak for at least one minute. Try to continue.");
-      // Don't end — let them keep speaking
-      if (voice.isSupported) {
-        setTimeout(() => voice.startRecording(), 300);
+    if (!isTimerExpiry && content !== "[Speaking completed]") {
+      const tooFewWords = wordCount < 30;
+      const tooShortDuration = speakingDurationMs < 30000; // < 30 seconds of actual speaking
+
+      if (tooFewWords || tooShortDuration) {
+        const reason = tooFewWords && tooShortDuration
+          ? "You still have time. In the real IELTS test, you should speak for at least one minute. Try to continue."
+          : tooShortDuration
+          ? "You've been speaking for less than 30 seconds. Try to develop your ideas more."
+          : "You still have time. Try to expand on your points.";
+        setPart2Nudge(reason);
+        if (voice.isSupported) {
+          setTimeout(() => startMicWithTiming(), 300);
+        }
+        return;
       }
-      return;
     }
 
+    // Finalize speech timing for Part 2
+    const metrics = speechTiming.finalizeTurn();
+    consecutiveShortSegmentsRef.current = 0;
+
     setPart2Nudge(null);
+    setPart2SilenceNudge(null);
     setTimerActive(false);
     setInputText("");
     setIsProcessing(true);
 
     try {
-      const result = await submitScenarioTurn(sessionId, content);
+      const result = await submitScenarioTurn(sessionId, content, metrics);
 
       const userTurn: ConversationTurn = {
         id: `user-${result.userTurn.turnIndex}`,
@@ -561,7 +645,7 @@ export default function IeltsConversation({
     } catch (err) { console.error("[ielts-ui] handlePart2End error:", err); } finally {
       setIsProcessing(false);
     }
-  }, [sessionId, isProcessing, inputText, voice, playTTS]);
+  }, [sessionId, isProcessing, inputText, voice, playTTS, speechTiming, startMicWithTiming]);
 
   const prepSkipFiredRef = useRef(false);
   const handlePrepSkip = useCallback(async () => {
@@ -600,11 +684,11 @@ export default function IeltsConversation({
     setTimerSeconds(SPEAK_SECONDS);
     setTimerActive(true);
 
-    // Start mic after a brief pause (TTS has already finished via await)
+    // Start mic with timing after a brief pause (TTS has already finished via await)
     if (voice.isSupported) {
-      setTimeout(() => voice.startRecording(), 300);
+      setTimeout(() => startMicWithTiming(), 300);
     }
-  }, [sessionId, voice, playTTS]);
+  }, [sessionId, voice, playTTS, startMicWithTiming]);
 
   // ── Timer expiry handlers ──
   useEffect(() => {
@@ -889,6 +973,13 @@ export default function IeltsConversation({
                 {voice.isRecording && voice.interimTranscript && (
                   <div className="ielts-live-transcript">
                     {voice.interimTranscript}
+                  </div>
+                )}
+
+                {/* Silence nudge — triggered by 4s of no speech during Part 2 */}
+                {part2SilenceNudge && !part2Nudge && (
+                  <div className="px-4 py-2.5 rounded-xl text-[13px] text-blue-300/90 bg-blue-500/10 border border-blue-500/20 text-center max-w-[300px] animate-fadeIn">
+                    {part2SilenceNudge}
                   </div>
                 )}
 
