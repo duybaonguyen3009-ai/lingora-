@@ -148,3 +148,38 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 | ~~`DailyMission` + `DailyGoalBar` both render in Practice~~ | ~~Confusing duplicate daily display~~ | **FIXED** — `DailyMission` removed from LessonsPage |
 | ~~`LessonsSection.tsx` is dead code~~ | ~~Unused file adds noise~~ | **FIXED** — file deleted |
 | `dateKey()` duplicated in `useDailyGoal` and `useUserStats` | Maintenance risk — could diverge | Import from single location |
+| Grammar progress is localStorage-only | Clearing browser data loses all grammar progress; XP not in backend `xp_ledger` | Add backend grammar progress API when grammar is validated |
+| Grammar XP separate from Profile XP | Profile tab shows backend XP, Grammar shows its own XP counter | Unify when backend grammar tracking is added |
+| `PracticeTab` still exists but is no longer rendered | Dead component — still importable but not wired | Remove or re-purpose when grammar direction is confirmed |
+
+---
+
+## Grammar Curriculum — Context-Based Questions Only
+
+**Decision:** Every grammar question MUST include a time clue or scenario context. Naked "She ___ to school" without context is never allowed.
+
+**Why:** Context-free grammar questions are academic and boring — they test rote memorization, not real understanding. Time clues ("every morning", "right now", "yesterday") and scenario framing ("You're on a video call showing your room") force the learner to think about WHY a tense is correct, not just WHAT form to use. This dramatically improves retention and engagement.
+
+**Constraint:** When adding new questions to `grammarData.ts`, every `sentence` field must contain either:
+- A time clue (every day, right now, yesterday, last week, tomorrow, next year, etc.)
+- A scenario context ("You're describing...", "Your teacher asks about...", "You call your friend...")
+- Both
+
+**Review rule:** If a question can be answered correctly without reading the context words, it's a bad question. Rewrite it.
+
+---
+
+## Grammar Progression — Game-Like Unlock, Not Menu
+
+**Decision:** Grammar lessons unlock sequentially within each unit. Units unlock after passing the previous unit's exam. Final exam unlocks after all unit exams pass.
+
+**Why:** Menu-based learning (pick any lesson) gives no sense of progression. Sequential unlocking creates a game-like flow: challenge → mastery → unlock → next challenge. Users feel achievement at each step.
+
+**Implementation:**
+- `useGrammarProgress.ts` — localStorage-backed state, tracks per-lesson scores, per-unit exam results
+- First lesson in Unit 1 is always unlocked. Each subsequent lesson requires the previous one completed.
+- Unit exam requires all lessons in that unit completed. Next unit requires previous unit's exam passed.
+- Final exam requires all 3 unit exams passed.
+- XP: 10/lesson (+5 perfect bonus), 20/exam, 50/final exam.
+
+**Constraint:** Never add a "skip" or "unlock all" button. The progression IS the product. If users find it too slow, add more content variety — don't remove the gate.

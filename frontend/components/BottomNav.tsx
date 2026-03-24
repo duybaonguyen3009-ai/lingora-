@@ -10,7 +10,7 @@ interface BottomNavProps {
 const NAV_ITEMS = [
   { id: "home", label: "Home", Icon: IconHome },
   { id: "speak", label: "Speak", Icon: IconMic },
-  { id: "practice", label: "Practice", Icon: IconBook },
+  { id: "practice", label: "Grammar", Icon: IconBook },
   { id: "exam", label: "Exam", Icon: IconGraduationCap },
   { id: "profile", label: "Profile", Icon: IconUser },
 ] as const;

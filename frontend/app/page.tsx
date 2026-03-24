@@ -7,7 +7,7 @@ import StartSpeakingCard from "@/components/StartSpeakingCard";
 import PracticeScenarios from "@/components/PracticeScenarios";
 import CoachTipCard from "@/components/CoachTipCard";
 import TodayFocusCard from "@/components/TodayFocusCard";
-import PracticeTab from "@/components/PracticeTab";
+import { GrammarTab } from "@/components/Grammar";
 import ScenarioList from "@/components/ScenarioList";
 import ScenarioConversation from "@/components/ScenarioConversation";
 import IeltsConversation from "@/components/IeltsConversation";
@@ -144,9 +144,9 @@ export default function HomePage() {
             />
           )}
 
-          {/* ── PRACTICE TAB — Unified learning experience ── */}
+          {/* ── GRAMMAR TAB — Gamified tenses curriculum ── */}
           {activeTab === "practice" && (
-            <PracticeTab onLessonComplete={refetchGamification} streak={displayStreak} />
+            <GrammarTab />
           )}
 
           {/* ── EXAM TAB ── */}
