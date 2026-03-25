@@ -764,10 +764,10 @@ export default function IeltsConversation({
           </button>
 
           <div className="flex-1 min-w-0">
-            <div className="font-sora font-bold text-[14px] text-white">
+            <div className="font-sora font-bold text-[14px]" style={{ color: 'var(--ielts-text)' }}>
               IELTS Speaking Test
             </div>
-            <div className="text-[11px] text-white/50">
+            <div className="text-[11px]" style={{ color: 'var(--ielts-text-secondary)' }}>
               {phase === "part1" ? "Part 1 — Interview" :
                phase.startsWith("part2") ? "Part 2 — Long Turn" :
                phase === "part3" ? "Part 3 — Discussion" :
@@ -815,10 +815,10 @@ export default function IeltsConversation({
                 </div>
               </div>
               <div className="text-center">
-                <p className="font-sora font-bold text-[20px] text-white">
+                <p className="font-sora font-bold text-[20px]" style={{ color: 'var(--ielts-text)' }}>
                   Entering exam room
                 </p>
-                <p className="text-[14px] mt-3 text-white/40 max-w-[280px] mx-auto leading-relaxed">
+                <p className="text-[14px] mt-3 max-w-[280px] mx-auto leading-relaxed" style={{ color: 'var(--ielts-text-muted)' }}>
                   Your examiner is preparing. The test will begin shortly.
                 </p>
               </div>
@@ -834,7 +834,7 @@ export default function IeltsConversation({
           {phase === "error" && (
             <div className="flex-1 flex flex-col items-center justify-center gap-5 py-24">
               <div className="text-[40px]">{!isAuthenticated ? "🔒" : "⚠️"}</div>
-              <p className="text-white/70 text-[16px] font-medium text-center">
+              <p className="text-[16px] font-medium text-center" style={{ color: 'var(--ielts-text-secondary)' }}>
                 {errorMsg || "Something went wrong"}
               </p>
               <div className="flex gap-3">
@@ -843,7 +843,7 @@ export default function IeltsConversation({
                     Sign In
                   </button>
                 )}
-                <button onClick={onClose} className="text-white/50 underline text-[14px]">Go back</button>
+                <button onClick={onClose} className="underline text-[14px]" style={{ color: 'var(--ielts-text-secondary)' }}>Go back</button>
               </div>
             </div>
           )}
@@ -859,10 +859,10 @@ export default function IeltsConversation({
                 </div>
               </div>
               <div className="text-center">
-                <p className="font-sora font-bold text-[18px] text-white">
+                <p className="font-sora font-bold text-[18px]" style={{ color: 'var(--ielts-text)' }}>
                   Analysing your performance
                 </p>
-                <p className="text-[13px] mt-2 text-white/40 max-w-[260px] mx-auto">
+                <p className="text-[13px] mt-2 max-w-[260px] mx-auto" style={{ color: 'var(--ielts-text-muted)' }}>
                   Evaluating fluency, vocabulary, grammar, and pronunciation...
                 </p>
               </div>
@@ -870,8 +870,8 @@ export default function IeltsConversation({
               <div className="w-52 flex flex-col gap-3 mt-2">
                 {["Fluency", "Vocabulary", "Grammar", "Pronunciation"].map((label, i) => (
                   <div key={label} className="flex items-center gap-3">
-                    <span className="text-[10px] w-20 text-right text-white/30 uppercase tracking-wider">{label}</span>
-                    <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
+                    <span className="text-[10px] w-20 text-right uppercase tracking-wider" style={{ color: 'var(--ielts-text-muted)' }}>{label}</span>
+                    <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--ielts-score-track)' }}>
                       <div className="ielts-score-loading" style={{ animationDelay: `${i * 0.2}s` }} />
                     </div>
                   </div>
@@ -885,13 +885,13 @@ export default function IeltsConversation({
             <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20 animate-fadeIn">
               <div className="ielts-orb ielts-orb-speaking">
                 <div className="ielts-orb-inner">
-                  <span className="text-[20px] font-bold text-white">2</span>
+                  <span className="text-[20px] font-bold" style={{ color: 'var(--ielts-text)' }}>2</span>
                 </div>
               </div>
-              <p className="font-sora font-bold text-[18px] text-white text-center">
+              <p className="font-sora font-bold text-[18px] text-center" style={{ color: 'var(--ielts-text)' }}>
                 Moving to Part 2
               </p>
-              <p className="text-[13px] text-white/40 text-center max-w-[260px]">
+              <p className="text-[13px] text-center max-w-[260px]" style={{ color: 'var(--ielts-text-muted)' }}>
                 You will receive a task card. You have 1 minute to prepare.
               </p>
             </div>
@@ -908,10 +908,10 @@ export default function IeltsConversation({
                     Task Card
                   </span>
                 </div>
-                <p className="text-[18px] font-semibold text-white leading-snug mb-4">
+                <p className="text-[18px] font-semibold leading-snug mb-4" style={{ color: 'var(--ielts-text)' }}>
                   {cueCard.topic}
                 </p>
-                <p className="text-[11px] font-medium text-white/40 uppercase tracking-wider mb-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-muted)' }}>
                   You should say:
                 </p>
                 <ul className="flex flex-col gap-2.5">
@@ -920,7 +920,7 @@ export default function IeltsConversation({
                       <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 bg-indigo-500/20 text-indigo-300">
                         {i + 1}
                       </span>
-                      <span className="text-[14px] text-white/80 leading-relaxed">{prompt}</span>
+                      <span className="text-[14px] leading-relaxed" style={{ color: 'var(--ielts-text-secondary)' }}>{prompt}</span>
                     </li>
                   ))}
                 </ul>
@@ -929,8 +929,8 @@ export default function IeltsConversation({
               {/* Timer + controls */}
               <div className="flex flex-col items-center gap-5">
                 <div className={`ielts-timer ${timerUrgent ? "ielts-timer-urgent" : ""}`}>
-                  <span className="text-[11px] uppercase tracking-wider text-white/40 mb-1">Preparation time</span>
-                  <span className="font-mono text-[36px] font-bold text-white">{timerDisplay}</span>
+                  <span className="text-[11px] uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Preparation time</span>
+                  <span className="font-mono text-[36px] font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
                 </div>
 
                 {/* Heartbeat pulse when timer is low */}
@@ -954,14 +954,14 @@ export default function IeltsConversation({
               {/* Compact cue card reminder */}
               <div className="ielts-cue-card-mini">
                 <span className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Topic:</span>
-                <span className="text-[13px] text-white/80 ml-2">{cueCard.topic}</span>
+                <span className="text-[13px] ml-2" style={{ color: 'var(--ielts-text-secondary)' }}>{cueCard.topic}</span>
               </div>
 
               {/* Timer */}
               <div className="flex flex-col items-center gap-5">
                 <div className={`ielts-timer ${timerUrgent ? "ielts-timer-urgent" : ""}`}>
-                  <span className="text-[11px] uppercase tracking-wider text-white/40 mb-1">Speaking time</span>
-                  <span className="font-mono text-[36px] font-bold text-white">{timerDisplay}</span>
+                  <span className="text-[11px] uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Speaking time</span>
+                  <span className="font-mono text-[36px] font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
                 </div>
 
                 {/* Central mic orb */}
@@ -1010,7 +1010,7 @@ export default function IeltsConversation({
                 <button
                   onClick={handlePart2End}
                   disabled={isProcessing}
-                  className="ielts-btn-ghost px-6 py-2 rounded-xl text-[13px] text-white/50 hover:text-white/70"
+                  className="ielts-btn-ghost px-6 py-2 rounded-xl text-[13px]"
                 >
                   Finish Speaking
                 </button>
@@ -1024,13 +1024,13 @@ export default function IeltsConversation({
               {/* Previous Q&A transcript (collapsed) */}
               {qaPairs.length > 1 && (
                 <div className="ielts-transcript">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-white/20 mb-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-faint)' }}>
                     Previous responses
                   </div>
                   {qaPairs.slice(0, -1).map((pair) => (
                     <div key={pair.idx} className="mb-3 last:mb-0">
-                      <p className="text-[11px] text-white/30 mb-0.5">Q{pair.idx}: {pair.q}</p>
-                      <p className="text-[12px] text-white/50">{pair.a}</p>
+                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--ielts-text-muted)' }}>Q{pair.idx}: {pair.q}</p>
+                      <p className="text-[12px]" style={{ color: 'var(--ielts-text-secondary)' }}>{pair.a}</p>
                     </div>
                   ))}
                 </div>
@@ -1053,7 +1053,7 @@ export default function IeltsConversation({
                       )}
                     </div>
                   </div>
-                  <p className="text-[17px] font-medium text-white leading-relaxed">
+                  <p className="text-[17px] font-medium leading-relaxed" style={{ color: 'var(--ielts-text)' }}>
                     {latestExaminerMsg.content}
                   </p>
                 </div>
@@ -1082,7 +1082,7 @@ export default function IeltsConversation({
               {latestUserMsg && qaPairs.length > 0 && (
                 <div className="ielts-user-answer animate-answerIn">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60">Your answer</span>
-                  <p className="text-[14px] text-white/70 mt-1">{latestUserMsg.content}</p>
+                  <p className="text-[14px] mt-1" style={{ color: 'var(--ielts-answer-text)' }}>{latestUserMsg.content}</p>
                 </div>
               )}
             </div>
@@ -1101,7 +1101,7 @@ export default function IeltsConversation({
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                 <span className="text-[11px] text-red-400 font-medium">Recording</span>
                 {voice.interimTranscript && (
-                  <span className="text-[12px] text-white/40 italic truncate flex-1">{voice.interimTranscript}</span>
+                  <span className="text-[12px] italic truncate flex-1" style={{ color: 'var(--ielts-text-muted)' }}>{voice.interimTranscript}</span>
                 )}
               </div>
             )}
@@ -1151,7 +1151,7 @@ export default function IeltsConversation({
             </div>
 
             {!voice.isSupported && (
-              <p className="text-[10px] mt-2 text-center text-white/25">
+              <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--ielts-text-faint)' }}>
                 Voice input requires Chrome or Edge
               </p>
             )}
