@@ -212,6 +212,37 @@ Adding a backend daily-goal endpoint would duplicate data already available clie
 
 ---
 
+## Grammar Topics — Standalone Topics Alongside Tenses
+
+**Decision:** Standalone grammar topics (e.g., Passive Voice) live in `GRAMMAR_TOPICS` array, separate from the tenses `GRAMMAR_UNITS`. They are displayed in a "Grammar Topics" section below the tenses units and above the final exam.
+
+**Why:** Adding topics to `GRAMMAR_UNITS` would break the tenses progression chain (unlock gating, final exam requirements, lesson count). Keeping them in a parallel array ensures the 12-tenses curriculum is unaffected. Topics are independently unlocked — no dependency on tenses progress.
+
+**Implementation:**
+- `grammarData.ts` — `GRAMMAR_TOPICS: GrammarUnit[]` holds standalone topics. `GRAMMAR_UNITS` is untouched.
+- `useGrammarProgress.ts` — `isLessonUnlocked` / `isUnitUnlocked` search `GRAMMAR_TOPICS` as fallback after `GRAMMAR_UNITS`. Topic units are always unlocked. `completedLessonsCount` only counts tenses lessons.
+- `GrammarTab.tsx` — Topics section rendered between tenses units and final exam using same `UnitCard` component.
+- Same localStorage store, same XP system, same exercise components (`GrammarLessonView`, `GrammarExam`).
+
+**Constraint:** Never add topics to `GRAMMAR_UNITS`. Never make topics gate the tenses final exam. Each topic must be self-contained.
+
+---
+
+## Custom Exercise Types — Isolated Components per Lesson ID
+
+**Decision:** Non-MCQ exercise types (e.g., drag-drop sentence builder) are implemented as fully self-contained components with their own internal data. They are wired into the lesson flow by checking `activeLesson.id` in `GrammarTab.tsx` — if the ID matches a custom lesson, the custom component renders instead of `GrammarLessonView`.
+
+**Why:** Modifying `GrammarLessonView` to support multiple exercise types would risk breaking the 12-tenses MCQ system. Isolated components keep each exercise type independent. The `GrammarLesson` entry in `grammarData.ts` serves only as a progression node (unlock gating, score tracking).
+
+**Implementation:**
+- `grammarData.ts` — Custom lessons use `questions: []` (empty) + `exerciseCount: N` for display. Optional `exerciseCount` field on `GrammarLesson`.
+- `GrammarTab.tsx` — `CUSTOM_LESSON_IDS` set contains IDs that route to custom components. The `LessonNode` uses `exerciseCount ?? questions.length` for the count label, and shows "exercises" instead of "questions" for custom lessons.
+- Custom components (e.g., `PassiveSentenceBuilder.tsx`) accept `onComplete(score)` + `onClose()` — same contract as `GrammarLessonView`.
+
+**Constraint:** Never pass a custom lesson (with `questions: []`) to `GrammarLessonView` — it will crash on empty array access. Always intercept via `CUSTOM_LESSON_IDS` check.
+
+---
+
 ## IELTS Examiner Prompt — Natural, Not Robotic
 
 **Decision:** The IELTS examiner must never say "My name is the examiner" or use generic robotic greetings. The system prompt instructs the AI to use a real first name (Sarah, David, James, Emily) and follow authentic IELTS protocol: greeting → full name request → ID check → Part 1 questions.

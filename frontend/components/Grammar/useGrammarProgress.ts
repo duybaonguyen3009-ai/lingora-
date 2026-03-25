@@ -11,7 +11,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { GRAMMAR_UNITS, TOTAL_GRAMMAR_LESSONS } from "./grammarData";
+import { GRAMMAR_UNITS, GRAMMAR_TOPICS, TOTAL_GRAMMAR_LESSONS } from "./grammarData";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -108,9 +108,17 @@ export interface UseGrammarProgressResult {
 export function useGrammarProgress(): UseGrammarProgressResult {
   const [data, setData] = useState<GrammarProgressData>(loadProgress);
 
+  // Only count tenses lessons for the tenses progress display
+  const tensesLessonIds = useMemo(
+    () => new Set(GRAMMAR_UNITS.flatMap((u) => u.lessons.map((l) => l.id))),
+    []
+  );
+
   const completedLessonsCount = useMemo(
-    () => Object.keys(data.lessonResults).length,
-    [data.lessonResults]
+    () =>
+      Object.keys(data.lessonResults).filter((id) => tensesLessonIds.has(id))
+        .length,
+    [data.lessonResults, tensesLessonIds]
   );
 
   const isLessonCompleted = useCallback(
@@ -181,18 +189,25 @@ export function useGrammarProgress(): UseGrammarProgressResult {
 
   const isLessonUnlocked = useCallback(
     (lessonId: string): boolean => {
+      // Check tenses curriculum (sequential cross-unit gating)
       for (const unit of GRAMMAR_UNITS) {
         for (let i = 0; i < unit.lessons.length; i++) {
           if (unit.lessons[i].id === lessonId) {
             if (i === 0) {
-              // First lesson in unit: unlocked if unit itself is unlocked
               const unitIndex = GRAMMAR_UNITS.indexOf(unit);
-              if (unitIndex === 0) return true; // first unit always unlocked
-              // Previous unit's exam must be passed
+              if (unitIndex === 0) return true;
               return data.examResults[GRAMMAR_UNITS[unitIndex - 1].id]?.passed === true;
             }
-            // Subsequent lessons: previous lesson must be completed
             return unit.lessons[i - 1].id in data.lessonResults;
+          }
+        }
+      }
+      // Check standalone grammar topics (each topic is independently unlocked)
+      for (const topic of GRAMMAR_TOPICS) {
+        for (let i = 0; i < topic.lessons.length; i++) {
+          if (topic.lessons[i].id === lessonId) {
+            if (i === 0) return true; // first lesson in any topic is always open
+            return topic.lessons[i - 1].id in data.lessonResults;
           }
         }
       }
@@ -203,11 +218,15 @@ export function useGrammarProgress(): UseGrammarProgressResult {
 
   const isUnitUnlocked = useCallback(
     (unitId: string): boolean => {
+      // Tenses curriculum: sequential gating
       const unitIndex = GRAMMAR_UNITS.findIndex((u) => u.id === unitId);
-      if (unitIndex === 0) return true; // first unit always unlocked
-      if (unitIndex < 0) return false;
-      // Previous unit's exam must be passed
-      return data.examResults[GRAMMAR_UNITS[unitIndex - 1].id]?.passed === true;
+      if (unitIndex === 0) return true;
+      if (unitIndex > 0) {
+        return data.examResults[GRAMMAR_UNITS[unitIndex - 1].id]?.passed === true;
+      }
+      // Standalone grammar topics: always unlocked (no cross-topic dependency)
+      if (GRAMMAR_TOPICS.some((t) => t.id === unitId)) return true;
+      return false;
     },
     [data.examResults]
   );
