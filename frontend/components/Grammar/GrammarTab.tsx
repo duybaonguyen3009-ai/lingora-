@@ -30,10 +30,15 @@ import { useGrammarProgress } from "./useGrammarProgress";
 import GrammarLessonView from "./GrammarLesson";
 import GrammarExam from "./GrammarExam";
 import PassiveSentenceBuilder from "./PassiveSentenceBuilder";
+import ModalVerbsLesson from "./ModalVerbsLesson";
 import { cn } from "@/lib/utils";
 
 /** Lesson IDs that use custom components instead of GrammarLessonView. */
-const CUSTOM_LESSON_IDS = new Set(["passive-sentence-builder"]);
+const CUSTOM_LESSON_IDS = new Set([
+  "passive-sentence-builder",
+  "modal-fill-blank",
+  "modal-mastery",
+]);
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -466,6 +471,16 @@ export default function GrammarTab() {
     if (activeLesson.id === "passive-sentence-builder") {
       return (
         <PassiveSentenceBuilder
+          onComplete={handleLessonComplete}
+          onClose={() => setActiveLesson(null)}
+        />
+      );
+    }
+    // Modal Verbs interactive lessons
+    if (activeLesson.id === "modal-fill-blank" || activeLesson.id === "modal-mastery") {
+      return (
+        <ModalVerbsLesson
+          lessonId={activeLesson.id}
           onComplete={handleLessonComplete}
           onClose={() => setActiveLesson(null)}
         />

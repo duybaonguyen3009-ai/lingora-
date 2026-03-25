@@ -1663,8 +1663,254 @@ const PASSIVE_VOICE_UNIT: GrammarUnit = {
   ],
 };
 
+// ---------------------------------------------------------------------------
+// Modal Verbs Topic
+// ---------------------------------------------------------------------------
+
+const MODAL_VERBS_UNIT: GrammarUnit = {
+  id: "topic-modal-verbs",
+  title: "Modal Verbs",
+  emoji: "\u{1F4AC}",
+  description: "Master can, should, must, might, would and more",
+  color: "blue",
+  lessons: [
+    {
+      id: "modal-basics-1",
+      title: "Can, Could & May",
+      subtitle: "Ability, possibility, permission",
+      questions: [
+        {
+          id: "mv-q1",
+          sentence: "My sister ___ speak French fluently because she lived in Paris for 5 years.",
+          options: ["can", "must", "should", "might"],
+          correctIndex: 0,
+          explanation: {
+            whyCorrect: "\"Can\" expresses present ability. She has the skill because of her experience.",
+            whyWrong: "\"Must\" = obligation. \"Should\" = advice. \"Might\" = uncertain possibility. None fit 'ability' here.",
+            rule: "Use \"can\" for present ability or skill.",
+            example: "He can play the guitar very well.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "mv-q2",
+          sentence: "When I was younger, I ___ run a marathon without any training.",
+          options: ["can", "could", "might", "should"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect: "\"Could\" expresses past ability — something you were once able to do.",
+            whyWrong: "\"Can\" is present ability. \"Might\" = possibility. \"Should\" = advice.",
+            rule: "Use \"could\" for ability in the past.",
+            example: "She could dance beautifully when she was young.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "mv-q3",
+          sentence: "Excuse me, ___ I borrow your pen for a moment?",
+          options: ["must", "should", "may", "will"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect: "\"May I...?\" is a polite way to ask for permission, especially in formal situations.",
+            whyWrong: "\"Must\" = obligation. \"Should\" = advice. \"Will\" doesn't ask permission.",
+            rule: "Use \"may\" for formal permission requests.",
+            example: "May I leave the meeting early today?",
+          },
+          difficulty: "medium",
+        },
+        {
+          id: "mv-q4",
+          sentence: "___ you help me carry these boxes to the car? They're very heavy.",
+          options: ["Must", "Should", "Could", "Might"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect: "\"Could you...?\" is a polite way to request someone's help. It's less direct than \"can\".",
+            whyWrong: "\"Must\" = commanding. \"Should\" = advice. \"Might\" doesn't make requests.",
+            rule: "Use \"could\" for polite requests.",
+            example: "Could you please close the window?",
+          },
+          difficulty: "medium",
+        },
+        {
+          id: "mv-q5",
+          sentence: "The restaurant ___ be closed today — I see no lights inside and the sign says 'Closed'.",
+          options: ["should", "might", "can", "could"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect: "\"Might\" expresses possibility — we're guessing based on evidence but aren't 100% sure.",
+            whyWrong: "\"Should\" = expectation. \"Can\" = ability. \"Could\" is also possible but \"might\" better expresses uncertain deduction.",
+            rule: "Use \"might\" when you think something is possible but you're not certain.",
+            example: "She might come to the party — I'm not sure.",
+          },
+          difficulty: "medium",
+        },
+      ],
+    },
+    {
+      id: "modal-basics-2",
+      title: "Must, Should & Would",
+      subtitle: "Obligation, advice, polite forms",
+      questions: [
+        {
+          id: "mv-q6",
+          sentence: "Students ___ submit their assignments before the deadline. No exceptions.",
+          options: ["should", "might", "must", "could"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect: "\"Must\" expresses strong obligation — this is a strict rule with no flexibility.",
+            whyWrong: "\"Should\" = advice (optional). \"Might\" = possibility. \"Could\" = ability/request.",
+            rule: "Use \"must\" for rules, obligations, and strong necessity.",
+            example: "You must wear a uniform at school.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "mv-q7",
+          sentence: "You look exhausted. You ___ take a day off and rest.",
+          options: ["must", "should", "might", "can"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect: "\"Should\" gives friendly advice — it's a recommendation, not an order.",
+            whyWrong: "\"Must\" is too forceful for friendly advice. \"Might\" = possibility. \"Can\" = ability.",
+            rule: "Use \"should\" to give advice or recommend something.",
+            example: "You should see a doctor about that cough.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "mv-q8",
+          sentence: "___ you like to join us for dinner tonight? We're going to that new Italian place.",
+          options: ["Should", "Must", "Would", "Can"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect: "\"Would you like to...?\" is the standard polite invitation form.",
+            whyWrong: "\"Should\" = advice. \"Must\" = obligation. \"Can\" works but is less polite than \"would\".",
+            rule: "Use \"would\" for polite offers, invitations, and requests.",
+            example: "Would you like some more coffee?",
+          },
+          difficulty: "medium",
+        },
+        {
+          id: "mv-q9",
+          sentence: "If I won the lottery, I ___ travel around the world for a year.",
+          options: ["will", "would", "must", "should"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect: "\"Would\" is used for hypothetical/imaginary situations. Winning the lottery is an unlikely scenario.",
+            whyWrong: "\"Will\" = real future plans. \"Must\" = obligation. \"Should\" = advice.",
+            rule: "Use \"would\" for hypothetical or conditional situations.",
+            example: "If I had more time, I would learn Japanese.",
+          },
+          difficulty: "hard",
+        },
+        {
+          id: "mv-q10",
+          sentence: "You ___ not park here — it's a fire lane and you'll get a fine.",
+          options: ["should", "might", "must", "would"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect: "\"Must not\" expresses prohibition — parking here is forbidden by law.",
+            whyWrong: "\"Should not\" = advice (weaker). \"Might not\" = possibility. \"Would not\" = hypothetical.",
+            rule: "Use \"must not\" for prohibition — things that are forbidden.",
+            example: "You must not use your phone during the exam.",
+          },
+          difficulty: "medium",
+        },
+      ],
+    },
+    {
+      id: "modal-fill-blank",
+      title: "Fill the Modal",
+      subtitle: "Tap to complete sentences with modals",
+      questions: [],
+      exerciseCount: 6,
+    },
+    {
+      id: "modal-mastery",
+      title: "Modal Mastery",
+      subtitle: "Match meanings & solve scenarios",
+      questions: [],
+      exerciseCount: 6,
+    },
+  ],
+  examQuestions: [
+    {
+      id: "mv-exam-1",
+      sentence: "You ___ drive without a license. It's against the law.",
+      options: ["shouldn't", "might not", "must not", "wouldn't"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect: "\"Must not\" = prohibition. Driving without a license is illegal.",
+        rule: "\"Must not\" expresses prohibition — something forbidden.",
+        example: "You must not enter this area without permission.",
+      },
+      difficulty: "easy",
+    },
+    {
+      id: "mv-exam-2",
+      sentence: "It's getting late. We ___ leave soon if we want to catch the last train.",
+      options: ["might", "should", "would", "can"],
+      correctIndex: 1,
+      explanation: {
+        whyCorrect: "\"Should\" gives practical advice about timing. It's a recommendation based on circumstances.",
+        rule: "\"Should\" = advice or recommendation.",
+        example: "We should hurry — the shop closes in 10 minutes.",
+      },
+      difficulty: "easy",
+    },
+    {
+      id: "mv-exam-3",
+      sentence: "She ___ be at home right now — I just saw her car in the driveway.",
+      options: ["must", "should", "would", "can"],
+      correctIndex: 0,
+      explanation: {
+        whyCorrect: "\"Must\" expresses logical deduction — strong certainty based on evidence (her car is there).",
+        rule: "\"Must\" can express strong deduction: \"I'm almost certain this is true.\"",
+        example: "He must be tired — he's been working for 12 hours.",
+      },
+      difficulty: "medium",
+    },
+    {
+      id: "mv-exam-4",
+      sentence: "___ you mind opening the window? It's quite warm in here.",
+      options: ["Could", "Should", "Would", "Must"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect: "\"Would you mind...?\" is a very polite way to make a request.",
+        rule: "\"Would you mind + -ing?\" is one of the most polite request forms in English.",
+        example: "Would you mind waiting for a few minutes?",
+      },
+      difficulty: "medium",
+    },
+    {
+      id: "mv-exam-5",
+      sentence: "When I was a child, I ___ climb trees very easily, but now I'm afraid of heights.",
+      options: ["can", "could", "might", "should"],
+      correctIndex: 1,
+      explanation: {
+        whyCorrect: "\"Could\" = past ability. The speaker had this ability as a child but no longer does.",
+        rule: "Use \"could\" (not \"can\") for abilities you had in the past.",
+        example: "She could read before she started school.",
+      },
+      difficulty: "medium",
+    },
+    {
+      id: "mv-exam-6",
+      sentence: "Take an umbrella — it ___ rain this afternoon according to the forecast.",
+      options: ["must", "should", "might", "would"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect: "\"Might\" = uncertain possibility. Weather forecasts aren't 100% certain.",
+        rule: "\"Might\" expresses possibility when you're not sure something will happen.",
+        example: "The flight might be delayed due to bad weather.",
+      },
+      difficulty: "easy",
+    },
+  ],
+};
+
 /** Standalone grammar topics — separate from the 12-tenses curriculum. */
-export const GRAMMAR_TOPICS: GrammarUnit[] = [PASSIVE_VOICE_UNIT];
+export const GRAMMAR_TOPICS: GrammarUnit[] = [PASSIVE_VOICE_UNIT, MODAL_VERBS_UNIT];
 
 /** Total lessons across all grammar topics. */
 export const TOTAL_TOPIC_LESSONS = GRAMMAR_TOPICS.reduce(
