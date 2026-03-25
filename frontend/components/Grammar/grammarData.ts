@@ -35,6 +35,8 @@ export interface GrammarLesson {
   title: string;
   subtitle: string;
   questions: GrammarQuestion[];
+  /** Override for exercise count display when questions[] is not the source (e.g., drag-drop). */
+  exerciseCount?: number;
 }
 
 export interface GrammarUnit {
@@ -1368,13 +1370,304 @@ export const FINAL_EXAM_QUESTIONS: GrammarQuestion[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Export all units
+// Export all tenses units (DO NOT add non-tense topics here)
 // ---------------------------------------------------------------------------
 
 export const GRAMMAR_UNITS: GrammarUnit[] = [PRESENT_UNIT, PAST_UNIT, FUTURE_UNIT];
 
-/** Total number of grammar lessons across all units. */
+/** Total number of grammar lessons across tenses units only. */
 export const TOTAL_GRAMMAR_LESSONS = GRAMMAR_UNITS.reduce(
+  (sum, u) => sum + u.lessons.length,
+  0
+);
+
+// ---------------------------------------------------------------------------
+// Grammar Topics — standalone topics outside the 12-tenses curriculum
+// ---------------------------------------------------------------------------
+
+const PASSIVE_VOICE_UNIT: GrammarUnit = {
+  id: "topic-passive-voice",
+  title: "Passive Voice",
+  emoji: "\u{1F504}",
+  description: "Learn how to shift focus from the doer to the receiver of an action",
+  color: "amber",
+  lessons: [
+    {
+      id: "passive-present-simple",
+      title: "Present Simple Passive",
+      subtitle: "is/am/are + past participle",
+      questions: [
+        {
+          id: "pv-ps-1",
+          sentence:
+            "In this factory, over 500 cars ___ every month.",
+          options: ["produce", "are produced", "is produced", "produces"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect:
+              "\"Cars\" is the subject receiving the action. Plural subject = \"are\" + past participle \"produced.\"",
+            whyWrong:
+              "\"Produce\" is active voice. \"Is produced\" is singular. \"Produces\" is active third-person.",
+            rule: "Present Simple Passive: Subject + am/is/are + past participle (V3).",
+            example: "English is spoken in many countries.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-ps-2",
+          sentence:
+            "At our school, students ___ to wear uniforms every day.",
+          options: ["require", "requires", "are required", "is required"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect:
+              "\"Students\" (plural) receive the requirement. Passive: are + required.",
+            whyWrong:
+              "\"Require\" and \"requires\" are active voice. \"Is required\" is for singular subjects.",
+            rule: "Use passive when the receiver of the action is the subject of the sentence.",
+            example: "All employees are expected to arrive on time.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-ps-3",
+          sentence:
+            "Every year, the Nobel Prize ___ to outstanding scientists and writers.",
+          options: ["gives", "is given", "are given", "given"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect:
+              "\"The Nobel Prize\" (singular) receives the action of giving. Passive: is + given.",
+            whyWrong:
+              "\"Gives\" is active. \"Are given\" would need a plural subject. \"Given\" alone is incomplete.",
+            rule: "Singular subject + is + V3 for present simple passive.",
+            example: "The report is submitted at the end of each month.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-ps-4",
+          sentence:
+            "These days, most emails ___ on smartphones, not computers.",
+          options: ["read", "reads", "is read", "are read"],
+          correctIndex: 3,
+          explanation: {
+            whyCorrect:
+              "\"Most emails\" (plural) receive the action. Passive: are + read (past participle of read).",
+            whyWrong:
+              "\"Read\" (base form) and \"reads\" are active voice. \"Is read\" needs a singular subject.",
+            rule: "Plural subject + are + V3. Note: \"read\" has the same form for base and past participle.",
+            example: "These books are sold in every bookstore.",
+          },
+          difficulty: "medium",
+        },
+        {
+          id: "pv-ps-5",
+          sentence:
+            "In Japan, shoes ___ before entering a house. It is a cultural tradition.",
+          options: ["remove", "removes", "are removed", "is removed"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect:
+              "\"Shoes\" (plural) receive the action. We don't focus on who removes them. Passive: are removed.",
+            whyWrong:
+              "Active forms don't fit because the sentence focuses on what happens to the shoes, not who does it.",
+            rule: "Use passive when the doer is unknown, obvious, or unimportant.",
+            example: "The streets are cleaned every morning.",
+          },
+          difficulty: "medium",
+        },
+      ],
+    },
+    {
+      id: "passive-past-simple",
+      title: "Past Simple Passive",
+      subtitle: "was/were + past participle",
+      questions: [
+        {
+          id: "pv-past-1",
+          sentence:
+            "The Eiffel Tower ___ in 1889 for the World's Fair in Paris.",
+          options: ["built", "was built", "were built", "is built"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect:
+              "\"The Eiffel Tower\" (singular) received the action in the past. Passive: was + built.",
+            whyWrong:
+              "\"Built\" alone is incomplete passive. \"Were built\" needs plural. \"Is built\" is present tense.",
+            rule: "Past Simple Passive: Subject + was/were + past participle (V3).",
+            example: "America was discovered by Columbus in 1492.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-past-2",
+          sentence:
+            "During the storm last night, several trees ___ by strong winds.",
+          options: ["knocked down", "was knocked down", "were knocked down", "are knocked down"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect:
+              "\"Several trees\" (plural) + past event. Passive: were + knocked down.",
+            whyWrong:
+              "\"Knocked down\" alone lacks the auxiliary. \"Was\" is singular. \"Are\" is present tense.",
+            rule: "Plural subject + were + V3 for past simple passive.",
+            example: "Many houses were damaged by the earthquake.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-past-3",
+          sentence:
+            "The letter ___ to the wrong address, so it arrived two weeks late.",
+          options: ["sent", "was sent", "were sent", "is sent"],
+          correctIndex: 1,
+          explanation: {
+            whyCorrect:
+              "\"The letter\" (singular) + past event (arrived late). Passive: was + sent.",
+            whyWrong:
+              "\"Sent\" alone is incomplete. \"Were sent\" needs plural. \"Is sent\" is present.",
+            rule: "When we focus on what happened to something, use passive voice.",
+            example: "The package was delivered yesterday morning.",
+          },
+          difficulty: "easy",
+        },
+        {
+          id: "pv-past-4",
+          sentence:
+            "Last year, a new hospital ___ in the center of the city to serve more patients.",
+          options: ["opens", "opened", "was opened", "were opened"],
+          correctIndex: 2,
+          explanation: {
+            whyCorrect:
+              "\"A new hospital\" (singular) received the action of being opened. Past passive: was opened.",
+            whyWrong:
+              "\"Opens\" is present active. \"Opened\" could be active but the focus is on the hospital, not who opened it. \"Were opened\" is plural.",
+            rule: "Use past passive when describing completed actions done to the subject.",
+            example: "The new bridge was opened by the mayor last month.",
+          },
+          difficulty: "medium",
+        },
+        {
+          id: "pv-past-5",
+          sentence:
+            "When I was a child, all the meals in our house ___ by my grandmother.",
+          options: ["cook", "cooked", "was cooked", "were cooked"],
+          correctIndex: 3,
+          explanation: {
+            whyCorrect:
+              "\"All the meals\" (plural) + past time (\"when I was a child\"). Passive: were cooked. \"By my grandmother\" names the doer.",
+            whyWrong:
+              "\"Cook\" and \"cooked\" are active. \"Was cooked\" is singular.",
+            rule: "Use \"by + agent\" in passive when you want to mention who performed the action.",
+            example: "The song was written by a famous composer.",
+          },
+          difficulty: "medium",
+        },
+      ],
+    },
+    {
+      id: "passive-sentence-builder",
+      title: "Build Passive Sentences",
+      subtitle: "Arrange words to form correct passive voice",
+      questions: [], // Exercises managed by PassiveSentenceBuilder component
+      exerciseCount: 5,
+    },
+  ],
+  examQuestions: [
+    {
+      id: "pv-exam-1",
+      sentence:
+        "Rice ___ in many Asian countries. It is a staple food.",
+      options: ["grows", "is grown", "are grown", "grown"],
+      correctIndex: 1,
+      explanation: {
+        whyCorrect: "\"Rice\" (uncountable, singular) receives the action. Present passive: is grown.",
+        rule: "Uncountable nouns use \"is\" in present passive.",
+        example: "Coffee is produced in Brazil.",
+      },
+      difficulty: "easy",
+    },
+    {
+      id: "pv-exam-2",
+      sentence:
+        "The Mona Lisa ___ by Leonardo da Vinci in the early 1500s.",
+      options: ["painted", "was painted", "is painted", "were painted"],
+      correctIndex: 1,
+      explanation: {
+        whyCorrect: "\"The Mona Lisa\" (singular) + past time (1500s). Past passive: was painted.",
+        rule: "Past Simple Passive: was/were + V3.",
+        example: "The pyramids were built thousands of years ago.",
+      },
+      difficulty: "easy",
+    },
+    {
+      id: "pv-exam-3",
+      sentence:
+        "In our office, all computers ___ off at the end of each workday.",
+      options: ["turn", "turns", "are turned", "was turned"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect: "\"All computers\" (plural) + habitual action. Present passive: are turned off.",
+        rule: "Plural subject + are + V3 in present simple passive.",
+        example: "The doors are locked every night at ten.",
+      },
+      difficulty: "medium",
+    },
+    {
+      id: "pv-exam-4",
+      sentence:
+        "Three suspects ___ by the police after the robbery last Friday.",
+      options: ["arrested", "was arrested", "were arrested", "are arrested"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect: "\"Three suspects\" (plural) + past event (last Friday). Past passive: were arrested.",
+        rule: "Plural subject + were + V3 for past passive.",
+        example: "Two paintings were stolen from the museum last month.",
+      },
+      difficulty: "medium",
+    },
+    {
+      id: "pv-exam-5",
+      sentence:
+        "This bridge ___ in 1965. It ___ by thousands of people every day now.",
+      options: [
+        "was built / is used",
+        "built / used",
+        "is built / was used",
+        "were built / are used",
+      ],
+      correctIndex: 0,
+      explanation: {
+        whyCorrect:
+          "First blank: past event (1965) → was built. Second blank: present habit (every day now) → is used.",
+        rule: "Match the tense to the time marker: past time → was/were + V3, present time → is/are + V3.",
+        example: "The school was founded in 1900. It is attended by 2,000 students today.",
+      },
+      difficulty: "hard",
+    },
+    {
+      id: "pv-exam-6",
+      sentence:
+        "The results of the exam ___ next Monday. Students are waiting anxiously.",
+      options: ["announce", "announced", "will be announced", "are announced"],
+      correctIndex: 2,
+      explanation: {
+        whyCorrect:
+          "\"Next Monday\" = future time. Future passive: will be + announced. (Bonus preview of future passive!)",
+        rule: "Future Simple Passive: will be + V3.",
+        example: "The winner will be announced tomorrow.",
+      },
+      difficulty: "hard",
+    },
+  ],
+};
+
+/** Standalone grammar topics — separate from the 12-tenses curriculum. */
+export const GRAMMAR_TOPICS: GrammarUnit[] = [PASSIVE_VOICE_UNIT];
+
+/** Total lessons across all grammar topics. */
+export const TOTAL_TOPIC_LESSONS = GRAMMAR_TOPICS.reduce(
   (sum, u) => sum + u.lessons.length,
   0
 );

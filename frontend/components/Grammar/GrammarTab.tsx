@@ -20,6 +20,7 @@
 import { useState, useCallback, useMemo } from "react";
 import {
   GRAMMAR_UNITS,
+  GRAMMAR_TOPICS,
   FINAL_EXAM_QUESTIONS,
   FINAL_EXAM_CONFIG,
   type GrammarUnit,
@@ -28,7 +29,11 @@ import {
 import { useGrammarProgress } from "./useGrammarProgress";
 import GrammarLessonView from "./GrammarLesson";
 import GrammarExam from "./GrammarExam";
+import PassiveSentenceBuilder from "./PassiveSentenceBuilder";
 import { cn } from "@/lib/utils";
+
+/** Lesson IDs that use custom components instead of GrammarLessonView. */
+const CUSTOM_LESSON_IDS = new Set(["passive-sentence-builder"]);
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -104,6 +109,12 @@ const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; gl
     border: "rgba(139,92,246,0.2)",
     text: "#8B5CF6",
     glow: "rgba(139,92,246,0.3)",
+  },
+  amber: {
+    bg: "rgba(245,158,11,0.08)",
+    border: "rgba(245,158,11,0.2)",
+    text: "#F59E0B",
+    glow: "rgba(245,158,11,0.3)",
   },
 };
 
@@ -186,7 +197,7 @@ function LessonNode({
             className="text-[11px] mt-0.5 truncate"
             style={{ color: isLocked ? "rgba(166,179,194,0.25)" : "var(--color-text-secondary)" }}
           >
-            {lesson.subtitle} &middot; {lesson.questions.length} questions
+            {lesson.subtitle} &middot; {lesson.exerciseCount ?? lesson.questions.length} {CUSTOM_LESSON_IDS.has(lesson.id) ? "exercises" : "questions"}
           </p>
         </div>
 
@@ -451,6 +462,15 @@ export default function GrammarTab() {
 
   // ── Active lesson overlay ──
   if (activeLesson) {
+    // Custom component for drag-drop lessons
+    if (activeLesson.id === "passive-sentence-builder") {
+      return (
+        <PassiveSentenceBuilder
+          onComplete={handleLessonComplete}
+          onClose={() => setActiveLesson(null)}
+        />
+      );
+    }
     return (
       <GrammarLessonView
         lesson={activeLesson}
@@ -497,7 +517,7 @@ export default function GrammarTab() {
         totalXp={progress.totalXp}
       />
 
-      {/* Units */}
+      {/* Tenses Units */}
       <div className="flex flex-col gap-4 mb-6">
         {GRAMMAR_UNITS.map((unit) => (
           <UnitCard
@@ -509,6 +529,33 @@ export default function GrammarTab() {
           />
         ))}
       </div>
+
+      {/* Grammar Topics — standalone topics outside tenses */}
+      {GRAMMAR_TOPICS.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 mb-3 mt-2">
+            <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+            <span
+              className="text-[11px] font-semibold uppercase tracking-wider px-2"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Grammar Topics
+            </span>
+            <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+          </div>
+          <div className="flex flex-col gap-4 mb-6">
+            {GRAMMAR_TOPICS.map((topic) => (
+              <UnitCard
+                key={topic.id}
+                unit={topic}
+                progress={progress}
+                onStartLesson={setActiveLesson}
+                onStartExam={setActiveExamUnit}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Final Exam */}
       <div
