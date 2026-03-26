@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import type { GrammarQuestion } from "./grammarData";
 import GrammarExplanation from "./GrammarExplanation";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
@@ -231,9 +231,20 @@ export default function GrammarExam({
   const isCorrect = droppedOption === current?.options[current?.correctIndex];
   const progress = ((index + (phase === "explanation" ? 0.5 : 0)) / questions.length) * 100;
 
-  // Split sentence on ___
+  // Split sentence on ___ (supports multi-blank)
   const sentenceParts = current.sentence.split("___");
   const hasBlank = sentenceParts.length > 1;
+  const blankCount = sentenceParts.length - 1;
+
+  const answerParts: string[] = droppedOption
+    ? blankCount > 1
+      ? droppedOption.includes(" ... ")
+        ? droppedOption.split(" ... ")
+        : droppedOption.includes(" / ")
+        ? droppedOption.split(" / ")
+        : [droppedOption]
+      : [droppedOption]
+    : [];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--color-bg)" }}>
@@ -274,22 +285,34 @@ export default function GrammarExam({
           <div className="rounded-2xl p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
               <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
-                <span>{sentenceParts[0]}</span>
-                {droppedOption ? (
-                  <span
-                    className={cn(
-                      "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
-                      phase === "explanation" && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
-                      phase === "explanation" && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
+                {sentenceParts.map((part, i) => (
+                  <React.Fragment key={i}>
+                    <span>{part}</span>
+                    {i < blankCount && (
+                      droppedOption ? (
+                        <span
+                          className={cn(
+                            "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                            phase === "explanation" && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
+                            phase === "explanation" && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
+                          )}
+                          style={phase !== "explanation" ? { borderColor: "rgba(46,211,198,0.4)", background: "rgba(46,211,198,0.1)", color: "var(--color-success)" } : undefined}
+                        >
+                          {answerParts[i] ?? droppedOption}
+                        </span>
+                      ) : (
+                        i === 0 ? (
+                          <DropSlot id="exam-slot" placeholder="___" className="inline-flex min-w-[90px]" />
+                        ) : (
+                          <span
+                            className="inline-block w-16 h-6 mx-1 rounded border-2 border-dashed align-middle"
+                            style={{ borderColor: "var(--color-border)" }}
+                          />
+                        )
+                      )
                     )}
-                    style={phase !== "explanation" ? { borderColor: "rgba(46,211,198,0.4)", background: "rgba(46,211,198,0.1)", color: "var(--color-success)" } : undefined}
-                  >
-                    {droppedOption}
-                  </span>
-                ) : (
-                  <DropSlot id="exam-slot" placeholder="___" className="inline-flex min-w-[90px]" />
-                )}
-                <span>{sentenceParts[1]}</span>
+                  </React.Fragment>
+                ))}
               </div>
             ) : (
               <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>

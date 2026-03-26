@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { GrammarLesson as GrammarLessonType, GrammarQuestion } from "./grammarData";
 import GrammarExplanation from "./GrammarExplanation";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
@@ -161,9 +161,22 @@ export default function GrammarLessonView({
     );
   }
 
-  // Build sentence display with inline drop slot
+  // Build sentence display with inline drop slot(s)
   const sentenceParts = current.sentence.split("___");
   const hasBlank = sentenceParts.length > 1;
+  const blankCount = sentenceParts.length - 1;
+
+  // Split dropped answer into parts for multi-blank sentences
+  // Patterns: "do ... know" (split by " ... ") or "work / am working" (split by " / ")
+  const answerParts: string[] = droppedOption
+    ? blankCount > 1
+      ? droppedOption.includes(" ... ")
+        ? droppedOption.split(" ... ")
+        : droppedOption.includes(" / ")
+        ? droppedOption.split(" / ")
+        : [droppedOption]
+      : [droppedOption]
+    : [];
 
   return (
     <div
@@ -222,30 +235,42 @@ export default function GrammarLessonView({
           >
             {hasBlank ? (
               <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
-                <span>{sentenceParts[0]}</span>
-                {droppedOption ? (
-                  <span
-                    className={cn(
-                      "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
-                      phase === "explanation" && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
-                      phase === "explanation" && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
+                {sentenceParts.map((part, i) => (
+                  <React.Fragment key={i}>
+                    <span>{part}</span>
+                    {i < blankCount && (
+                      droppedOption ? (
+                        <span
+                          className={cn(
+                            "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                            phase === "explanation" && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
+                            phase === "explanation" && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
+                          )}
+                          style={phase !== "explanation" ? {
+                            borderColor: "rgba(46,211,198,0.4)",
+                            background: "rgba(46,211,198,0.1)",
+                            color: "var(--color-success)",
+                          } : undefined}
+                        >
+                          {answerParts[i] ?? droppedOption}
+                        </span>
+                      ) : (
+                        i === 0 ? (
+                          <DropSlot
+                            id="answer-slot"
+                            placeholder="___"
+                            className="inline-flex min-w-[90px]"
+                          />
+                        ) : (
+                          <span
+                            className="inline-block w-16 h-6 mx-1 rounded border-2 border-dashed align-middle"
+                            style={{ borderColor: "var(--color-border)" }}
+                          />
+                        )
+                      )
                     )}
-                    style={phase !== "explanation" ? {
-                      borderColor: "rgba(46,211,198,0.4)",
-                      background: "rgba(46,211,198,0.1)",
-                      color: "var(--color-success)",
-                    } : undefined}
-                  >
-                    {droppedOption}
-                  </span>
-                ) : (
-                  <DropSlot
-                    id="answer-slot"
-                    placeholder="___"
-                    className="inline-flex min-w-[90px]"
-                  />
-                )}
-                <span>{sentenceParts[1]}</span>
+                  </React.Fragment>
+                ))}
               </div>
             ) : (
               <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
