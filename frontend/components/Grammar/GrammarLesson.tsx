@@ -166,17 +166,34 @@ export default function GrammarLessonView({
   const hasBlank = sentenceParts.length > 1;
   const blankCount = sentenceParts.length - 1;
 
-  // Split dropped answer into parts for multi-blank sentences
-  // Patterns: "do ... know" (split by " ... ") or "work / am working" (split by " / ")
-  const answerParts: string[] = droppedOption
-    ? blankCount > 1
-      ? droppedOption.includes(" ... ")
-        ? droppedOption.split(" ... ")
-        : droppedOption.includes(" / ")
-        ? droppedOption.split(" / ")
-        : [droppedOption]
-      : [droppedOption]
-    : [];
+  // Split dropped answer into parts for multi-blank sentences.
+  // Handles mixed separators: "tried / had ... tried" → ["tried", "had", "tried"]
+  // Regex-based to tolerate whitespace variation around "/" and "...".
+  // On mismatch: pad with "—" so blanks never show confusing duplicated full-answer text.
+  const answerParts: string[] = (() => {
+    if (!droppedOption) return [];
+    if (blankCount <= 1) return [droppedOption];
+    const SEP_SLASH = /\s*\/\s*/;
+    const SEP_DOTS = /\s*\.{2,}\s*/;
+    const parts = droppedOption
+      .split(SEP_SLASH)
+      .flatMap((p) => (SEP_DOTS.test(p) ? p.split(SEP_DOTS) : [p]))
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length === blankCount) {
+      // Capitalize first part if it fills a sentence-initial blank
+      if (sentenceParts[0].trim() === "" && parts[0]) {
+        parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      }
+      return parts;
+    }
+    // Mismatch fallback: log warning, pad with empty strings so blanks stay silent
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`[Grammar] answer-part count (${parts.length}) ≠ blank count (${blankCount}) for: "${droppedOption}"`);
+    }
+    while (parts.length < blankCount) parts.push("");
+    return parts.slice(0, blankCount);
+  })();
 
   return (
     <div

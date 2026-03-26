@@ -236,15 +236,30 @@ export default function GrammarExam({
   const hasBlank = sentenceParts.length > 1;
   const blankCount = sentenceParts.length - 1;
 
-  const answerParts: string[] = droppedOption
-    ? blankCount > 1
-      ? droppedOption.includes(" ... ")
-        ? droppedOption.split(" ... ")
-        : droppedOption.includes(" / ")
-        ? droppedOption.split(" / ")
-        : [droppedOption]
-      : [droppedOption]
-    : [];
+  // Split answer for multi-blank: "tried / had ... tried" → ["tried", "had", "tried"]
+  // Regex-based to tolerate whitespace variation. Mismatch pads with "—".
+  const answerParts: string[] = (() => {
+    if (!droppedOption) return [];
+    if (blankCount <= 1) return [droppedOption];
+    const SEP_SLASH = /\s*\/\s*/;
+    const SEP_DOTS = /\s*\.{2,}\s*/;
+    const parts = droppedOption
+      .split(SEP_SLASH)
+      .flatMap((p) => (SEP_DOTS.test(p) ? p.split(SEP_DOTS) : [p]))
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length === blankCount) {
+      if (sentenceParts[0].trim() === "" && parts[0]) {
+        parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      }
+      return parts;
+    }
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`[Grammar] answer-part count (${parts.length}) ≠ blank count (${blankCount}) for: "${droppedOption}"`);
+    }
+    while (parts.length < blankCount) parts.push("");
+    return parts.slice(0, blankCount);
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--color-bg)" }}>
