@@ -1,23 +1,25 @@
 /**
  * GrammarTab.tsx
  *
- * Main Grammar tab view — replaces Practice tab content.
+ * Premium Grammar tab — structured learning journey.
  *
- * Structure:
- *  - Grammar progress hero card
- *  - 3 collapsible units (Present / Past / Future)
- *    - Each unit has lessons (locked/unlocked/completed)
- *    - Each unit has a mini exam (unlocked after all lessons)
- *  - Final exam card (unlocked after all mini exams passed)
+ * Layout:
+ *   - Progress hero (XP, level, overall progress)
+ *   - English Tense (collapsible accordion, collapsed by default)
+ *     - Present / Past / Future units inside
+ *   - Passive Voice (locked until all tense exams passed)
+ *   - Modal Verbs (locked until Passive Voice exam passed)
+ *   - Final Exam (locked until all 3 topics complete)
  *
- * Progression: first lesson → complete → unlock next → ...
- *              → all unit lessons done → mini exam → next unit
- *              → all units done → final exam
+ * Gamification:
+ *   - XP + Level display
+ *   - Floating XP gain animation
+ *   - Level-up toast
  */
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   GRAMMAR_UNITS,
   GRAMMAR_TOPICS,
@@ -26,7 +28,7 @@ import {
   type GrammarUnit,
   type GrammarLesson as GrammarLessonType,
 } from "./grammarData";
-import { useGrammarProgress } from "./useGrammarProgress";
+import { useGrammarProgress, computeLevel } from "./useGrammarProgress";
 import GrammarLessonView from "./GrammarLesson";
 import GrammarExam from "./GrammarExam";
 import PassiveSentenceBuilder from "./PassiveSentenceBuilder";
@@ -41,61 +43,9 @@ const CUSTOM_LESSON_IDS = new Set([
 ]);
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Color configs
 // ---------------------------------------------------------------------------
 
-function ProgressHero({
-  completedCount,
-  totalCount,
-  totalXp,
-}: {
-  completedCount: number;
-  totalCount: number;
-  totalXp: number;
-}) {
-  const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
-  return (
-    <div
-      className="rounded-2xl p-5 mb-6"
-      style={{
-        background: "linear-gradient(135deg, rgba(46,211,198,0.08), rgba(45,168,255,0.06))",
-        border: "1px solid rgba(46,211,198,0.15)",
-      }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-[18px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
-            English Tenses
-          </h2>
-          <p className="text-[12px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-            Master present, past &amp; future
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[16px] font-bold" style={{ color: "var(--color-success)" }}>
-            {totalXp} XP
-          </p>
-          <p className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
-            {completedCount}/{totalCount} lessons
-          </p>
-        </div>
-      </div>
-      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-        <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{
-            width: `${pct}%`,
-            background: "linear-gradient(90deg, var(--color-success), var(--color-accent))",
-            boxShadow: pct > 0 ? "0 0 12px rgba(46,211,198,0.4)" : "none",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// Color config per unit
 const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
   emerald: {
     bg: "rgba(16,185,129,0.08)",
@@ -123,6 +73,175 @@ const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; gl
   },
 };
 
+// ---------------------------------------------------------------------------
+// XP Gain Animation
+// ---------------------------------------------------------------------------
+
+function XpGainPopup({ xp, onDone }: { xp: number; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 1800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
+      style={{ animation: "grammar-xp-float 1.8s ease-out forwards" }}
+    >
+      <style>{`
+        @keyframes grammar-xp-float {
+          0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+          15% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
+          70% { opacity: 1; transform: translate(-50%, -40px) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -60px) scale(0.9); }
+        }
+      `}</style>
+      <div
+        className="px-5 py-2.5 rounded-full font-bold text-[16px]"
+        style={{
+          background: "linear-gradient(135deg, var(--color-success), var(--color-accent))",
+          color: "white",
+          boxShadow: "0 4px 20px rgba(46,211,198,0.4)",
+        }}
+      >
+        +{xp} XP
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Level-Up Toast
+// ---------------------------------------------------------------------------
+
+function LevelUpToast({ level, onDone }: { level: number; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
+      style={{ animation: "grammar-levelup 3s ease-out forwards" }}
+    >
+      <style>{`
+        @keyframes grammar-levelup {
+          0% { opacity: 0; transform: scale(0.5); }
+          15% { opacity: 1; transform: scale(1.1); }
+          25% { transform: scale(1); }
+          75% { opacity: 1; }
+          100% { opacity: 0; transform: scale(0.9); }
+        }
+      `}</style>
+      <div
+        className="rounded-2xl px-8 py-6 flex flex-col items-center gap-3"
+        style={{
+          background: "color-mix(in srgb, var(--color-bg) 95%, transparent)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(139,92,246,0.3)",
+          boxShadow: "0 0 40px rgba(139,92,246,0.2), 0 20px 40px rgba(0,0,0,0.3)",
+        }}
+      >
+        <div className="text-4xl">🎉</div>
+        <p className="text-[18px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+          Level {level}!
+        </p>
+        <p className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+          Keep going — you&apos;re making great progress!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Progress Hero (with level)
+// ---------------------------------------------------------------------------
+
+function ProgressHero({
+  totalXp,
+  level,
+  levelProgress,
+  completedAll,
+  totalAll,
+}: {
+  totalXp: number;
+  level: number;
+  levelProgress: { currentXp: number; nextLevelXp: number };
+  completedAll: number;
+  totalAll: number;
+}) {
+  const pct = totalAll > 0 ? Math.round((completedAll / totalAll) * 100) : 0;
+  const lvlPct = Math.round((levelProgress.currentXp / levelProgress.nextLevelXp) * 100);
+
+  return (
+    <div
+      className="rounded-2xl p-5 mb-5"
+      style={{
+        background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(46,211,198,0.06))",
+        border: "1px solid rgba(139,92,246,0.15)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          {/* Level badge */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-[14px] font-bold"
+            style={{
+              background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
+              color: "white",
+              boxShadow: "0 2px 10px rgba(139,92,246,0.3)",
+            }}
+          >
+            {level}
+          </div>
+          <div>
+            <p className="text-[14px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+              Grammar Journey
+            </p>
+            <p className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+              Level {level} &middot; {totalXp} XP
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[13px] font-bold" style={{ color: "var(--color-success)" }}>
+            {pct}%
+          </p>
+          <p className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
+            {completedAll}/{totalAll} lessons
+          </p>
+        </div>
+      </div>
+
+      {/* Level progress bar */}
+      <div className="flex items-center gap-2">
+        <span className="text-[9px] font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+          LV{level}
+        </span>
+        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+          <div
+            className="h-full rounded-full transition-all duration-700 ease-out"
+            style={{
+              width: `${lvlPct}%`,
+              background: "linear-gradient(90deg, #8B5CF6, #6D28D9)",
+              boxShadow: lvlPct > 0 ? "0 0 8px rgba(139,92,246,0.4)" : "none",
+            }}
+          />
+        </div>
+        <span className="text-[9px] font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+          LV{level + 1}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Lesson Node
+// ---------------------------------------------------------------------------
+
 function LessonNode({
   lesson,
   isCompleted,
@@ -144,10 +263,9 @@ function LessonNode({
       disabled={isLocked}
       onClick={isLocked ? undefined : onStart}
       className={cn(
-        "w-full rounded-xl px-4 py-3.5 text-left transition-all duration-200 border",
+        "w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border",
         isLocked && "opacity-40 cursor-not-allowed",
-        isCurrent && "cursor-pointer",
-        isCompleted && "cursor-pointer"
+        (isCurrent || isCompleted) && "cursor-pointer"
       )}
       style={{
         borderColor: isCurrent
@@ -158,81 +276,60 @@ function LessonNode({
         background: isCurrent
           ? "rgba(46,211,198,0.06)"
           : "var(--color-primary-soft)",
-        boxShadow: isCurrent ? "0 0 16px rgba(46,211,198,0.1)" : "none",
+        boxShadow: isCurrent ? "0 0 12px rgba(46,211,198,0.08)" : "none",
       }}
     >
       <div className="flex items-center gap-3">
-        {/* Status icon */}
         <div
-          className={cn(
-            "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[13px] font-bold",
-          )}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-bold"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, var(--color-success), var(--color-accent))"
               : isCurrent
               ? "rgba(46,211,198,0.15)"
               : "#0F2D46",
-            color: isCompleted
-              ? "var(--color-bg)"
-              : isCurrent
-              ? "var(--color-success)"
-              : "rgba(166,179,194,0.4)",
+            color: isCompleted ? "white" : isCurrent ? "var(--color-success)" : "rgba(166,179,194,0.4)",
             border: isLocked ? "1.5px solid var(--color-border)" : "none",
-            boxShadow: isCurrent ? "0 0 12px rgba(46,211,198,0.3)" : "none",
           }}
         >
           {isCompleted ? "\u2713" : isLocked ? "\u{1F512}" : "\u25B6"}
         </div>
-
         <div className="flex-1 min-w-0">
           <p
-            className="text-[13px] font-semibold truncate"
+            className="text-[12px] font-semibold truncate"
             style={{
-              color: isLocked
-                ? "rgba(166,179,194,0.4)"
-                : isCurrent
-                ? "var(--color-success)"
-                : "var(--color-text)",
+              color: isLocked ? "rgba(166,179,194,0.4)" : isCurrent ? "var(--color-success)" : "var(--color-text)",
             }}
           >
             {lesson.title}
           </p>
-          <p
-            className="text-[11px] mt-0.5 truncate"
-            style={{ color: isLocked ? "rgba(166,179,194,0.25)" : "var(--color-text-secondary)" }}
-          >
+          <p className="text-[10px] mt-0.5 truncate" style={{ color: isLocked ? "rgba(166,179,194,0.25)" : "var(--color-text-secondary)" }}>
             {lesson.subtitle} &middot; {lesson.exerciseCount ?? lesson.questions.length} {CUSTOM_LESSON_IDS.has(lesson.id) ? "exercises" : "questions"}
           </p>
         </div>
-
-        {/* Score badge */}
         {isCompleted && score !== null && (
           <span
-            className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
             style={{
               background: score >= 80 ? "rgba(16,185,129,0.15)" : "rgba(251,191,36,0.15)",
               color: score >= 80 ? "#10B981" : "#F59E0B",
-              border: score >= 80
-                ? "1px solid rgba(16,185,129,0.25)"
-                : "1px solid rgba(251,191,36,0.25)",
+              border: score >= 80 ? "1px solid rgba(16,185,129,0.25)" : "1px solid rgba(251,191,36,0.25)",
             }}
           >
             {score}%
           </span>
         )}
-
-        {/* Current indicator */}
         {isCurrent && (
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0 animate-pulse"
-            style={{ background: "var(--color-success)" }}
-          />
+          <span className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ background: "var(--color-success)" }} />
         )}
       </div>
     </button>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Exam Card
+// ---------------------------------------------------------------------------
 
 function ExamCard({
   label,
@@ -254,54 +351,36 @@ function ExamCard({
       disabled={!isUnlocked}
       onClick={isUnlocked ? onStart : undefined}
       className={cn(
-        "w-full rounded-xl px-4 py-3.5 text-left transition-all duration-200 border",
+        "w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border",
         !isUnlocked && "opacity-40 cursor-not-allowed",
         isUnlocked && !isPassed && "cursor-pointer"
       )}
       style={{
         borderColor: isPassed ? "rgba(16,185,129,0.3)" : `${accentColor}40`,
-        background: isPassed
-          ? "rgba(16,185,129,0.06)"
-          : isUnlocked
-          ? `${accentColor}10`
-          : "var(--color-primary-soft)",
+        background: isPassed ? "rgba(16,185,129,0.06)" : isUnlocked ? `${accentColor}10` : "var(--color-primary-soft)",
       }}
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-[14px]"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[13px]"
           style={{
-            background: isPassed
-              ? "linear-gradient(135deg, var(--color-success), var(--color-accent))"
-              : isUnlocked
-              ? `${accentColor}20`
-              : "#0F2D46",
-            color: isPassed ? "var(--color-bg)" : isUnlocked ? accentColor : "rgba(166,179,194,0.4)",
+            background: isPassed ? "linear-gradient(135deg, var(--color-success), var(--color-accent))" : isUnlocked ? `${accentColor}20` : "#0F2D46",
+            color: isPassed ? "white" : isUnlocked ? accentColor : "rgba(166,179,194,0.4)",
             border: !isUnlocked ? "1.5px solid var(--color-border)" : "none",
           }}
         >
           {isPassed ? "\u2713" : "\u{1F4DD}"}
         </div>
         <div className="flex-1">
-          <p
-            className="text-[13px] font-semibold"
-            style={{ color: !isUnlocked ? "rgba(166,179,194,0.4)" : "var(--color-text)" }}
-          >
+          <p className="text-[12px] font-semibold" style={{ color: !isUnlocked ? "rgba(166,179,194,0.4)" : "var(--color-text)" }}>
             {label}
           </p>
-          <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
             {isPassed ? "Passed" : "Test your knowledge"}
           </p>
         </div>
         {isPassed && score !== null && (
-          <span
-            className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-            style={{
-              background: "rgba(16,185,129,0.15)",
-              color: "#10B981",
-              border: "1px solid rgba(16,185,129,0.25)",
-            }}
-          >
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.15)", color: "#10B981", border: "1px solid rgba(16,185,129,0.25)" }}>
             {score}%
           </span>
         )}
@@ -310,21 +389,24 @@ function ExamCard({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Unit Card (inside accordion)
+// ---------------------------------------------------------------------------
+
 function UnitCard({
   unit,
   progress,
   onStartLesson,
   onStartExam,
+  defaultExpanded,
 }: {
   unit: GrammarUnit;
   progress: ReturnType<typeof useGrammarProgress>;
   onStartLesson: (lesson: GrammarLessonType) => void;
   onStartExam: (unit: GrammarUnit) => void;
+  defaultExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(() => {
-    // Auto-expand the unit that has the current lesson
-    return progress.isUnitUnlocked(unit.id) && !progress.isExamPassed(unit.id);
-  });
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
   const colors = UNIT_COLORS[unit.color] ?? UNIT_COLORS.emerald;
   const unitUnlocked = progress.isUnitUnlocked(unit.id);
@@ -337,69 +419,51 @@ function UnitCard({
   return (
     <div
       className={cn("rounded-2xl overflow-hidden transition-all duration-300", !unitUnlocked && "opacity-50")}
-      style={{
-        border: `1px solid ${colors.border}`,
-        background: "var(--color-bg-card)",
-      }}
+      style={{ border: `1px solid ${colors.border}`, background: "var(--color-bg-card)" }}
     >
-      {/* Header — clickable to expand/collapse */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full px-5 py-4 flex items-center gap-3 text-left"
+        className="w-full px-4 py-3.5 flex items-center gap-3 text-left"
         style={{ background: colors.bg }}
       >
-        <span className="text-2xl">{unit.emoji}</span>
+        <span className="text-xl">{unit.emoji}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+          <p className="text-[14px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
             {unit.title}
           </p>
-          <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-[10px] mt-0.5 truncate" style={{ color: "var(--color-text-secondary)" }}>
             {unit.description}
           </p>
         </div>
-
-        {/* Progress pill */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {examPassed && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-              {"\u2713"} Complete
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+              ✓
             </span>
           )}
           {!examPassed && (
-            <span className="text-[11px] font-bold" style={{ color: colors.text }}>
+            <span className="text-[10px] font-bold" style={{ color: colors.text }}>
               {completedInUnit}/{unit.lessons.length}
             </span>
           )}
-          <span
-            className="text-[14px] transition-transform duration-200"
-            style={{
-              color: "var(--color-text-secondary)",
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            }}
-          >
-            {"\u25BC"}
+          <span className="text-[13px] transition-transform duration-200" style={{ color: "var(--color-text-secondary)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+            ▼
           </span>
         </div>
       </button>
 
       {/* Unit progress bar */}
       {unitUnlocked && (
-        <div className="px-5 pb-1 pt-0" style={{ background: colors.bg }}>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${pct}%`,
-                background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})`,
-              }}
-            />
+        <div className="px-4 pb-1 pt-0" style={{ background: colors.bg }}>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})` }} />
           </div>
         </div>
       )}
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-4 py-4 flex flex-col gap-2.5">
+        <div className="px-3 py-3 flex flex-col gap-2">
           {unit.lessons.map((lesson) => (
             <LessonNode
               key={lesson.id}
@@ -410,9 +474,7 @@ function UnitCard({
               onStart={() => onStartLesson(lesson)}
             />
           ))}
-
-          {/* Mini exam */}
-          <div className="mt-2 pt-3" style={{ borderTop: "1px solid var(--color-border)" }}>
+          <div className="mt-1 pt-2" style={{ borderTop: "1px solid var(--color-border)" }}>
             <ExamCard
               label={`${unit.title} Exam`}
               isUnlocked={allLessonsDone}
@@ -438,10 +500,24 @@ export default function GrammarTab() {
   const [activeExamUnit, setActiveExamUnit] = useState<GrammarUnit | null>(null);
   const [showFinalExam, setShowFinalExam] = useState(false);
 
+  // English Tense accordion — collapsed by default
+  const [tensesExpanded, setTensesExpanded] = useState(false);
+
+  // Gamification state
+  const [xpGain, setXpGain] = useState<number | null>(null);
+  const [levelUpTo, setLevelUpTo] = useState<number | null>(null);
+  const prevLevelRef = useRef(progress.level);
+
   const handleLessonComplete = useCallback(
     (score: number) => {
       if (activeLesson) {
-        progress.completeLesson(activeLesson.id, score);
+        const prevLevel = computeLevel(progress.totalXp).level;
+        const xp = progress.completeLesson(activeLesson.id, score);
+        setXpGain(xp);
+        const newLevel = computeLevel(progress.totalXp + xp).level;
+        if (newLevel > prevLevel) {
+          setTimeout(() => setLevelUpTo(newLevel), 1000);
+        }
       }
     },
     [activeLesson, progress]
@@ -450,7 +526,15 @@ export default function GrammarTab() {
   const handleExamComplete = useCallback(
     (score: number, passed: boolean) => {
       if (activeExamUnit) {
-        progress.completeExam(activeExamUnit.id, score, passed);
+        const prevLevel = computeLevel(progress.totalXp).level;
+        const xp = progress.completeExam(activeExamUnit.id, score, passed);
+        if (xp > 0) {
+          setXpGain(xp);
+          const newLevel = computeLevel(progress.totalXp + xp).level;
+          if (newLevel > prevLevel) {
+            setTimeout(() => setLevelUpTo(newLevel), 1000);
+          }
+        }
       }
     },
     [activeExamUnit, progress]
@@ -458,7 +542,15 @@ export default function GrammarTab() {
 
   const handleFinalExamComplete = useCallback(
     (score: number, passed: boolean) => {
-      progress.completeExam("final", score, passed);
+      const prevLevel = computeLevel(progress.totalXp).level;
+      const xp = progress.completeExam("final", score, passed);
+      if (xp > 0) {
+        setXpGain(xp);
+        const newLevel = computeLevel(progress.totalXp + xp).level;
+        if (newLevel > prevLevel) {
+          setTimeout(() => setLevelUpTo(newLevel), 1000);
+        }
+      }
     },
     [progress]
   );
@@ -467,7 +559,6 @@ export default function GrammarTab() {
 
   // ── Active lesson overlay ──
   if (activeLesson) {
-    // Custom component for drag-drop lessons
     if (activeLesson.id === "passive-sentence-builder") {
       return (
         <PassiveSentenceBuilder
@@ -476,7 +567,6 @@ export default function GrammarTab() {
         />
       );
     }
-    // Modal Verbs interactive lessons
     if (activeLesson.id === "modal-fill-blank" || activeLesson.id === "modal-mastery") {
       return (
         <ModalVerbsLesson
@@ -501,7 +591,7 @@ export default function GrammarTab() {
       <GrammarExam
         title={`${activeExamUnit.title} Exam`}
         questions={activeExamUnit.examQuestions}
-        timeLimitSeconds={300} // 5 minutes for mini exam
+        timeLimitSeconds={300}
         passingScore={70}
         onComplete={handleExamComplete}
         onClose={() => setActiveExamUnit(null)}
@@ -523,56 +613,133 @@ export default function GrammarTab() {
     );
   }
 
+  // Tenses completion summary
+  const tensesCompletedLessons = GRAMMAR_UNITS.reduce(
+    (sum, u) => sum + u.lessons.filter((l) => progress.isLessonCompleted(l.id)).length,
+    0
+  );
+  const tensesTotalLessons = GRAMMAR_UNITS.reduce((sum, u) => sum + u.lessons.length, 0);
+  const tensesExamsPassed = GRAMMAR_UNITS.filter((u) => progress.isExamPassed(u.id)).length;
+
   return (
-    <div className="max-w-[600px] mx-auto">
+    <div className="max-w-[540px] mx-auto">
+      {/* XP Gain Popup */}
+      {xpGain !== null && <XpGainPopup xp={xpGain} onDone={() => setXpGain(null)} />}
+      {/* Level Up Toast */}
+      {levelUpTo !== null && <LevelUpToast level={levelUpTo} onDone={() => setLevelUpTo(null)} />}
+
       {/* Progress hero */}
       <ProgressHero
-        completedCount={progress.completedLessonsCount}
-        totalCount={progress.totalLessons}
         totalXp={progress.totalXp}
+        level={progress.level}
+        levelProgress={progress.levelProgress}
+        completedAll={progress.completedAllLessonsCount}
+        totalAll={progress.totalAllLessons}
       />
 
-      {/* Tenses Units */}
-      <div className="flex flex-col gap-4 mb-6">
-        {GRAMMAR_UNITS.map((unit) => (
-          <UnitCard
-            key={unit.id}
-            unit={unit}
-            progress={progress}
-            onStartLesson={setActiveLesson}
-            onStartExam={setActiveExamUnit}
-          />
-        ))}
-      </div>
-
-      {/* Grammar Topics — standalone topics outside tenses */}
-      {GRAMMAR_TOPICS.length > 0 && (
-        <>
-          <div className="flex items-center gap-2 mb-3 mt-2">
-            <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-            <span
-              className="text-[11px] font-semibold uppercase tracking-wider px-2"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              Grammar Topics
-            </span>
-            <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+      {/* ── Section 1: English Tense (collapsible accordion) ── */}
+      <div
+        className="rounded-2xl overflow-hidden mb-4"
+        style={{
+          border: progress.allTensesComplete
+            ? "1px solid rgba(16,185,129,0.2)"
+            : "1px solid rgba(139,92,246,0.15)",
+          background: "var(--color-bg-card)",
+        }}
+      >
+        {/* Accordion header */}
+        <button
+          onClick={() => setTensesExpanded((v) => !v)}
+          className="w-full px-4 py-4 flex items-center gap-3 text-left"
+          style={{
+            background: progress.allTensesComplete
+              ? "rgba(16,185,129,0.06)"
+              : "rgba(139,92,246,0.04)",
+          }}
+        >
+          <span className="text-xl">📖</span>
+          <div className="flex-1">
+            <p className="text-[15px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+              English Tense
+            </p>
+            <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+              Present, Past &amp; Future &middot; {tensesCompletedLessons}/{tensesTotalLessons} lessons &middot; {tensesExamsPassed}/3 exams
+            </p>
           </div>
-          <div className="flex flex-col gap-4 mb-6">
-            {GRAMMAR_TOPICS.map((topic) => (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {progress.allTensesComplete && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                ✓ Complete
+              </span>
+            )}
+            <span
+              className="text-[14px] transition-transform duration-200"
+              style={{ color: "var(--color-text-secondary)", transform: tensesExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+            >
+              ▼
+            </span>
+          </div>
+        </button>
+
+        {/* Tenses progress bar */}
+        <div className="px-4 pb-2" style={{ background: progress.allTensesComplete ? "rgba(16,185,129,0.06)" : "rgba(139,92,246,0.04)" }}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${tensesTotalLessons > 0 ? Math.round((tensesCompletedLessons / tensesTotalLessons) * 100) : 0}%`,
+                background: progress.allTensesComplete
+                  ? "linear-gradient(90deg, #10B981, var(--color-accent))"
+                  : "linear-gradient(90deg, #8B5CF6, #6D28D9)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Expanded: show 3 unit cards */}
+        {tensesExpanded && (
+          <div className="px-3 py-3 flex flex-col gap-3">
+            {GRAMMAR_UNITS.map((unit) => (
               <UnitCard
-                key={topic.id}
-                unit={topic}
+                key={unit.id}
+                unit={unit}
                 progress={progress}
                 onStartLesson={setActiveLesson}
                 onStartExam={setActiveExamUnit}
+                defaultExpanded={progress.isUnitUnlocked(unit.id) && !progress.isExamPassed(unit.id)}
               />
             ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      {/* Final Exam */}
+      {/* ── Section 2: Passive Voice ── */}
+      {GRAMMAR_TOPICS.map((topic) => {
+        const topicUnlocked = progress.isUnitUnlocked(topic.id);
+        return (
+          <div key={topic.id} className="mb-4">
+            <UnitCard
+              unit={topic}
+              progress={progress}
+              onStartLesson={setActiveLesson}
+              onStartExam={setActiveExamUnit}
+              defaultExpanded={topicUnlocked && !progress.isExamPassed(topic.id)}
+            />
+            {/* Unlock hint */}
+            {!topicUnlocked && (
+              <p className="text-[10px] mt-1 px-2" style={{ color: "var(--color-text-secondary)" }}>
+                {topic.id === "topic-passive-voice"
+                  ? "🔒 Complete all English Tense exams to unlock"
+                  : topic.id === "topic-modal-verbs"
+                  ? "🔒 Complete Passive Voice exam to unlock"
+                  : "🔒 Complete previous topics to unlock"}
+              </p>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ── Section 3: Final Exam ── */}
       <div
         className="rounded-2xl p-5"
         style={{
@@ -586,20 +753,20 @@ export default function GrammarTab() {
         }}
       >
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">{"\u{1F3C6}"}</span>
+          <span className="text-2xl">🏆</span>
           <div className="flex-1">
-            <p className="text-[16px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-[15px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
               Final Exam
             </p>
-            <p className="text-[12px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
               {progress.isFinalExamUnlocked
                 ? `${FINAL_EXAM_QUESTIONS.length} questions \u00b7 ${Math.floor(FINAL_EXAM_CONFIG.timeLimitSeconds / 60)} minutes \u00b7 +${FINAL_EXAM_CONFIG.xpReward} XP`
-                : "Complete all unit exams to unlock"}
+                : "Complete English Tense, Passive Voice & Modal Verbs to unlock"}
             </p>
           </div>
           {finalExamResult?.passed && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
-              {"\u2713"} {finalExamResult.score}%
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+              ✓ {finalExamResult.score}%
             </span>
           )}
         </div>
@@ -609,9 +776,7 @@ export default function GrammarTab() {
           onClick={() => setShowFinalExam(true)}
           className={cn(
             "w-full py-3 rounded-xl font-semibold text-[14px] transition-all",
-            progress.isFinalExamUnlocked
-              ? "text-white cursor-pointer hover:opacity-90"
-              : "cursor-not-allowed"
+            progress.isFinalExamUnlocked ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
           )}
           style={{
             background: progress.isFinalExamUnlocked
@@ -620,7 +785,7 @@ export default function GrammarTab() {
             color: progress.isFinalExamUnlocked ? "white" : "rgba(166,179,194,0.4)",
           }}
         >
-          {finalExamResult?.passed ? "Retake Final Exam" : progress.isFinalExamUnlocked ? "Start Final Exam" : "\u{1F512} Locked"}
+          {finalExamResult?.passed ? "Retake Final Exam" : progress.isFinalExamUnlocked ? "Start Final Exam" : "🔒 Locked"}
         </button>
       </div>
     </div>

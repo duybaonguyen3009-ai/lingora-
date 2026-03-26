@@ -2,10 +2,12 @@
  * useGrammarProgress.ts
  *
  * LocalStorage-backed grammar progression hook.
- * Tracks completed lessons, scores, exam results, and XP.
+ * Tracks completed lessons, scores, exam results, XP, and level.
+ *
+ * Progression chain:
+ *   English Tense (Present → Past → Future) → Passive Voice → Modal Verbs → Final Exam
  *
  * No backend changes — grammar progress is frontend-only.
- * When backend grammar support is added, migrate this to useProgress.
  */
 
 "use client";
@@ -45,6 +47,25 @@ const XP_PER_LESSON = 10;
 const XP_PERFECT_BONUS = 5;
 const XP_PER_EXAM = 20;
 const XP_FINAL_EXAM = 50;
+const XP_PER_LEVEL = 100;
+
+// Topic dependency chain: topic ID → required predecessor ID(s)
+// Passive Voice requires all 3 tense unit exams passed
+// Modal Verbs requires Passive Voice exam passed
+const TOPIC_DEPENDENCIES: Record<string, string[]> = {
+  "topic-passive-voice": GRAMMAR_UNITS.map((u) => u.id), // all tense unit exams
+  "topic-modal-verbs": ["topic-passive-voice"],
+};
+
+// ---------------------------------------------------------------------------
+// Level computation
+// ---------------------------------------------------------------------------
+
+export function computeLevel(xp: number): { level: number; currentXp: number; nextLevelXp: number } {
+  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
+  const currentXp = xp % XP_PER_LEVEL;
+  return { level, currentXp, nextLevelXp: XP_PER_LEVEL };
+}
 
 // ---------------------------------------------------------------------------
 // Storage helpers
@@ -77,31 +98,31 @@ function saveProgress(data: GrammarProgressData): void {
 // ---------------------------------------------------------------------------
 
 export interface UseGrammarProgressResult {
-  /** Whether a lesson has been completed. */
   isLessonCompleted: (lessonId: string) => boolean;
-  /** Get the score for a completed lesson. */
   getLessonScore: (lessonId: string) => number | null;
-  /** Record completion of a grammar lesson. Returns XP earned. */
+  /** Record completion. Returns XP earned. */
   completeLesson: (lessonId: string, score: number) => number;
-  /** Record completion of a unit exam or final exam. Returns XP earned. */
+  /** Record exam completion. Returns XP earned. */
   completeExam: (unitId: string, score: number, passed: boolean) => number;
-  /** Whether a unit exam was passed. */
   isExamPassed: (unitId: string) => boolean;
-  /** Get exam result for a unit or final. */
   getExamResult: (unitId: string) => ExamResult | null;
-  /** Whether a lesson is unlocked (all previous lessons in the unit completed). */
   isLessonUnlocked: (lessonId: string) => boolean;
-  /** Whether a unit is unlocked (all previous units' exams passed). */
   isUnitUnlocked: (unitId: string) => boolean;
-  /** Whether the final exam is unlocked (all unit exams passed). */
+  /** Whether all tense unit exams are passed. */
+  allTensesComplete: boolean;
+  /** Whether the final exam is unlocked (all units + topics complete). */
   isFinalExamUnlocked: boolean;
-  /** Total grammar XP earned. */
   totalXp: number;
-  /** Count of completed lessons. */
+  /** Current level (1-based). */
+  level: number;
+  /** XP progress within current level. */
+  levelProgress: { currentXp: number; nextLevelXp: number };
   completedLessonsCount: number;
-  /** Total lessons available. */
   totalLessons: number;
-  /** Reset all grammar progress. */
+  /** Total lessons across ALL content (tenses + topics). */
+  totalAllLessons: number;
+  /** Count of all completed lessons (tenses + topics). */
+  completedAllLessonsCount: number;
   reset: () => void;
 }
 
@@ -119,6 +140,25 @@ export function useGrammarProgress(): UseGrammarProgressResult {
       Object.keys(data.lessonResults).filter((id) => tensesLessonIds.has(id))
         .length,
     [data.lessonResults, tensesLessonIds]
+  );
+
+  // All lessons count (tenses + topics)
+  const totalAllLessons = useMemo(
+    () =>
+      GRAMMAR_UNITS.reduce((sum, u) => sum + u.lessons.length, 0) +
+      GRAMMAR_TOPICS.reduce((sum, t) => sum + t.lessons.length, 0),
+    []
+  );
+
+  const completedAllLessonsCount = useMemo(
+    () => Object.keys(data.lessonResults).length,
+    [data.lessonResults]
+  );
+
+  // Level
+  const { level, currentXp: levelCurrentXp, nextLevelXp } = useMemo(
+    () => computeLevel(data.totalXp),
+    [data.totalXp]
   );
 
   const isLessonCompleted = useCallback(
@@ -202,11 +242,19 @@ export function useGrammarProgress(): UseGrammarProgressResult {
           }
         }
       }
-      // Check standalone grammar topics (each topic is independently unlocked)
+      // Check standalone grammar topics — respect dependency chain
       for (const topic of GRAMMAR_TOPICS) {
         for (let i = 0; i < topic.lessons.length; i++) {
           if (topic.lessons[i].id === lessonId) {
-            if (i === 0) return true; // first lesson in any topic is always open
+            // First, check if the topic itself is unlocked
+            const deps = TOPIC_DEPENDENCIES[topic.id];
+            if (deps) {
+              const topicUnlocked = deps.every(
+                (depId) => data.examResults[depId]?.passed === true
+              );
+              if (!topicUnlocked) return false;
+            }
+            if (i === 0) return true; // first lesson in unlocked topic
             return topic.lessons[i - 1].id in data.lessonResults;
           }
         }
@@ -224,15 +272,30 @@ export function useGrammarProgress(): UseGrammarProgressResult {
       if (unitIndex > 0) {
         return data.examResults[GRAMMAR_UNITS[unitIndex - 1].id]?.passed === true;
       }
-      // Standalone grammar topics: always unlocked (no cross-topic dependency)
-      if (GRAMMAR_TOPICS.some((t) => t.id === unitId)) return true;
-      return false;
+      // Grammar topics: check dependency chain
+      const deps = TOPIC_DEPENDENCIES[unitId];
+      if (deps) {
+        return deps.every((depId) => data.examResults[depId]?.passed === true);
+      }
+      // Unknown topic with no dependencies: unlocked
+      return true;
     },
     [data.examResults]
   );
 
-  const isFinalExamUnlocked = useMemo(
+  // All 3 tense unit exams passed
+  const allTensesComplete = useMemo(
     () => GRAMMAR_UNITS.every((u) => data.examResults[u.id]?.passed === true),
+    [data.examResults]
+  );
+
+  // Final exam: requires ALL unit exams AND ALL topic exams passed
+  const isFinalExamUnlocked = useMemo(
+    () => {
+      const tensesOk = GRAMMAR_UNITS.every((u) => data.examResults[u.id]?.passed === true);
+      const topicsOk = GRAMMAR_TOPICS.every((t) => data.examResults[t.id]?.passed === true);
+      return tensesOk && topicsOk;
+    },
     [data.examResults]
   );
 
@@ -255,10 +318,15 @@ export function useGrammarProgress(): UseGrammarProgressResult {
     getExamResult,
     isLessonUnlocked,
     isUnitUnlocked,
+    allTensesComplete,
     isFinalExamUnlocked,
     totalXp: data.totalXp,
+    level,
+    levelProgress: { currentXp: levelCurrentXp, nextLevelXp },
     completedLessonsCount,
     totalLessons: TOTAL_GRAMMAR_LESSONS,
+    totalAllLessons,
+    completedAllLessonsCount,
     reset,
   };
 }
