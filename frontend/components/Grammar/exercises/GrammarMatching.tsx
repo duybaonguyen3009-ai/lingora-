@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import DragDropProvider, { type DragEndEvent } from "./DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./DragToken";
 import DropSlot from "./DropSlot";
+import { GRAMMAR_CARD_STYLE } from "./GrammarAmbient";
 
 // ---------------------------------------------------------------------------
 // Types (exported for reuse)
@@ -164,10 +165,7 @@ export default function GrammarMatching({
 
         <div
           className="rounded-2xl p-4"
-          style={{
-            border: "1px solid var(--color-border)",
-            background: "var(--color-bg-card)",
-          }}
+          style={GRAMMAR_CARD_STYLE}
         >
           <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
             {exercise.instruction}

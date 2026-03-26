@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./exercises/DragToken";
 import DropSlot from "./exercises/DropSlot";
+import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE } from "./exercises/GrammarAmbient";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -279,8 +280,9 @@ export default function PassiveSentenceBuilder({
       className="fixed inset-0 z-50 flex flex-col"
       style={{ background: "var(--color-bg)", opacity: show ? 1 : 0, transition: "opacity 0.3s ease" }}
     >
+      <GrammarAmbientGlow />
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]"
@@ -300,7 +302,7 @@ export default function PassiveSentenceBuilder({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full relative z-10">
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           {/* Difficulty badge */}
           <div className="flex items-center gap-2 mb-4">
@@ -315,7 +317,7 @@ export default function PassiveSentenceBuilder({
           {/* Active sentence prompt */}
           <div
             className="rounded-2xl p-5 mb-4"
-            style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}
+            style={GRAMMAR_CARD_STYLE}
           >
             <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
               Active Voice
