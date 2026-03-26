@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import DragDropProvider, { type DragEndEvent } from "./DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./DragToken";
 import DropSlot from "./DropSlot";
+import { GRAMMAR_CARD_STYLE } from "./GrammarAmbient";
 
 // ---------------------------------------------------------------------------
 // Types (exported for reuse by other grammar modules)
@@ -129,10 +130,7 @@ export default function GrammarFillBlank({
         {/* Sentence card with inline drop slot */}
         <div
           className="rounded-2xl p-5"
-          style={{
-            border: "1px solid var(--color-border)",
-            background: "var(--color-bg-card)",
-          }}
+          style={GRAMMAR_CARD_STYLE}
         >
           <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
             <span>{parts[0]}</span>

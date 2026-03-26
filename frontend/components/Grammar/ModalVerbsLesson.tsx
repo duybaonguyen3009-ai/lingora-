@@ -16,6 +16,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { GrammarAmbientGlow } from "./exercises/GrammarAmbient";
 import GrammarFillBlank, { type FillBlankResult } from "./exercises/GrammarFillBlank";
 import GrammarMatching, { type MatchingResult } from "./exercises/GrammarMatching";
 import GrammarScenario, { type ScenarioResult } from "./exercises/GrammarScenario";
@@ -313,9 +314,10 @@ export default function ModalVerbsLesson({
         transition: "opacity 0.3s ease",
       }}
     >
+      <GrammarAmbientGlow />
       {/* Top bar */}
       <div
-        className="flex items-center gap-3 px-4 py-3"
+        className="flex items-center gap-3 px-4 py-3 relative z-10"
         style={{ borderBottom: "1px solid var(--color-border)" }}
       >
         <button
@@ -346,7 +348,7 @@ export default function ModalVerbsLesson({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full relative z-10">
         {current.type === "explanation" && (
           <ExplanationPanel
             key={`exp-${current.dataIndex}`}

@@ -15,6 +15,7 @@ import GrammarExplanation from "./GrammarExplanation";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./exercises/DragToken";
 import DropSlot from "./exercises/DropSlot";
+import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE } from "./exercises/GrammarAmbient";
 import { cn } from "@/lib/utils";
 
 interface GrammarExamProps {
@@ -229,8 +230,9 @@ export default function GrammarExam({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--color-bg)" }}>
+      <GrammarAmbientGlow />
       {/* Top bar with timer */}
-      <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>
           &times;
         </button>
@@ -246,7 +248,7 @@ export default function GrammarExam({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] mx-auto w-full relative z-10">
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-[11px] font-bold" style={{ color: "var(--color-text-secondary)" }}>
@@ -262,7 +264,7 @@ export default function GrammarExam({
           )}
 
           {/* Question with inline drop slot */}
-          <div className="rounded-2xl p-5 mb-5" style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}>
+          <div className="rounded-2xl p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
               <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
                 <span>{sentenceParts[0]}</span>
