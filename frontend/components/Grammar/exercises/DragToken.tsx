@@ -88,9 +88,19 @@ export default function DragToken({
       )}
       style={{
         ...VARIANT_STYLES[variant],
-        ...(disabled
-          ? { boxShadow: "none" }
-          : {}),
+        ...(disabled ? { boxShadow: "none" } : {}),
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          (e.currentTarget as HTMLElement).style.boxShadow =
+            "0 6px 16px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.1), 0 0 12px rgba(139,92,246,0.08)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          (e.currentTarget as HTMLElement).style.boxShadow =
+            VARIANT_STYLES[variant].boxShadow as string;
+        }
       }}
       role="button"
       tabIndex={disabled ? -1 : 0}
