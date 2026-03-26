@@ -2,25 +2,29 @@
  * GrammarLesson.tsx
  *
  * Full-screen lesson flow for grammar questions.
- * Flow: question → drag answer → explanation → next → completion.
  *
- * Each question shows a sentence with a blank. User drags
- * the correct option into the blank. After dropping, shows
- * GrammarExplanation card. At the end, shows score + XP earned.
+ * Single-blank: user drags one option into one blank.
+ * Multi-blank: options are split into individual tokens;
+ *   each blank is an independent drop target requiring its own answer.
  *
  * Uses @dnd-kit for real drag-and-drop interaction.
  */
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import type { GrammarLesson as GrammarLessonType, GrammarQuestion } from "./grammarData";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import type { GrammarLesson as GrammarLessonType } from "./grammarData";
 import GrammarExplanation from "./GrammarExplanation";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./exercises/DragToken";
 import DropSlot from "./exercises/DropSlot";
 import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE } from "./exercises/GrammarAmbient";
 import { useGrammarSounds } from "./exercises/useGrammarSounds";
+import {
+  extractDragTokens,
+  getCorrectParts,
+  validateMultiBlankAnswer,
+} from "./exercises/parseMultiBlank";
 import { cn } from "@/lib/utils";
 
 interface GrammarLessonProps {
@@ -38,10 +42,15 @@ export default function GrammarLessonView({
 }: GrammarLessonProps) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<LessonPhase>("question");
-  const [droppedOption, setDroppedOption] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [show, setShow] = useState(false);
   const { playCorrect, playWrong, playLevelUp } = useGrammarSounds();
+
+  // Single-blank state
+  const [droppedOption, setDroppedOption] = useState<string | null>(null);
+
+  // Multi-blank state: per-blank answers
+  const [blankAnswers, setBlankAnswers] = useState<(string | null)[]>([]);
 
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 50);
@@ -50,27 +59,109 @@ export default function GrammarLessonView({
 
   const current = lesson.questions[index];
   const isLast = index === lesson.questions.length - 1;
-  const isCorrect = droppedOption === current.options[current.correctIndex];
+
+  // Sentence analysis
+  const sentenceParts = current.sentence.split("___");
+  const blankCount = sentenceParts.length - 1;
+  const isMultiBlank = blankCount > 1;
+
+  // Correct answer parts
+  const correctParts = useMemo(
+    () => getCorrectParts(current.options as string[], current.correctIndex, blankCount),
+    [current, blankCount]
+  );
+
+  // For multi-blank: individual drag tokens extracted from all options
+  const dragTokens = useMemo(
+    () => isMultiBlank ? extractDragTokens(current.options as string[], blankCount) : current.options as string[],
+    [current, isMultiBlank, blankCount]
+  );
+
+  // Correctness check
+  const isCorrect = isMultiBlank
+    ? validateMultiBlankAnswer(blankAnswers, correctParts)
+    : droppedOption === current.options[current.correctIndex];
+
+  // Whether answer is committed (all blanks filled or single option dropped)
+  const isAnswered = isMultiBlank
+    ? blankAnswers.length === blankCount && blankAnswers.every((a) => a !== null)
+    : droppedOption !== null;
+
+  // Track which tokens are used in multi-blank
+  const usedTokens = useMemo(
+    () => new Set(blankAnswers.filter(Boolean) as string[]),
+    [blankAnswers]
+  );
+
+  // Initialize blank answers when question changes
+  useEffect(() => {
+    if (isMultiBlank) {
+      setBlankAnswers(new Array(blankCount).fill(null));
+    }
+  }, [index, isMultiBlank, blankCount]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      if (phase !== "question" || droppedOption !== null) return;
+      if (phase !== "question") return;
       const { active, over } = event;
-      if (over?.id === "answer-slot") {
-        const optText = String(active.id).replace("qopt-", "");
-        setDroppedOption(optText);
-        const wasCorrect = optText === current.options[current.correctIndex];
-        if (wasCorrect) {
-          setCorrectCount((c) => c + 1);
-        }
-        // Audio feedback after drop
+      if (!over) return;
+
+      const tokenText = String(active.id).replace("qopt-", "");
+      const overId = String(over.id);
+
+      if (isMultiBlank) {
+        // Multi-blank: drop into specific blank slot "blank-0", "blank-1", etc.
+        const match = overId.match(/^blank-(\d+)$/);
+        if (!match) return;
+        const slotIdx = parseInt(match[1], 10);
+        if (slotIdx < 0 || slotIdx >= blankCount) return;
+
+        setBlankAnswers((prev) => {
+          const updated = [...prev];
+          // Remove this token from any other slot first
+          for (let i = 0; i < updated.length; i++) {
+            if (updated[i] === tokenText) updated[i] = null;
+          }
+          updated[slotIdx] = tokenText;
+          return updated;
+        });
+      } else {
+        // Single-blank: existing behavior
+        if (overId !== "answer-slot" || droppedOption !== null) return;
+        setDroppedOption(tokenText);
+        const wasCorrect = tokenText === current.options[current.correctIndex];
+        if (wasCorrect) setCorrectCount((c) => c + 1);
         setTimeout(() => {
           wasCorrect ? playCorrect() : playWrong();
           setPhase("explanation");
         }, 300);
       }
     },
-    [phase, droppedOption, current, playCorrect, playWrong]
+    [phase, isMultiBlank, blankCount, droppedOption, current, playCorrect, playWrong]
+  );
+
+  // Multi-blank: submit all answers
+  const handleSubmitMultiBlank = useCallback(() => {
+    if (!isAnswered || phase !== "question") return;
+    const correct = validateMultiBlankAnswer(blankAnswers, correctParts);
+    if (correct) setCorrectCount((c) => c + 1);
+    setTimeout(() => {
+      correct ? playCorrect() : playWrong();
+      setPhase("explanation");
+    }, 300);
+  }, [isAnswered, phase, blankAnswers, correctParts, playCorrect, playWrong]);
+
+  // Clear a multi-blank slot
+  const handleClearSlot = useCallback(
+    (slotIdx: number) => {
+      if (phase !== "question") return;
+      setBlankAnswers((prev) => {
+        const updated = [...prev];
+        updated[slotIdx] = null;
+        return updated;
+      });
+    },
+    [phase]
   );
 
   const handleNext = useCallback(() => {
@@ -82,9 +173,10 @@ export default function GrammarLessonView({
     } else {
       setIndex((i) => i + 1);
       setDroppedOption(null);
+      setBlankAnswers([]);
       setPhase("question");
     }
-  }, [isLast, correctCount, lesson.questions.length, onComplete]);
+  }, [isLast, correctCount, lesson.questions.length, onComplete, playLevelUp]);
 
   const score = Math.round((correctCount / lesson.questions.length) * 100);
   const progress = ((index + (phase === "complete" ? 1 : 0)) / lesson.questions.length) * 100;
@@ -104,6 +196,7 @@ export default function GrammarLessonView({
     []
   );
 
+  // ── Completion screen ──
   if (phase === "complete") {
     return (
       <div
@@ -161,64 +254,23 @@ export default function GrammarLessonView({
     );
   }
 
-  // Build sentence display with inline drop slot(s)
-  const sentenceParts = current.sentence.split("___");
-  const hasBlank = sentenceParts.length > 1;
-  const blankCount = sentenceParts.length - 1;
-
-  // Split dropped answer into parts for multi-blank sentences.
-  // Handles mixed separators: "tried / had ... tried" → ["tried", "had", "tried"]
-  // Regex-based to tolerate whitespace variation around "/" and "...".
-  // On mismatch: pad with "—" so blanks never show confusing duplicated full-answer text.
-  const answerParts: string[] = (() => {
-    if (!droppedOption) return [];
-    if (blankCount <= 1) return [droppedOption];
-    const SEP_SLASH = /\s*\/\s*/;
-    const SEP_DOTS = /\s*\.{2,}\s*/;
-    const parts = droppedOption
-      .split(SEP_SLASH)
-      .flatMap((p) => (SEP_DOTS.test(p) ? p.split(SEP_DOTS) : [p]))
-      .map((p) => p.trim())
-      .filter(Boolean);
-    if (parts.length === blankCount) {
-      // Capitalize first part if it fills a sentence-initial blank
-      if (sentenceParts[0].trim() === "" && parts[0]) {
-        parts[0] = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-      }
-      return parts;
-    }
-    // Mismatch fallback: log warning, pad with empty strings so blanks stay silent
-    if (process.env.NODE_ENV === "development") {
-      console.warn(`[Grammar] answer-part count (${parts.length}) ≠ blank count (${blankCount}) for: "${droppedOption}"`);
-    }
-    while (parts.length < blankCount) parts.push("");
-    return parts.slice(0, blankCount);
-  })();
+  // ── Question phase ──
+  const hasBlank = blankCount > 0;
+  const showingFeedback = phase === "explanation";
 
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col"
-      style={{
-        background: "var(--color-bg)",
-        opacity: show ? 1 : 0,
-        transition: "opacity 0.3s ease",
-      }}
+      style={{ background: "var(--color-bg)", opacity: show ? 1 : 0, transition: "opacity 0.3s ease" }}
     >
       <GrammarAmbientGlow />
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]"
-          style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
-        >
+        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>
           &times;
         </button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-          <div
-            className="h-full rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }}
-          />
+          <div className="h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
         <span className="text-[12px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           {index + 1}/{lesson.questions.length}
@@ -239,49 +291,76 @@ export default function GrammarLessonView({
           </div>
 
           {/* Instruction */}
-          {phase === "question" && !droppedOption && (
+          {phase === "question" && !isAnswered && (
             <p className="text-[11px] font-semibold mb-3" style={{ color: "var(--color-text-secondary)" }}>
-              Drag the correct answer into the blank
+              {isMultiBlank
+                ? `Drag the correct word into each blank (${blankCount} blanks)`
+                : "Drag the correct answer into the blank"}
             </p>
           )}
 
-          {/* Question card with drop slot */}
-          <div
-            className="rounded-2xl p-5 mb-5"
-            style={GRAMMAR_CARD_STYLE}
-          >
+          {/* Question card with inline blanks */}
+          <div className="rounded-2xl p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
-              <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
+              <div className="text-[15px] font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
                 {sentenceParts.map((part, i) => (
                   <React.Fragment key={i}>
-                    <span>{part}</span>
+                    {part && <span>{part}</span>}
                     {i < blankCount && (
-                      droppedOption ? (
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
-                            phase === "explanation" && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
-                            phase === "explanation" && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
-                          )}
-                          style={phase !== "explanation" ? {
-                            borderColor: "rgba(46,211,198,0.4)",
-                            background: "rgba(46,211,198,0.1)",
-                            color: "var(--color-success)",
-                          } : undefined}
-                        >
-                          {answerParts[i] ?? droppedOption}
-                        </span>
+                      isMultiBlank ? (
+                        // Multi-blank: each blank is independent
+                        showingFeedback ? (
+                          <span
+                            className={cn(
+                              "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                              blankAnswers[i]?.toLowerCase().trim() === correctParts[i]?.toLowerCase().trim()
+                                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                                : "border-red-500/40 bg-red-500/15 text-red-400"
+                            )}
+                          >
+                            {blankAnswers[i] ?? "—"}
+                          </span>
+                        ) : blankAnswers[i] ? (
+                          <button
+                            onClick={() => handleClearSlot(i)}
+                            className="inline-flex px-2 py-0.5 rounded-lg font-bold text-[13px] border cursor-pointer hover:opacity-80"
+                            style={{
+                              borderColor: "rgba(46,211,198,0.4)",
+                              background: "rgba(46,211,198,0.1)",
+                              color: "var(--color-success)",
+                            }}
+                          >
+                            {blankAnswers[i]} ×
+                          </button>
+                        ) : (
+                          <DropSlot
+                            id={`blank-${i}`}
+                            placeholder={`blank ${i + 1}`}
+                            className="inline-flex min-w-[80px]"
+                          />
+                        )
                       ) : (
-                        i === 0 ? (
+                        // Single-blank: existing behavior
+                        droppedOption ? (
+                          <span
+                            className={cn(
+                              "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                              showingFeedback && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
+                              showingFeedback && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
+                            )}
+                            style={!showingFeedback ? {
+                              borderColor: "rgba(46,211,198,0.4)",
+                              background: "rgba(46,211,198,0.1)",
+                              color: "var(--color-success)",
+                            } : undefined}
+                          >
+                            {droppedOption}
+                          </span>
+                        ) : (
                           <DropSlot
                             id="answer-slot"
                             placeholder="___"
                             className="inline-flex min-w-[90px]"
-                          />
-                        ) : (
-                          <span
-                            className="inline-block w-16 h-6 mx-1 rounded border-2 border-dashed align-middle"
-                            style={{ borderColor: "var(--color-border)" }}
                           />
                         )
                       )
@@ -296,34 +375,65 @@ export default function GrammarLessonView({
             )}
           </div>
 
-          {/* Draggable options */}
-          {phase === "question" && !droppedOption && (
+          {/* Draggable tokens */}
+          {phase === "question" && (
             <div className="flex flex-wrap gap-2.5 mb-5">
-              {current.options.map((opt, i) => (
-                <DragToken
-                  key={`${opt}-${i}`}
-                  id={`qopt-${opt}`}
-                >
-                  {opt}
-                </DragToken>
-              ))}
+              {dragTokens.map((token, i) => {
+                const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption !== null;
+                return (
+                  <DragToken
+                    key={`${token}-${i}`}
+                    id={`qopt-${token}`}
+                    disabled={isUsed}
+                    variant={isUsed ? "placed" : "default"}
+                  >
+                    {token}
+                  </DragToken>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Multi-blank: Check Answer button */}
+          {isMultiBlank && phase === "question" && isAnswered && (
+            <button
+              onClick={handleSubmitMultiBlank}
+              className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90 mb-5"
+              style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
+            >
+              Check Answer
+            </button>
+          )}
+
+          {/* Correct answer (shown on wrong for multi-blank) */}
+          {showingFeedback && !isCorrect && isMultiBlank && (
+            <div
+              className="rounded-xl p-3 mb-4"
+              style={{ border: "1px solid rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.05)" }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#10B981" }}>
+                Correct Answer
+              </p>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+                {correctParts.join(" + ")}
+              </p>
             </div>
           )}
 
           {/* Explanation */}
-          {phase === "explanation" && (
+          {showingFeedback && (
             <div className="mb-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <GrammarExplanation
                 isCorrect={isCorrect}
                 correctAnswer={current.options[current.correctIndex]}
-                userAnswer={droppedOption ?? ""}
+                userAnswer={isMultiBlank ? (blankAnswers.filter(Boolean).join(" / ") || "") : (droppedOption ?? "")}
                 explanation={current.explanation}
               />
             </div>
           )}
 
           {/* Next button */}
-          {phase === "explanation" && (
+          {showingFeedback && (
             <button
               onClick={handleNext}
               className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
