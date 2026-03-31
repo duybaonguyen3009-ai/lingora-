@@ -144,13 +144,17 @@ export default function LessonModal({
       >
         {/* Panel */}
         <div
-          className="relative w-full max-w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+          className="relative w-full max-w-[480px] sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-lg shadow-xl"
           style={{ border: "1px solid var(--color-border)", background: "var(--color-bg)", boxShadow: "0 25px 60px rgba(0,0,0,0.6)" }}
         >
           {/* Close button */}
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 text-[16px]"
+            onClick={() => {
+              if (confirm("Quit this lesson? Your progress won't be saved.")) {
+                onClose();
+              }
+            }}
+            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-normal text-base"
             style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
           >
             ×
@@ -182,7 +186,7 @@ export default function LessonModal({
                     {steps.filter((s) => s !== "complete").map((s) => (
                       <div
                         key={s}
-                        className="flex-1 h-1 rounded-full transition-all duration-300"
+                        className="flex-1 h-1 rounded-full transition-all duration-normal"
                         style={{
                           background:
                             s === step
@@ -199,10 +203,10 @@ export default function LessonModal({
                 {/* Section label */}
                 {step !== "complete" && (
                   <div className="mb-5">
-                    <h2 className="text-[17px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+                    <h2 className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
                       {detail.lesson.title}
                     </h2>
-                    <p className="text-[12px] font-semibold mt-0.5" style={{ color: "var(--color-success)" }}>
+                    <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--color-success)" }}>
                       {stepLabels[step]}
                     </p>
                   </div>

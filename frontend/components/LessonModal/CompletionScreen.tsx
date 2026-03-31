@@ -3,15 +3,95 @@
 /**
  * CompletionScreen.tsx
  *
- * Reward moment after completing a lesson.
- * Shows: XP earned (animated), score cards, streak, daily goal progress,
- * positive feedback, and forward-momentum actions (Next Lesson / Done).
+ * Celebration moment after completing a lesson.
+ * Shows: confetti, mascot, XP counting animation, score cards, streak,
+ * daily goal progress, positive feedback, and forward-momentum actions.
  *
  * All new props are optional — backward compatible with callers that
  * don't pass daily goal or next lesson info.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Button from "@/components/ui/Button";
+import Mascot from "@/components/ui/Mascot";
+import useSound from "@/hooks/useSound";
+
+/* ── CSS-only confetti ── */
+function Confetti() {
+  const pieces = Array.from({ length: 16 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 1.5,
+    size: 6 + Math.random() * 6,
+    color: [
+      "var(--color-primary)",
+      "var(--color-accent)",
+      "var(--color-success)",
+      "var(--color-warning)",
+    ][i % 4],
+    duration: 2 + Math.random() * 2,
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <style>{`
+        @keyframes confettiFall {
+          0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+          100% { opacity: 0; transform: translateY(400px) rotate(720deg); }
+        }
+        @keyframes mascotBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+      `}</style>
+      {pieces.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-sm"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.left}%`,
+            top: -20,
+            backgroundColor: p.color,
+            animation: `confettiFall ${p.duration}s ease-out ${p.delay}s forwards`,
+            opacity: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ── XP counting hook ── */
+function useCountUp(target: number, duration = 800) {
+  const [value, setValue] = useState(0);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current || target <= 0) return;
+    started.current = true;
+
+    const startTime = performance.now();
+    let rafId: number;
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out quad
+      const eased = 1 - (1 - progress) * (1 - progress);
+      setValue(Math.round(eased * target));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, duration]);
+
+  return value;
+}
 
 interface CompletionScreenProps {
   lessonTitle:    string;
@@ -40,14 +120,19 @@ export default function CompletionScreen({
   dailyXp,
   dailyGoal,
 }: CompletionScreenProps) {
+  const { play } = useSound();
   const [show, setShow] = useState(false);
   const [xpAnimated, setXpAnimated] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setShow(true), 50);
     const t2 = setTimeout(() => setXpAnimated(true), 400);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t3 = setTimeout(() => play("correct", 0.5), 150);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
+
+  // XP counting animation — starts when the XP pill animates in
+  const xpDisplay = useCountUp(xpAnimated ? xpEarned : 0, 800);
 
   // Determine highlight message
   const bestScore = Math.max(quizScore, speakingScore ?? 0);
@@ -71,34 +156,43 @@ export default function CompletionScreen({
 
   return (
     <div
-      className="flex flex-col items-center gap-4 py-4 transition-all duration-500"
+      className="relative flex flex-col items-center gap-4 py-4 transition-all duration-slow"
       style={{ opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(12px)" }}
     >
-      {/* Trophy */}
+      {/* Confetti */}
+      <Confetti />
+
+      {/* Mascot with bounce */}
       <div
-        className="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
         style={{
-          background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
-          boxShadow: "0 0 32px var(--color-primary-glow)",
+          animation: "mascotBounce 2s ease-in-out infinite",
         }}
       >
-        {bestScore >= 90 ? "\u{1F31F}" : "\u{1F3C6}"}
+        <Mascot size={80} mood="happy" />
       </div>
 
-      {/* Headline */}
+      {/* Headline — gradient text */}
       <div className="text-center">
-        <p className="text-[20px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+        <p
+          className="text-xl font-sora font-bold"
+          style={{
+            background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           {highlight}
         </p>
-        <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
           {lessonTitle}
         </p>
       </div>
 
-      {/* ── XP Earned — hero stat ── */}
+      {/* ── XP Earned — hero stat with counting animation ── */}
       {xpEarned > 0 && (
         <div
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-500"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-slow"
           style={{
             background: xpAnimated
               ? "linear-gradient(135deg, rgba(46,211,198,0.15), rgba(45,168,255,0.1))"
@@ -108,11 +202,11 @@ export default function CompletionScreen({
             opacity: xpAnimated ? 1 : 0,
           }}
         >
-          <span className="text-[20px] font-sora font-bold" style={{ color: "var(--color-success)" }}>
-            +{xpEarned} XP
+          <span className="text-lg font-sora font-bold" style={{ color: "var(--color-success)" }}>
+            +{xpDisplay} XP
           </span>
           {bestScore >= 100 && (
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
               Perfect bonus!
             </span>
           )}
@@ -129,8 +223,8 @@ export default function CompletionScreen({
               border: "1px solid var(--color-primary-glow)",
             }}
           >
-            <p className="text-[22px] font-bold" style={{ color: "var(--color-primary)" }}>{quizScore}%</p>
-            <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Quiz</p>
+            <p className="text-xl font-bold" style={{ color: "var(--color-primary)" }}>{quizScore}%</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Quiz</p>
           </div>
         )}
         {speakingScore != null && speakingScore > 0 && (
@@ -141,22 +235,22 @@ export default function CompletionScreen({
               border: "1px solid var(--color-primary-glow)",
             }}
           >
-            <p className="text-[22px] font-bold" style={{ color: "var(--color-accent)" }}>{speakingScore}%</p>
-            <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Speaking</p>
+            <p className="text-xl font-bold" style={{ color: "var(--color-accent)" }}>{speakingScore}%</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Speaking</p>
           </div>
         )}
         {streak != null && streak > 0 && (
           <div
             className="flex-1 rounded-xl p-3.5 text-center"
             style={{
-              backgroundColor: "rgba(251,191,36,0.08)",
-              border: "1px solid rgba(251,191,36,0.2)",
+              backgroundColor: "var(--color-warning-soft)",
+              border: "1px solid color-mix(in srgb, var(--color-warning) 20%, transparent)",
             }}
           >
-            <p className="text-[22px] font-bold text-amber-400">
+            <p className="text-xl font-bold text-amber-400">
               {"\u{1F525}"} {streak}
             </p>
-            <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
               Day streak
             </p>
           </div>
@@ -170,20 +264,20 @@ export default function CompletionScreen({
             className="rounded-xl px-4 py-3"
             style={{
               border: dailyGoalMet
-                ? "1px solid rgba(251,191,36,0.25)"
+                ? "1px solid color-mix(in srgb, var(--color-warning) 25%, transparent)"
                 : "1px solid var(--color-border)",
               background: dailyGoalMet
-                ? "rgba(251,191,36,0.06)"
+                ? "color-mix(in srgb, var(--color-warning) 6%, transparent)"
                 : "var(--color-primary-soft)",
             }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+              <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
                 Daily Goal
               </span>
               <span
-                className="text-[11px] font-bold"
-                style={{ color: dailyGoalMet ? "#F59E0B" : "var(--color-text-secondary)" }}
+                className="text-xs font-bold"
+                style={{ color: dailyGoalMet ? "var(--color-warning)" : "var(--color-text-secondary)" }}
               >
                 {dailyXp} / {dailyGoal} XP
                 {dailyGoalMet && " \u2713"}
@@ -195,7 +289,7 @@ export default function CompletionScreen({
                 style={{
                   width: `${dailyPct}%`,
                   background: dailyGoalMet
-                    ? "linear-gradient(90deg, #F59E0B, #D97706)"
+                    ? "linear-gradient(90deg, var(--color-warning), color-mix(in srgb, var(--color-warning) 80%, black))"
                     : "linear-gradient(90deg, var(--color-success), var(--color-accent))",
                 }}
               />
@@ -205,42 +299,31 @@ export default function CompletionScreen({
       )}
 
       {/* Focus area */}
-      <p className="text-[12px] text-center px-4" style={{ color: "var(--color-text-secondary)" }}>
+      <p className="text-xs text-center px-4" style={{ color: "var(--color-text-secondary)" }}>
         {focusArea}
       </p>
 
       {/* ── Actions ── */}
       <div className="flex flex-col gap-2.5 w-full max-w-[300px]">
         {onNextLesson && nextLessonTitle && (
-          <button
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
             onClick={onNextLesson}
-            className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2"
-            style={{
-              background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
-            }}
+            iconRight={<span style={{ fontSize: 16 }}>&rarr;</span>}
           >
             Next: {nextLessonTitle.length > 24 ? nextLessonTitle.slice(0, 24) + "..." : nextLessonTitle}
-            <span style={{ fontSize: 16 }}>&rarr;</span>
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant={onNextLesson ? "soft" : "primary"}
+          size="lg"
+          fullWidth
           onClick={onClose}
-          className={`w-full py-3 rounded-xl font-semibold text-[14px] transition-all duration-200 hover:opacity-90 ${onNextLesson ? "" : "text-white"}`}
-          style={
-            onNextLesson
-              ? {
-                  background: "var(--color-primary-soft)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text-secondary)",
-                }
-              : {
-                  background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
-                  color: "white",
-                }
-          }
         >
           {onNextLesson ? "Back to Practice" : "Done"}
-        </button>
+        </Button>
       </div>
     </div>
   );

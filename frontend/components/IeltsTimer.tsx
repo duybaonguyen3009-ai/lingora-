@@ -83,7 +83,7 @@ export default function IeltsTimer({ seconds, onExpire, label }: IeltsTimerProps
   return (
     <div className="flex flex-col items-center gap-1">
       <span
-        className="text-[10px] font-medium uppercase tracking-wider"
+        className="text-xs font-medium uppercase tracking-wider"
         style={{ color: "var(--color-text-secondary)" }}
       >
         {label}

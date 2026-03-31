@@ -104,7 +104,7 @@ export default function AudioRecorder({
         onClick={state === "recording" ? stopRecording : startRecording}
         disabled={disabled || state === "requesting" || state === "stopped"}
         className={cn(
-          "relative flex items-center justify-center rounded-full transition-all duration-300",
+          "relative flex items-center justify-center rounded-full transition-all duration-normal",
           state === "recording"
             ? "w-16 h-16 border-2 border-red-400"
             : "w-16 h-16 border-2"
@@ -157,24 +157,24 @@ export default function AudioRecorder({
       {/* Label */}
       <div className="text-center">
         {state === "idle" && !permError && (
-          <p className="text-[13px]" style={{ color: "var(--color-text-secondary)" }}>Tap to Record</p>
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Tap to Record</p>
         )}
         {state === "requesting" && (
-          <p className="text-[13px] animate-pulse" style={{ color: "var(--color-primary)" }}>Requesting mic access…</p>
+          <p className="text-sm animate-pulse" style={{ color: "var(--color-primary)" }}>Requesting mic access…</p>
         )}
         {state === "recording" && (
           <div className="flex flex-col items-center gap-1">
-            <p className="text-[15px] font-bold text-red-400 tabular-nums">
+            <p className="text-base font-bold text-red-400 tabular-nums">
               {formatTime(elapsed)}
             </p>
-            <p className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>Tap to Stop</p>
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>Tap to Stop</p>
           </div>
         )}
         {state === "stopped" && (
-          <p className="text-[13px]" style={{ color: "var(--color-success)" }}>Processing…</p>
+          <p className="text-sm" style={{ color: "var(--color-success)" }}>Processing…</p>
         )}
         {permError && (
-          <p className="text-[12px] text-red-400 max-w-[260px]">{permError}</p>
+          <p className="text-xs text-red-400 max-w-[260px]">{permError}</p>
         )}
       </div>
     </div>

@@ -23,17 +23,17 @@ export default function PracticeScenarios({ onSelect }: PracticeScenariosProps) 
   return (
     <div className="flex flex-col gap-3">
       <h3
-        className="font-sora font-semibold text-[15px] px-1"
+        className="font-sora font-semibold text-base px-1"
         style={{ color: "var(--color-text-secondary)" }}
       >
         Practice a scenario
       </h3>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 stagger-children">
         {SCENARIOS.map((s) => (
           <button
             key={s.id}
             onClick={() => onSelect(s.id)}
-            className="flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 card-hover text-left"
+            className="flex items-center gap-4 p-4 rounded-lg transition-all duration-normal card-hover text-left"
             style={{
               backgroundColor: "var(--color-bg-card)",
               border: "1px solid var(--color-border)",
@@ -47,13 +47,13 @@ export default function PracticeScenarios({ onSelect }: PracticeScenariosProps) 
             </div>
             <div className="flex-1 min-w-0">
               <p
-                className="font-semibold text-[15px]"
+                className="font-semibold text-base"
                 style={{ color: "var(--color-text)" }}
               >
                 {s.title}
               </p>
               <p
-                className="text-[13px] mt-0.5"
+                className="text-sm mt-0.5"
                 style={{ color: "var(--color-text-secondary)" }}
               >
                 {s.description}

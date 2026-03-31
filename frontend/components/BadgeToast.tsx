@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ApiCompleteBadge } from "@/lib/api";
+import useSound from "@/hooks/useSound";
 
 interface BadgeToastProps {
   badges:    ApiCompleteBadge[];
@@ -17,10 +18,12 @@ interface BadgeToastProps {
  * `duration` ms.  Multiple badges are stacked vertically.
  */
 export default function BadgeToast({ badges, duration = 4000 }: BadgeToastProps) {
+  const { play } = useSound();
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (badges.length === 0) return;
+    play("correct", 0.5);
     setVisible(true);
     const id = setTimeout(() => setVisible(false), duration);
     return () => clearTimeout(id);
@@ -37,7 +40,7 @@ export default function BadgeToast({ badges, duration = 4000 }: BadgeToastProps)
       {badges.map((badge) => (
         <div
           key={badge.id}
-          className="flex items-center gap-3 px-4 py-3 rounded-[14px] border border-amber-500/30 backdrop-blur-md shadow-2xl animate-fade-in"
+          className="flex items-center gap-3 px-4 py-3 rounded-md border border-amber-500/30 backdrop-blur-md shadow-xl animate-fade-in"
           style={{ backgroundColor: "rgba(13,33,55,0.9)", animation: "fadeInUp 0.4s ease forwards" }}
         >
           {/* Icon or emoji placeholder */}
@@ -50,14 +53,14 @@ export default function BadgeToast({ badges, duration = 4000 }: BadgeToastProps)
           </div>
 
           <div className="min-w-0">
-            <p className="text-[11px] text-amber-400 font-semibold uppercase tracking-wide">
+            <p className="text-xs text-amber-400 font-semibold uppercase tracking-wide">
               Badge Unlocked!
             </p>
-            <p className="text-[13px] font-semibold font-sora truncate" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm font-semibold font-sora truncate" style={{ color: "var(--color-text)" }}>
               {badge.name}
             </p>
             {badge.xp_reward > 0 && (
-              <p className="text-[11px]" style={{ color: "var(--color-success)" }}>+{badge.xp_reward} XP</p>
+              <p className="text-xs" style={{ color: "var(--color-success)" }}>+{badge.xp_reward} XP</p>
             )}
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { IconHome, IconMic, IconBook, IconGraduationCap, IconUser } from "./Icons";
+import useSound from "@/hooks/useSound";
 
 interface BottomNavProps {
   active: string;
@@ -16,6 +17,8 @@ const NAV_ITEMS = [
 ] as const;
 
 export default function BottomNav({ active, onChange }: BottomNavProps) {
+  const { play } = useSound();
+
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around h-[68px] px-1"
@@ -32,14 +35,14 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
         return (
           <button
             key={id}
-            onClick={() => onChange(id)}
-            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-200"
+            onClick={() => { play("click", 0.2); onChange(id); }}
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-normal active:scale-95"
             style={{
               color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
             }}
           >
             <div
-              className="flex items-center justify-center rounded-xl transition-all duration-200"
+              className="flex items-center justify-center rounded-xl transition-all duration-normal"
               style={{
                 width: 36,
                 height: 36,
@@ -49,7 +52,7 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
               <Icon size={20} />
             </div>
             <span
-              className="text-[10px] font-semibold transition-colors duration-200"
+              className="text-xs font-semibold transition-colors duration-normal"
               style={{
                 color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
               }}

@@ -16,7 +16,7 @@ export default function LingonaLogo({ size = 40, className = "" }: LingonaLogoPr
   // Scale bar dimensions relative to a 44x44 viewbox
   return (
     <div
-      className={`flex items-center justify-center rounded-[10px] ${className}`}
+      className={`flex items-center justify-center rounded-md ${className}`}
       style={{
         width: size,
         height: size,

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useScenarios } from "@/hooks/useScenarios";
+import Badge from "@/components/ui/Badge";
 import type { Scenario } from "@/lib/types";
 
 interface ScenarioListProps {
@@ -19,16 +20,16 @@ const CATEGORIES = [
   { key: "academic", label: "Academic" },
 ] as const;
 
-function difficultyColor(d: string) {
+function difficultyBadgeVariant(d: string): "success" | "warning" | "error" | "muted" {
   switch (d) {
     case "beginner":
-      return { bg: "rgba(52,211,153,0.15)", text: "#34D399" };
+      return "success";
     case "intermediate":
-      return { bg: "rgba(251,191,36,0.15)", text: "#fbbf24" };
+      return "warning";
     case "advanced":
-      return { bg: "rgba(248,113,113,0.15)", text: "#f87171" };
+      return "error";
     default:
-      return { bg: "rgba(139,146,171,0.15)", text: "#8B92AB" };
+      return "muted";
   }
 }
 
@@ -64,7 +65,7 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
                 color: isActive ? "#fff" : "var(--color-text-secondary)",
                 border: isActive ? "none" : "1px solid var(--color-border)",
               }}
-              className="px-4 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap shrink-0 transition-all duration-200"
+              className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap shrink-0 transition-all duration-normal"
             >
               {cat.label}
             </button>
@@ -82,30 +83,28 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
       )}
 
       {error && (
-        <div className="text-center py-10 text-[15px]" style={{ color: "var(--color-warning)" }}>
+        <div className="text-center py-10 text-base" style={{ color: "var(--color-warning)" }}>
           {error}
         </div>
       )}
 
       {!loading && !error && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 stagger-children">
           {scenarios.length === 0 && (
-            <div className="text-center py-10 text-[15px]" style={{ color: "var(--color-text-secondary)" }}>
+            <div className="text-center py-10 text-base" style={{ color: "var(--color-text-secondary)" }}>
               No scenarios found for this category.
             </div>
           )}
 
-          {scenarios.map((scenario, i) => {
-            const dc = difficultyColor(scenario.difficulty);
+          {scenarios.map((scenario) => {
             return (
               <button
                 key={scenario.id}
                 onClick={() => onSelect(scenario)}
-                className="flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200 card-hover animate-fadeSlideUp"
+                className="flex items-center gap-4 p-4 rounded-lg text-left transition-all duration-normal card-hover"
                 style={{
                   background: "var(--color-bg-card)",
                   border: "1px solid var(--color-border)",
-                  animationDelay: `${i * 50}ms`,
                 }}
               >
                 <div
@@ -116,17 +115,17 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[15px] truncate" style={{ color: "var(--color-text)" }}>
+                  <div className="font-semibold text-base truncate" style={{ color: "var(--color-text)" }}>
                     {scenario.title}
                   </div>
-                  <div className="text-[13px] mt-0.5 line-clamp-1" style={{ color: "var(--color-text-secondary)" }}>
+                  <div className="text-sm mt-0.5 line-clamp-1" style={{ color: "var(--color-text-secondary)" }}>
                     {scenario.description}
                   </div>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: dc.bg, color: dc.text }}>
+                    <Badge variant={difficultyBadgeVariant(scenario.difficulty)} size="sm">
                       {scenario.difficulty}
-                    </span>
-                    <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+                    </Badge>
+                    <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
                       ~{scenario.expected_turns} turns
                     </span>
                   </div>

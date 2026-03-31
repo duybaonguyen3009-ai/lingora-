@@ -96,7 +96,7 @@ function ExplanationPanel({
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="rounded-2xl p-5"
+        className="rounded-lg p-5"
         style={{
           border: "1px solid rgba(46,211,198,0.2)",
           background: "rgba(46,211,198,0.04)",
@@ -104,18 +104,18 @@ function ExplanationPanel({
       >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">📖</span>
-          <p className="text-[16px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+          <p className="text-base font-sora font-bold" style={{ color: "var(--color-text)" }}>
             {explanation.title}
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
               Modal
             </p>
             <p
-              className="text-[15px] font-bold px-3 py-1.5 rounded-lg inline-block"
+              className="text-base font-bold px-3 py-1.5 rounded-lg inline-block"
               style={{
                 background: "rgba(46,211,198,0.1)",
                 border: "1px solid rgba(46,211,198,0.25)",
@@ -127,19 +127,19 @@ function ExplanationPanel({
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-accent)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-accent)" }}>
               Meaning
             </p>
-            <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
               {explanation.meaning}
             </p>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
               When to use
             </p>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
               {explanation.usage}
             </p>
           </div>
@@ -151,10 +151,10 @@ function ExplanationPanel({
               border: "1px solid var(--color-border)",
             }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
               Example
             </p>
-            <p className="text-[13px] italic" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm italic" style={{ color: "var(--color-text)" }}>
               {explanation.example}
             </p>
           </div>
@@ -163,7 +163,7 @@ function ExplanationPanel({
 
       <button
         onClick={onNext}
-        className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+        className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
         style={{
           background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
         }}
@@ -243,7 +243,7 @@ export default function ModalVerbsLesson({
         }}
       >
         <div
-          className="w-full max-w-[420px] rounded-2xl p-6 flex flex-col items-center gap-5"
+          className="w-full max-w-[420px] rounded-lg p-6 flex flex-col items-center gap-5"
           style={{
             border: "1px solid var(--color-border)",
             background: "var(--color-bg)",
@@ -267,10 +267,10 @@ export default function ModalVerbsLesson({
           </div>
 
           <div className="text-center">
-            <p className="text-[20px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
               {score >= 90 ? "Excellent!" : score >= 70 ? "Well done!" : "Keep practicing!"}
             </p>
-            <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
               {lessonTitle}
             </p>
           </div>
@@ -282,17 +282,17 @@ export default function ModalVerbsLesson({
               background: "rgba(46,211,198,0.08)",
             }}
           >
-            <span className="text-[24px] font-sora font-bold" style={{ color: "var(--color-success)" }}>
+            <span className="text-xl font-sora font-bold" style={{ color: "var(--color-success)" }}>
               {score}%
             </span>
-            <span className="text-[13px] ml-2" style={{ color: "var(--color-text-secondary)" }}>
+            <span className="text-sm ml-2" style={{ color: "var(--color-text-secondary)" }}>
               ({correctCount}/{totalScorable} correct)
             </span>
           </div>
 
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
             }}
@@ -322,7 +322,7 @@ export default function ModalVerbsLesson({
       >
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-base"
           style={{
             background: "var(--color-primary-soft)",
             border: "1px solid var(--color-border)",
@@ -334,7 +334,7 @@ export default function ModalVerbsLesson({
 
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-500 ease-out"
+            className="h-full rounded-full transition-all duration-slow ease-out"
             style={{
               width: `${progress}%`,
               background: "linear-gradient(90deg, var(--color-success), var(--color-accent))",
@@ -342,7 +342,7 @@ export default function ModalVerbsLesson({
           />
         </div>
 
-        <span className="text-[12px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           {stepIndex + 1}/{steps.length}
         </span>
       </div>

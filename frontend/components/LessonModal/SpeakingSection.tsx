@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
 import type { ApiSpeakingPrompt } from "@/lib/api";
 import type { PronunciationResult } from "@/lib/types";
 import {
@@ -79,7 +80,7 @@ export default function SpeakingSection({
       } catch (err) {
         setPromptState("error");
         setErrorMsg(
-          err instanceof Error ? err.message : "Something went wrong. Please try again."
+          err instanceof Error ? err.message : "Oops! Let's try that again"
         );
       }
     },
@@ -113,7 +114,7 @@ export default function SpeakingSection({
           <div
             key={i}
             className={cn(
-              "h-1.5 rounded-full transition-all duration-300",
+              "h-1.5 rounded-full transition-all duration-normal",
               i === index ? "w-6" : "w-2.5"
             )}
             style={{
@@ -137,27 +138,27 @@ export default function SpeakingSection({
           🎯
         </div>
         <div
-          className="flex-1 rounded-2xl rounded-tl-md p-4"
+          className="flex-1 rounded-lg rounded-tl-md p-4"
           style={{
             backgroundColor: "var(--color-bg-card)",
             border: "1px solid var(--color-border)",
           }}
         >
           <p
-            className="text-[11px] font-bold uppercase tracking-[0.8px] mb-2"
+            className="text-xs font-bold uppercase tracking-[0.8px] mb-2"
             style={{ color: "var(--color-primary)" }}
           >
             Speaking Prompt
           </p>
           <p
-            className="text-[15px] font-semibold leading-relaxed"
+            className="text-base font-semibold leading-relaxed"
             style={{ color: "var(--color-text)" }}
           >
             {current.prompt_text}
           </p>
           {current.hint && (
             <p
-              className="text-[12px] mt-2.5 italic"
+              className="text-xs mt-2.5 italic"
               style={{ color: "var(--color-text-secondary)", opacity: 0.7 }}
             >
               💡 {current.hint}
@@ -169,20 +170,21 @@ export default function SpeakingSection({
       {/* Sample answer toggle — hidden when showing results */}
       {current.sample_answer && promptState !== "results" && (
         <div className="pl-11">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setRevealed((v) => !v)}
-            className="text-[12px] font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200"
-            style={{
-              backgroundColor: revealed ? "var(--color-primary-soft)" : "transparent",
-              borderColor: revealed ? "var(--color-primary-glow)" : "var(--color-border)",
-              color: revealed ? "var(--color-primary)" : "var(--color-text-secondary)",
-            }}
+            style={revealed ? {
+              background: "var(--color-primary-soft)",
+              borderColor: "var(--color-primary-glow)",
+              color: "var(--color-primary)",
+            } : undefined}
           >
             {revealed ? "Hide Sample Answer" : "Reveal Sample Answer"}
-          </button>
+          </Button>
           {revealed && (
             <div
-              className="mt-2 px-4 py-3 rounded-xl text-[13px] leading-relaxed"
+              className="mt-2 px-4 py-3 rounded-xl text-sm leading-relaxed"
               style={{
                 backgroundColor: "var(--color-bg-card-hover)",
                 border: "1px solid var(--color-border)",
@@ -213,7 +215,7 @@ export default function SpeakingSection({
               borderTopColor: "var(--color-primary)",
             }}
           />
-          <p className="text-[13px]" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
             {promptState === "uploading" ? "Uploading audio…" : "Analyzing pronunciation…"}
           </p>
         </div>
@@ -222,18 +224,14 @@ export default function SpeakingSection({
       {/* Error state */}
       {promptState === "error" && (
         <div className="flex flex-col items-center gap-3 py-4">
-          <p className="text-[13px] text-red-400">{errorMsg}</p>
-          <button
+          <p className="text-sm text-red-400">{errorMsg}</p>
+          <Button
+            variant="soft"
+            size="sm"
             onClick={handleTryAgain}
-            className="px-5 py-2 rounded-lg text-[13px] font-semibold transition-all duration-200"
-            style={{
-              backgroundColor: "var(--color-primary-soft)",
-              border: "1px solid var(--color-primary-glow)",
-              color: "var(--color-primary)",
-            }}
           >
             Try Again
-          </button>
+          </Button>
         </div>
       )}
 
@@ -248,7 +246,7 @@ export default function SpeakingSection({
       )}
 
       {/* Prompt counter */}
-      <p className="text-[12px] text-center" style={{ color: "var(--color-text-secondary)", opacity: 0.5 }}>
+      <p className="text-xs text-center" style={{ color: "var(--color-text-secondary)", opacity: 0.5 }}>
         {index + 1} / {items.length} prompts
       </p>
     </div>

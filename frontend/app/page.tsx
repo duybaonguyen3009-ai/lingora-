@@ -14,6 +14,7 @@ import IeltsConversation from "@/components/IeltsConversation";
 import ExamScreen from "@/components/ExamScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import Onboarding from "@/components/Onboarding";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
@@ -124,52 +125,68 @@ export default function HomePage() {
 
           {/* ── HOME TAB ── */}
           {activeTab === "home" && (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-8 animate-fadeSlideUp">
+              {/* Primary CTA — dominant, above the fold */}
               <StartSpeakingCard onStart={handleStartSpeaking} />
+
+              {/* Secondary — personalized recommendations (only if relevant) */}
               <TodayFocusCard
                 recommendations={focusRecs}
                 loading={focusLoading}
                 onAction={handleFocusAction}
               />
+
+              {/* Tertiary — browsable options */}
               <PracticeScenarios onSelect={(id) => handleScenarioSelect(id)} />
+
+              {/* Ambient — non-blocking, dismissible */}
               <CoachTipCard />
             </div>
           )}
 
           {/* ── SPEAK TAB — Scenario browser (no exam scenarios) ── */}
           {activeTab === "speak" && (
-            <ScenarioList
-              onSelect={(scenario) => handleScenarioSelect(scenario)}
-              excludeExam
-            />
+            <div className="animate-fadeSlideUp">
+              <ScenarioList
+                onSelect={(scenario) => handleScenarioSelect(scenario)}
+                excludeExam
+              />
+            </div>
           )}
 
           {/* ── GRAMMAR TAB — Gamified tenses curriculum ── */}
           {activeTab === "practice" && (
-            <GrammarTab />
+            <div className="animate-fadeSlideUp">
+              <GrammarTab />
+            </div>
           )}
 
           {/* ── EXAM TAB ── */}
           {activeTab === "exam" && (
-            <ExamScreen
-              onStartIelts={(scenario) => setIeltsScenario(scenario)}
-            />
+            <div className="animate-fadeSlideUp">
+              <ExamScreen
+                onStartIelts={(scenario) => setIeltsScenario(scenario)}
+              />
+            </div>
           )}
 
           {/* ── PROFILE TAB ── */}
           {activeTab === "profile" && (
-            <ProfileScreen
-              userId={userId}
-              metrics={metrics}
-              metricsLoading={metricsLoading}
-              gamification={gamification}
-            />
+            <div className="animate-fadeSlideUp">
+              <ProfileScreen
+                userId={userId}
+                metrics={metrics}
+                metricsLoading={metricsLoading}
+                gamification={gamification}
+              />
+            </div>
           )}
 
         </div>
       </main>
 
       <BottomNav active={activeTab} onChange={setActiveTab} />
+      <Onboarding />
     </div>
   );
 }

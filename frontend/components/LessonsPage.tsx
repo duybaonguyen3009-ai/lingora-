@@ -59,8 +59,8 @@ export default function LessonsPage({
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h2 className="text-[18px] font-sora font-bold" style={{ color: "var(--color-text)" }}>Learning Path</h2>
-          <p className="text-[12px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Your personalized English journey</p>
+          <h2 className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>Learning Path</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>Your personalized English journey</p>
         </div>
         <LevelFilter active={levelFilter} onChange={setLevelFilter} />
       </div>
@@ -71,7 +71,7 @@ export default function LessonsPage({
       {/* Path divider */}
       <div className="flex items-center gap-3 mt-8 mb-6">
         <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-        <span className="text-[11px] font-bold uppercase tracking-[1.5px] flex items-center gap-2" style={{ color: "rgba(166,179,194,0.5)" }}>
+        <span className="text-xs font-bold uppercase tracking-[1.5px] flex items-center gap-2" style={{ color: "rgba(166,179,194,0.5)" }}>
           <span>{"\u{1F9ED}"}</span> Learning Path
         </span>
         <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />

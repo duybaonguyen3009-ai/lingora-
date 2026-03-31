@@ -116,27 +116,27 @@ export default function GrammarFillBlank({
       <div className="flex flex-col gap-4">
         {/* Category + difficulty */}
         <div className="flex items-center gap-2">
-          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", diffColor)}>
+          <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
             {exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1)}
           </span>
           {exercise.category && (
-            <span className="text-[11px] font-semibold" style={{ color: "var(--color-accent)" }}>
+            <span className="text-xs font-semibold" style={{ color: "var(--color-accent)" }}>
               {exercise.category}
             </span>
           )}
         </div>
 
         {/* Instruction */}
-        <p className="text-[11px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           Drag the correct word into the blank
         </p>
 
         {/* Sentence card with inline drop slot */}
         <div
-          className="rounded-2xl p-5"
+          className="rounded-lg p-5"
           style={GRAMMAR_CARD_STYLE}
         >
-          <div className="text-[15px] font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
+          <div className="text-base font-semibold leading-relaxed flex flex-wrap items-center gap-1" style={{ color: "var(--color-text)" }}>
             <span>{parts[0]}</span>
             {!submitted ? (
               <DropSlot
@@ -148,7 +148,7 @@ export default function GrammarFillBlank({
                 {selected && (
                   <button
                     onClick={handleClear}
-                    className="px-2 py-0.5 rounded-lg font-bold text-[14px] cursor-pointer hover:opacity-80"
+                    className="px-2 py-0.5 rounded-lg font-bold text-sm cursor-pointer hover:opacity-80"
                     style={{
                       background: "rgba(46,211,198,0.1)",
                       border: "1px solid rgba(46,211,198,0.3)",
@@ -162,7 +162,7 @@ export default function GrammarFillBlank({
             ) : (
               <span
                 className={cn(
-                  "inline-block px-2 py-0.5 mx-1 rounded-lg font-bold text-[14px] border",
+                  "inline-block px-2 py-0.5 mx-1 rounded-lg font-bold text-sm border",
                   isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
                   !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
                 )}
@@ -198,10 +198,10 @@ export default function GrammarFillBlank({
               background: "rgba(16,185,129,0.05)",
             }}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#10B981" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
               Correct Answer
             </p>
-            <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
               {exercise.sentence.replace("___", exercise.correctAnswer)}
             </p>
           </div>
@@ -216,10 +216,10 @@ export default function GrammarFillBlank({
               background: "var(--color-bg-card)",
             }}
           >
-            <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
               {isCorrect ? "✓ Correct!" : "✗ Not quite"} — Rule
             </p>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
               {exercise.explanation}
             </p>
           </div>
@@ -231,7 +231,7 @@ export default function GrammarFillBlank({
             onClick={handleSubmit}
             disabled={!selected}
             className={cn(
-              "w-full py-3 rounded-xl font-semibold text-[14px] transition-all",
+              "w-full py-3 rounded-xl font-semibold text-sm transition-all",
               selected ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
             )}
             style={{
@@ -248,7 +248,7 @@ export default function GrammarFillBlank({
         {submitted && (
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
             }}

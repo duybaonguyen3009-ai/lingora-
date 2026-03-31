@@ -19,7 +19,7 @@ export const ZIGZAG = [0, 40, 60, 40, 0, -40, -60, -40];
 function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
   const c = DIFF_CONFIG[difficulty];
   return (
-    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border", c.bg, c.border, c.text)}>
+    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold border", c.bg, c.border, c.text)}>
       <span className={cn("w-1.5 h-1.5 rounded-full", c.dot)} />
       {c.label}
     </span>
@@ -33,7 +33,7 @@ function AiHintButton() {
       <button
         onClick={() => setShowHint((v) => !v)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200 border",
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-normal border",
           showHint
             ? "bg-violet-500/15 border-violet-500/25 text-violet-300"
             : "border-transparent"
@@ -56,7 +56,7 @@ function AiHintButton() {
         {showHint ? "Hide Hint" : "Ask AI for Hint"}
       </button>
       {showHint && (
-        <div className="mt-2 px-3 py-2.5 rounded-xl bg-violet-500/[0.07] border border-violet-500/15 text-[11px] text-violet-200/80 leading-relaxed max-w-[200px]">
+        <div className="mt-2 px-3 py-2.5 rounded-xl bg-violet-500/[0.07] border border-violet-500/15 text-xs text-violet-200/80 leading-relaxed max-w-[200px]">
           {"\u{1F4A1}"} Try describing the weather using adjectives like &quot;sunny&quot;, &quot;cloudy&quot;, &quot;windy&quot; before moving to full sentences.
         </div>
       )}
@@ -95,11 +95,11 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 transition-all duration-300" style={{ transform: `translateX(${offset}px)` }}>
+    <div className="flex flex-col items-center gap-2 transition-all duration-normal" style={{ transform: `translateX(${offset}px)` }}>
       <button
         disabled={node.status === "locked"}
         onClick={node.status !== "locked" ? () => onOpen(node.id) : undefined}
-        className={cn("relative rounded-full flex items-center justify-center transition-all duration-300", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed")}
+        className={cn("relative rounded-full flex items-center justify-center transition-all duration-normal", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed")}
         style={{ ...bgStyle(), ...(node.status === "locked" ? { border: "2px solid var(--color-border)" } : {}) }}
       >
         {renderIcon()}
@@ -108,7 +108,7 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
         )}
         {node.xp && node.status !== "locked" && (
           <span
-            className="absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+            className="absolute -bottom-1 -right-1 text-xs font-bold px-1.5 py-0.5 rounded-full"
             style={{ backgroundColor: "var(--color-bg-card)", border: "1px solid rgba(46,211,198,0.3)", color: "var(--color-success)" }}
           >
             +{node.xp}
@@ -118,7 +118,7 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
 
       <div className="flex flex-col items-center text-center max-w-[140px]">
         <p
-          className="text-[12px] font-semibold leading-tight"
+          className="text-xs font-semibold leading-tight"
           style={{
             color: node.status === "locked"
               ? "rgba(166,179,194,0.4)"
@@ -131,7 +131,7 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
         </p>
         {node.subtitle && (
           <p
-            className="text-[10px] mt-0.5"
+            className="text-xs mt-0.5"
             style={{ color: node.status === "locked" ? "rgba(166,179,194,0.25)" : "rgba(166,179,194,0.7)" }}
           >
             {node.subtitle}
@@ -142,7 +142,7 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
         )}
         {node.progress !== undefined && <MiniProgress pct={node.progress} status={node.status} />}
         {node.duration && node.status === "current" && (
-          <span className="flex items-center gap-1 text-[10px] mt-1" style={{ color: "rgba(166,179,194,0.6)" }}>
+          <span className="flex items-center gap-1 text-xs mt-1" style={{ color: "rgba(166,179,194,0.6)" }}>
             <IconClock size={9} /> {node.duration} min
           </span>
         )}

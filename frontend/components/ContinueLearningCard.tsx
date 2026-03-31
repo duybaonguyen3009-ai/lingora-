@@ -55,7 +55,7 @@ export default function ContinueLearningCard({
   if (loading) {
     return (
       <div
-        className="rounded-2xl p-6 animate-pulse"
+        className="rounded-lg p-6 animate-pulse"
         style={{
           border: "1px solid var(--color-border)",
           background: "var(--color-bg-card)",
@@ -77,7 +77,7 @@ export default function ContinueLearningCard({
   if (allDone) {
     return (
       <div
-        className="rounded-2xl p-6 relative overflow-hidden"
+        className="rounded-lg p-6 relative overflow-hidden"
         style={{
           border: "1px solid rgba(46,211,198,0.25)",
           background: "linear-gradient(135deg, rgba(46,211,198,0.08), rgba(45,168,255,0.05))",
@@ -92,17 +92,17 @@ export default function ContinueLearningCard({
             <IconCheck size={22} className="text-white" />
           </div>
           <div>
-            <p className="text-[16px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-base font-sora font-bold" style={{ color: "var(--color-text)" }}>
               All lessons complete!
             </p>
-            <p className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
               {totalCompleted} lessons finished — amazing work
             </p>
           </div>
         </div>
         <button
           onClick={onQuickReview}
-          className="w-full py-3 rounded-xl text-[14px] font-semibold transition-all duration-200 hover:opacity-90"
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-normal hover:opacity-90"
           style={{
             background: "var(--color-primary-soft)",
             border: "1px solid var(--color-border)",
@@ -119,16 +119,16 @@ export default function ContinueLearningCard({
   if (!current) {
     return (
       <div
-        className="rounded-2xl p-6 text-center"
+        className="rounded-lg p-6 text-center"
         style={{
           border: "1px solid var(--color-border)",
           background: "var(--color-bg-card)",
         }}
       >
-        <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--color-text)" }}>
+        <p className="text-base font-semibold mb-1" style={{ color: "var(--color-text)" }}>
           Start your learning journey
         </p>
-        <p className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
           Lessons will appear here once content is available.
         </p>
       </div>
@@ -142,7 +142,7 @@ export default function ContinueLearningCard({
 
   return (
     <div
-      className="rounded-2xl relative overflow-hidden"
+      className="rounded-lg relative overflow-hidden"
       style={{
         border: "1px solid rgba(46,211,198,0.2)",
         background: "linear-gradient(135deg, rgba(46,211,198,0.06), rgba(45,168,255,0.04))",
@@ -155,30 +155,30 @@ export default function ContinueLearningCard({
         {/* Unit + progress context */}
         <div className="flex items-center gap-2 mb-3">
           <span
-            className="text-[10px] font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
+            className="text-xs font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
             style={{ backgroundColor: "rgba(46,211,198,0.12)", color: "var(--color-success)" }}
           >
             Unit {unitNumber}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
+          <span className="text-xs font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
             style={{ backgroundColor: "rgba(45,168,255,0.1)", color: "var(--color-accent)" }}
           >
             {unit.level}
           </span>
-          <span className="ml-auto text-[11px] font-medium" style={{ color: "var(--color-text-secondary)" }}>
+          <span className="ml-auto text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>
             {totalCompleted}/{totalLessons} lessons
           </span>
         </div>
 
         {/* Lesson info */}
-        <p className="text-[11px] font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs font-semibold mb-1" style={{ color: "var(--color-text-secondary)" }}>
           Lesson {lessonNumber} of {unit.nodes.length} · {unit.title}
         </p>
-        <h3 className="text-[18px] font-sora font-bold mb-1" style={{ color: "var(--color-text)" }}>
+        <h3 className="text-lg font-sora font-bold mb-1" style={{ color: "var(--color-text)" }}>
           {node.title}
         </h3>
         {node.xp && (
-          <p className="text-[11px] mb-4" style={{ color: "var(--color-success)" }}>
+          <p className="text-xs mb-4" style={{ color: "var(--color-success)" }}>
             +{node.xp} XP
           </p>
         )}
@@ -194,7 +194,7 @@ export default function ContinueLearningCard({
               }}
             />
           </div>
-          <p className="text-[10px] mt-1 text-right" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs mt-1 text-right" style={{ color: "var(--color-text-secondary)" }}>
             {progressPct}% complete
           </p>
         </div>
@@ -202,7 +202,7 @@ export default function ContinueLearningCard({
         {/* CTA */}
         <button
           onClick={() => onStartLesson(node.id)}
-          className="w-full py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-normal hover:opacity-90 flex items-center justify-center gap-2"
           style={{
             background: "linear-gradient(135deg, var(--color-success), var(--color-accent))",
             color: "var(--color-bg)",

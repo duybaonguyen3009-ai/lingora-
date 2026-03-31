@@ -34,6 +34,7 @@ import GrammarExam from "./GrammarExam";
 import PassiveSentenceBuilder from "./PassiveSentenceBuilder";
 import ModalVerbsLesson from "./ModalVerbsLesson";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
 
 /** Lesson IDs that use custom components instead of GrammarLessonView. */
 const CUSTOM_LESSON_IDS = new Set([
@@ -50,7 +51,7 @@ const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; gl
   emerald: {
     bg: "rgba(16,185,129,0.08)",
     border: "rgba(16,185,129,0.2)",
-    text: "#10B981",
+    text: "var(--color-success)",
     glow: "rgba(16,185,129,0.3)",
   },
   blue: {
@@ -68,7 +69,7 @@ const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; gl
   amber: {
     bg: "rgba(245,158,11,0.08)",
     border: "rgba(245,158,11,0.2)",
-    text: "#F59E0B",
+    text: "var(--color-warning)",
     glow: "rgba(245,158,11,0.3)",
   },
 };
@@ -97,7 +98,7 @@ function XpGainPopup({ xp, onDone }: { xp: number; onDone: () => void }) {
         }
       `}</style>
       <div
-        className="px-5 py-2.5 rounded-full font-bold text-[16px]"
+        className="px-5 py-2.5 rounded-full font-bold text-base"
         style={{
           background: "linear-gradient(135deg, var(--color-success), var(--color-accent))",
           color: "white",
@@ -135,7 +136,7 @@ function LevelUpToast({ level, onDone }: { level: number; onDone: () => void }) 
         }
       `}</style>
       <div
-        className="rounded-2xl px-8 py-6 flex flex-col items-center gap-3"
+        className="rounded-lg px-8 py-6 flex flex-col items-center gap-3"
         style={{
           background: "color-mix(in srgb, var(--color-bg) 95%, transparent)",
           backdropFilter: "blur(12px)",
@@ -144,10 +145,10 @@ function LevelUpToast({ level, onDone }: { level: number; onDone: () => void }) 
         }}
       >
         <div className="text-4xl">🎉</div>
-        <p className="text-[18px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+        <p className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
           Level {level}!
         </p>
-        <p className="text-[12px]" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
           Keep going — you&apos;re making great progress!
         </p>
       </div>
@@ -177,7 +178,7 @@ function ProgressHero({
 
   return (
     <div
-      className="rounded-2xl p-5 mb-5"
+      className="rounded-lg p-5 mb-5"
       style={{
         background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(46,211,198,0.06))",
         border: "1px solid rgba(139,92,246,0.15)",
@@ -187,7 +188,7 @@ function ProgressHero({
         <div className="flex items-center gap-3">
           {/* Level badge */}
           <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center text-[14px] font-bold"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold"
             style={{
               background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
               color: "white",
@@ -197,19 +198,19 @@ function ProgressHero({
             {level}
           </div>
           <div>
-            <p className="text-[14px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm font-sora font-bold" style={{ color: "var(--color-text)" }}>
               Grammar Journey
             </p>
-            <p className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
               Level {level} &middot; {totalXp} XP
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[13px] font-bold" style={{ color: "var(--color-success)" }}>
+          <p className="text-sm font-bold" style={{ color: "var(--color-success)" }}>
             {pct}%
           </p>
-          <p className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
             {completedAll}/{totalAll} lessons
           </p>
         </div>
@@ -217,7 +218,7 @@ function ProgressHero({
 
       {/* Level progress bar */}
       <div className="flex items-center gap-2">
-        <span className="text-[9px] font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+        <span className="text-xs font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
           LV{level}
         </span>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
@@ -230,7 +231,7 @@ function ProgressHero({
             }}
           />
         </div>
-        <span className="text-[9px] font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+        <span className="text-xs font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
           LV{level + 1}
         </span>
       </div>
@@ -263,8 +264,8 @@ function LessonNode({
       disabled={isLocked}
       onClick={isLocked ? undefined : onStart}
       className={cn(
-        "w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border",
-        isLocked && "opacity-40 cursor-not-allowed",
+        "w-full rounded-xl px-4 py-3 text-left transition-all duration-normal border",
+        isLocked && "opacity-60 cursor-not-allowed",
         (isCurrent || isCompleted) && "cursor-pointer"
       )}
       style={{
@@ -281,14 +282,14 @@ function LessonNode({
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-bold"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
           style={{
             background: isCompleted
               ? "linear-gradient(135deg, var(--color-success), var(--color-accent))"
               : isCurrent
               ? "rgba(46,211,198,0.15)"
-              : "#0F2D46",
-            color: isCompleted ? "white" : isCurrent ? "var(--color-success)" : "rgba(166,179,194,0.4)",
+              : "var(--color-bg-secondary)",
+            color: isCompleted ? "white" : isCurrent ? "var(--color-success)" : "var(--color-text-secondary)",
             border: isLocked ? "1.5px solid var(--color-border)" : "none",
           }}
         >
@@ -296,23 +297,23 @@ function LessonNode({
         </div>
         <div className="flex-1 min-w-0">
           <p
-            className="text-[12px] font-semibold truncate"
+            className="text-xs font-semibold truncate"
             style={{
-              color: isLocked ? "rgba(166,179,194,0.4)" : isCurrent ? "var(--color-success)" : "var(--color-text)",
+              color: isLocked ? "var(--color-text-secondary)" : isCurrent ? "var(--color-success)" : "var(--color-text)",
             }}
           >
             {lesson.title}
           </p>
-          <p className="text-[10px] mt-0.5 truncate" style={{ color: isLocked ? "rgba(166,179,194,0.25)" : "var(--color-text-secondary)" }}>
+          <p className="text-xs mt-0.5 truncate" style={{ color: isLocked ? "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)" : "var(--color-text-secondary)" }}>
             {lesson.subtitle} &middot; {lesson.exerciseCount ?? lesson.questions.length} {CUSTOM_LESSON_IDS.has(lesson.id) ? "exercises" : "questions"}
           </p>
         </div>
         {isCompleted && score !== null && (
           <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{
-              background: score >= 80 ? "rgba(16,185,129,0.15)" : "rgba(251,191,36,0.15)",
-              color: score >= 80 ? "#10B981" : "#F59E0B",
+              background: score >= 80 ? "color-mix(in srgb, var(--color-success) 15%, transparent)" : "color-mix(in srgb, var(--color-warning) 15%, transparent)",
+              color: score >= 80 ? "var(--color-success)" : "var(--color-warning)",
               border: score >= 80 ? "1px solid rgba(16,185,129,0.25)" : "1px solid rgba(251,191,36,0.25)",
             }}
           >
@@ -351,8 +352,8 @@ function ExamCard({
       disabled={!isUnlocked}
       onClick={isUnlocked ? onStart : undefined}
       className={cn(
-        "w-full rounded-xl px-4 py-3 text-left transition-all duration-200 border",
-        !isUnlocked && "opacity-40 cursor-not-allowed",
+        "w-full rounded-xl px-4 py-3 text-left transition-all duration-normal border",
+        !isUnlocked && "opacity-60 cursor-not-allowed",
         isUnlocked && !isPassed && "cursor-pointer"
       )}
       style={{
@@ -362,25 +363,25 @@ function ExamCard({
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[13px]"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
           style={{
-            background: isPassed ? "linear-gradient(135deg, var(--color-success), var(--color-accent))" : isUnlocked ? `${accentColor}20` : "#0F2D46",
-            color: isPassed ? "white" : isUnlocked ? accentColor : "rgba(166,179,194,0.4)",
+            background: isPassed ? "linear-gradient(135deg, var(--color-success), var(--color-accent))" : isUnlocked ? `${accentColor}20` : "var(--color-bg-secondary)",
+            color: isPassed ? "white" : isUnlocked ? accentColor : "var(--color-text-secondary)",
             border: !isUnlocked ? "1.5px solid var(--color-border)" : "none",
           }}
         >
           {isPassed ? "\u2713" : "\u{1F4DD}"}
         </div>
         <div className="flex-1">
-          <p className="text-[12px] font-semibold" style={{ color: !isUnlocked ? "rgba(166,179,194,0.4)" : "var(--color-text)" }}>
+          <p className="text-xs font-semibold" style={{ color: !isUnlocked ? "var(--color-text-secondary)" : "var(--color-text)" }}>
             {label}
           </p>
-          <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
             {isPassed ? "Passed" : "Test your knowledge"}
           </p>
         </div>
         {isPassed && score !== null && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.15)", color: "#10B981", border: "1px solid rgba(16,185,129,0.25)" }}>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--color-success) 15%, transparent)", color: "var(--color-success)", border: "1px solid color-mix(in srgb, var(--color-success) 25%, transparent)" }}>
             {score}%
           </span>
         )}
@@ -418,7 +419,7 @@ function UnitCard({
 
   return (
     <div
-      className={cn("rounded-2xl overflow-hidden transition-all duration-300", !unitUnlocked && "opacity-50")}
+      className={cn("rounded-lg overflow-hidden transition-all duration-normal", !unitUnlocked && "opacity-50")}
       style={{ border: `1px solid ${colors.border}`, background: "var(--color-bg-card)" }}
     >
       <button
@@ -428,25 +429,25 @@ function UnitCard({
       >
         <span className="text-xl">{unit.emoji}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+          <p className="text-sm font-sora font-bold" style={{ color: "var(--color-text)" }}>
             {unit.title}
           </p>
-          <p className="text-[10px] mt-0.5 truncate" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-secondary)" }}>
             {unit.description}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {examPassed && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
               ✓
             </span>
           )}
           {!examPassed && (
-            <span className="text-[10px] font-bold" style={{ color: colors.text }}>
+            <span className="text-xs font-bold" style={{ color: colors.text }}>
               {completedInUnit}/{unit.lessons.length}
             </span>
           )}
-          <span className="text-[13px] transition-transform duration-200" style={{ color: "var(--color-text-secondary)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+          <span className="text-sm transition-transform duration-normal" style={{ color: "var(--color-text-secondary)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
             ▼
           </span>
         </div>
@@ -456,7 +457,7 @@ function UnitCard({
       {unitUnlocked && (
         <div className="px-4 pb-1 pt-0" style={{ background: colors.bg }}>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})` }} />
+            <div className="h-full rounded-full transition-all duration-slow" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})` }} />
           </div>
         </div>
       )}
@@ -639,7 +640,7 @@ export default function GrammarTab() {
 
       {/* ── Section 1: English Tense (collapsible accordion) ── */}
       <div
-        className="rounded-2xl overflow-hidden mb-4"
+        className="rounded-lg overflow-hidden mb-4"
         style={{
           border: progress.allTensesComplete
             ? "1px solid rgba(16,185,129,0.2)"
@@ -659,21 +660,21 @@ export default function GrammarTab() {
         >
           <span className="text-xl">📖</span>
           <div className="flex-1">
-            <p className="text-[15px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-base font-sora font-bold" style={{ color: "var(--color-text)" }}>
               English Tense
             </p>
-            <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
               Present, Past &amp; Future &middot; {tensesCompletedLessons}/{tensesTotalLessons} lessons &middot; {tensesExamsPassed}/3 exams
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {progress.allTensesComplete && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
                 ✓ Complete
               </span>
             )}
             <span
-              className="text-[14px] transition-transform duration-200"
+              className="text-sm transition-transform duration-normal"
               style={{ color: "var(--color-text-secondary)", transform: tensesExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
             >
               ▼
@@ -689,7 +690,7 @@ export default function GrammarTab() {
               style={{
                 width: `${tensesTotalLessons > 0 ? Math.round((tensesCompletedLessons / tensesTotalLessons) * 100) : 0}%`,
                 background: progress.allTensesComplete
-                  ? "linear-gradient(90deg, #10B981, var(--color-accent))"
+                  ? "linear-gradient(90deg, var(--color-success), var(--color-accent))"
                   : "linear-gradient(90deg, #8B5CF6, #6D28D9)",
               }}
             />
@@ -727,13 +728,22 @@ export default function GrammarTab() {
             />
             {/* Unlock hint */}
             {!topicUnlocked && (
-              <p className="text-[10px] mt-1 px-2" style={{ color: "var(--color-text-secondary)" }}>
-                {topic.id === "topic-passive-voice"
-                  ? "🔒 Complete all English Tense exams to unlock"
-                  : topic.id === "topic-modal-verbs"
-                  ? "🔒 Complete Passive Voice exam to unlock"
-                  : "🔒 Complete previous topics to unlock"}
-              </p>
+              <div
+                className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg"
+                style={{
+                  background: "color-mix(in srgb, var(--color-text-secondary) 8%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--color-text-secondary) 12%, transparent)",
+                }}
+              >
+                <span className="text-sm">🔒</span>
+                <p className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                  {topic.id === "topic-passive-voice"
+                    ? "Complete all English Tense exams to unlock"
+                    : topic.id === "topic-modal-verbs"
+                    ? "Complete Passive Voice exam to unlock"
+                    : "Complete previous topics to unlock"}
+                </p>
+              </div>
             )}
           </div>
         );
@@ -741,7 +751,7 @@ export default function GrammarTab() {
 
       {/* ── Section 3: Final Exam ── */}
       <div
-        className="rounded-2xl p-5"
+        className="rounded-lg p-5"
         style={{
           border: progress.isFinalExamUnlocked
             ? "1px solid rgba(251,191,36,0.3)"
@@ -749,44 +759,44 @@ export default function GrammarTab() {
           background: progress.isFinalExamUnlocked
             ? "rgba(251,191,36,0.06)"
             : "var(--color-primary-soft)",
-          opacity: progress.isFinalExamUnlocked ? 1 : 0.4,
+          opacity: progress.isFinalExamUnlocked ? 1 : 0.6,
         }}
       >
         <div className="flex items-center gap-3 mb-3">
           <span className="text-2xl">🏆</span>
           <div className="flex-1">
-            <p className="text-[15px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-base font-sora font-bold" style={{ color: "var(--color-text)" }}>
               Final Exam
             </p>
-            <p className="text-[11px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
               {progress.isFinalExamUnlocked
                 ? `${FINAL_EXAM_QUESTIONS.length} questions \u00b7 ${Math.floor(FINAL_EXAM_CONFIG.timeLimitSeconds / 60)} minutes \u00b7 +${FINAL_EXAM_CONFIG.xpReward} XP`
                 : "Complete English Tense, Passive Voice & Modal Verbs to unlock"}
             </p>
           </div>
           {finalExamResult?.passed && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
               ✓ {finalExamResult.score}%
             </span>
           )}
         </div>
 
-        <button
+        <Button
           disabled={!progress.isFinalExamUnlocked}
           onClick={() => setShowFinalExam(true)}
-          className={cn(
-            "w-full py-3 rounded-xl font-semibold text-[14px] transition-all",
-            progress.isFinalExamUnlocked ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
-          )}
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="rounded-xl"
           style={{
             background: progress.isFinalExamUnlocked
-              ? "linear-gradient(135deg, #F59E0B, #D97706)"
+              ? "linear-gradient(135deg, var(--color-warning), #D97706)"
               : "var(--color-border)",
-            color: progress.isFinalExamUnlocked ? "white" : "rgba(166,179,194,0.4)",
+            color: progress.isFinalExamUnlocked ? "white" : "var(--color-text-secondary)",
           }}
         >
           {finalExamResult?.passed ? "Retake Final Exam" : progress.isFinalExamUnlocked ? "Start Final Exam" : "🔒 Locked"}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ import {
   validateMultiBlankAnswer,
 } from "./exercises/parseMultiBlank";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
 
 interface GrammarLessonProps {
   lesson: GrammarLessonType;
@@ -207,7 +208,7 @@ export default function GrammarLessonView({
         }}
       >
         <div
-          className="w-full max-w-[420px] rounded-2xl p-6 flex flex-col items-center gap-5"
+          className="w-full max-w-[420px] rounded-lg p-6 flex flex-col items-center gap-5"
           style={{
             border: "1px solid var(--color-border)",
             background: "var(--color-bg)",
@@ -219,7 +220,7 @@ export default function GrammarLessonView({
             style={{
               background: score >= 70
                 ? "linear-gradient(135deg, var(--color-success), var(--color-accent))"
-                : "linear-gradient(135deg, #F59E0B, #D97706)",
+                : "linear-gradient(135deg, var(--color-warning), #D97706)",
               boxShadow: score >= 70
                 ? "0 0 32px rgba(46,211,198,0.3)"
                 : "0 0 32px rgba(245,158,11,0.3)",
@@ -228,10 +229,10 @@ export default function GrammarLessonView({
             {score >= 90 ? "\u{1F31F}" : score >= 70 ? "\u{1F3C6}" : "\u{1F4AA}"}
           </div>
           <div className="text-center">
-            <p className="text-[20px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
               {score >= 90 ? "Excellent!" : score >= 70 ? "Well done!" : "Keep practicing!"}
             </p>
-            <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
               {lesson.title}
             </p>
           </div>
@@ -239,16 +240,12 @@ export default function GrammarLessonView({
             className="px-6 py-3 rounded-full"
             style={{ border: "1px solid rgba(46,211,198,0.25)", background: "rgba(46,211,198,0.08)" }}
           >
-            <span className="text-[24px] font-sora font-bold" style={{ color: "var(--color-success)" }}>{score}%</span>
-            <span className="text-[13px] ml-2" style={{ color: "var(--color-text-secondary)" }}>({correctCount}/{lesson.questions.length} correct)</span>
+            <span className="text-xl font-sora font-bold" style={{ color: "var(--color-success)" }}>{score}%</span>
+            <span className="text-sm ml-2" style={{ color: "var(--color-text-secondary)" }}>({correctCount}/{lesson.questions.length} correct)</span>
           </div>
-          <button
-            onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
-          >
+          <Button variant="primary" size="lg" fullWidth onClick={onClose}>
             Continue
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -266,13 +263,13 @@ export default function GrammarLessonView({
       <GrammarAmbientGlow />
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
-        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>
+        <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-base" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>
           &times;
         </button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-          <div className="h-full rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
+          <div className="h-full rounded-full transition-all duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
-        <span className="text-[12px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           {index + 1}/{lesson.questions.length}
         </span>
       </div>
@@ -282,17 +279,17 @@ export default function GrammarLessonView({
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           {/* Difficulty badge */}
           <div className="flex items-center gap-2 mb-4">
-            <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", diffColor)}>
+            <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
               {current.difficulty.charAt(0).toUpperCase() + current.difficulty.slice(1)}
             </span>
-            <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+            <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
               {lesson.subtitle}
             </span>
           </div>
 
           {/* Instruction */}
           {phase === "question" && !isAnswered && (
-            <p className="text-[11px] font-semibold mb-3" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: "var(--color-text-secondary)" }}>
               {isMultiBlank
                 ? `Drag the correct word into each blank (${blankCount} blanks)`
                 : "Drag the correct answer into the blank"}
@@ -300,9 +297,9 @@ export default function GrammarLessonView({
           )}
 
           {/* Question card with inline blanks */}
-          <div className="rounded-2xl p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
+          <div className="rounded-lg p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
-              <div className="text-[15px] font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
+              <div className="text-base font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
                 {sentenceParts.map((part, i) => (
                   <React.Fragment key={i}>
                     {part && <span>{part}</span>}
@@ -312,7 +309,7 @@ export default function GrammarLessonView({
                         showingFeedback ? (
                           <span
                             className={cn(
-                              "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                              "inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
                               blankAnswers[i]?.toLowerCase().trim() === correctParts[i]?.toLowerCase().trim()
                                 ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
                                 : "border-red-500/40 bg-red-500/15 text-red-400"
@@ -323,7 +320,7 @@ export default function GrammarLessonView({
                         ) : blankAnswers[i] ? (
                           <button
                             onClick={() => handleClearSlot(i)}
-                            className="inline-flex px-2 py-0.5 rounded-lg font-bold text-[13px] border cursor-pointer hover:opacity-80"
+                            className="inline-flex px-2 py-0.5 rounded-lg font-bold text-sm border cursor-pointer hover:opacity-80"
                             style={{
                               borderColor: "rgba(46,211,198,0.4)",
                               background: "rgba(46,211,198,0.1)",
@@ -344,7 +341,7 @@ export default function GrammarLessonView({
                         droppedOption ? (
                           <span
                             className={cn(
-                              "inline-block px-2 py-0.5 rounded-lg font-bold text-[14px] border",
+                              "inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
                               showingFeedback && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
                               showingFeedback && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
                             )}
@@ -369,7 +366,7 @@ export default function GrammarLessonView({
                 ))}
               </div>
             ) : (
-              <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
+              <p className="text-base font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
                 {current.sentence}
               </p>
             )}
@@ -396,13 +393,9 @@ export default function GrammarLessonView({
 
           {/* Multi-blank: Check Answer button */}
           {isMultiBlank && phase === "question" && isAnswered && (
-            <button
-              onClick={handleSubmitMultiBlank}
-              className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90 mb-5"
-              style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
-            >
+            <Button variant="primary" size="lg" fullWidth className="mb-5" onClick={handleSubmitMultiBlank}>
               Check Answer
-            </button>
+            </Button>
           )}
 
           {/* Correct answer (shown on wrong for multi-blank) */}
@@ -411,10 +404,10 @@ export default function GrammarLessonView({
               className="rounded-xl p-3 mb-4"
               style={{ border: "1px solid rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.05)" }}
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#10B981" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
                 Correct Answer
               </p>
-              <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+              <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                 {correctParts.join(" + ")}
               </p>
             </div>
@@ -422,7 +415,7 @@ export default function GrammarLessonView({
 
           {/* Explanation */}
           {showingFeedback && (
-            <div className="mb-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="mb-5 animate-in fade-in slide-in-from-bottom-2 duration-normal">
               <GrammarExplanation
                 isCorrect={isCorrect}
                 correctAnswer={current.options[current.correctIndex]}
@@ -434,13 +427,9 @@ export default function GrammarLessonView({
 
           {/* Next button */}
           {showingFeedback && (
-            <button
-              onClick={handleNext}
-              className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
-              style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
-            >
+            <Button variant="primary" size="lg" fullWidth onClick={handleNext}>
               {isLast ? "See Results" : "Next Question →"}
-            </button>
+            </Button>
           )}
         </DragDropProvider>
       </div>

@@ -16,6 +16,8 @@ import { registerUser, migrateGuestProgress } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { getGuestUserId, clearGuestUserId } from "@/lib/guestUser";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,16 +31,16 @@ function minDateISO(): string {
   return d.toISOString().split("T")[0];
 }
 
-// ─── Shared input style ────────────────────────────────────────────────────────
+// ─── Shared select style (Input component handles <input> elements) ───────────
 
-const inputCls = cn(
-  "w-full h-11 px-4 rounded-[10px] text-[14px]",
+const selectCls = cn(
+  "w-full h-11 px-4 rounded-md text-sm",
   "border outline-none",
-  "transition-all duration-200",
-  "[color-scheme:dark]",   // native date/select respect dark mode
+  "transition-all duration-normal",
+  "[color-scheme:dark]",
 );
 
-const inputStyle: React.CSSProperties = {
+const selectStyle: React.CSSProperties = {
   color: "var(--color-text)",
   backgroundColor: "var(--color-primary-soft)",
   borderColor: "var(--color-border)",
@@ -117,12 +119,12 @@ export default function RegisterPage() {
       {/* ── Logo + heading ── */}
       <div className="text-center mb-8">
         <div
-          className="inline-flex items-center justify-center w-12 h-12 rounded-[14px] mb-4"
+          className="inline-flex items-center justify-center w-12 h-12 rounded-md mb-4"
           style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))" }}
         >
-          <span className="font-sora font-black text-[20px]" style={{ color: "var(--color-bg)" }}>L</span>
+          <span className="font-sora font-black text-lg" style={{ color: "var(--color-bg)" }}>L</span>
         </div>
-        <h1 className="font-sora font-black text-[26px] tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
+        <h1 className="font-sora font-black text-xl tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
           Create your account
         </h1>
         <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>Start learning English today — it&apos;s free</p>
@@ -130,7 +132,7 @@ export default function RegisterPage() {
 
       {/* ── Card ── */}
       <div
-        className="rounded-[20px] p-7 border"
+        className="rounded-lg p-7 border"
         style={{
           borderColor:          "var(--color-border)",
           background:           "rgba(11,34,57,0.75)",
@@ -143,50 +145,48 @@ export default function RegisterPage() {
 
           {/* Full name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Full name
             </label>
-            <input
+            <Input
               type="text"
+              inputSize="md"
               autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Emma Wilson"
-              className={inputCls}
-              style={inputStyle}
             />
           </div>
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Email address
             </label>
-            <input
+            <Input
               type="email"
+              inputSize="md"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className={inputCls}
-              style={inputStyle}
             />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Password
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
+                inputSize="md"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
-                className={cn(inputCls, "pr-11")}
-                style={inputStyle}
+                className="pr-11"
               />
               <button
                 type="button"
@@ -200,7 +200,7 @@ export default function RegisterPage() {
             </div>
             {/* Inline strength hint */}
             {password.length > 0 && password.length < 8 && (
-              <p className="text-[11.5px] text-amber-400/80 mt-0.5">
+              <p className="text-xs text-amber-400/80 mt-0.5">
                 {8 - password.length} more character{8 - password.length !== 1 ? "s" : ""} needed
               </p>
             )}
@@ -209,14 +209,14 @@ export default function RegisterPage() {
           {/* Role + Date of birth — side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+              <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
                 I am a…
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as "kid" | "teacher" | "parent")}
-                className={cn(inputCls, "cursor-pointer")}
-                style={inputStyle}
+                className={cn(selectCls, "cursor-pointer")}
+                style={selectStyle}
               >
                 <option value="kid">Student</option>
                 <option value="teacher">Teacher</option>
@@ -225,54 +225,52 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+              <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
                 Date of birth
               </label>
-              <input
+              <Input
                 type="date"
+                inputSize="md"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
                 max={todayISO()}
                 min={minDateISO()}
-                className={cn(inputCls, "cursor-pointer")}
-                style={inputStyle}
+                className="cursor-pointer"
               />
             </div>
           </div>
 
           {/* COPPA notice */}
-          <p className="text-[11px] leading-[1.6]" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs leading-[1.6]" style={{ color: "var(--color-text-secondary)" }}>
             Date of birth is used for COPPA age verification. Accounts for users
             under 13 require a parent or guardian&apos;s email consent before activation.
           </p>
 
           {/* Error banner */}
           {error && (
-            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[9px] bg-red-500/10 border border-red-500/20 text-red-400 text-[13px]">
-              <span className="mt-[1px] flex-shrink-0">⚠</span>
+            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-sm bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <span className="mt-px flex-shrink-0">⚠</span>
               <span>{error}</span>
             </div>
           )}
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={submitting}
             disabled={submitting}
-            className={cn(
-              "h-11 mt-1 rounded-[10px] font-sora font-bold text-[13.5px]",
-              "transition-all duration-200",
-              "hover:-translate-y-[1px]",
-              "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0",
-            )}
-            style={{ color: "var(--color-bg)", backgroundColor: "var(--color-success)", boxShadow: "0 4px 20px rgba(46,211,198,0.35)" }}
+            className="mt-1"
           >
             {submitting ? "Creating account…" : "Create Account"}
-          </button>
+          </Button>
         </form>
       </div>
 
       {/* Sign-in link */}
-      <p className="text-center text-[13px] mt-5" style={{ color: "var(--color-text-secondary)" }}>
+      <p className="text-center text-sm mt-5" style={{ color: "var(--color-text-secondary)" }}>
         Already have an account?{" "}
         <Link
           href="/login"

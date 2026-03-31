@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { ApiQuizItem } from "@/lib/api";
+import useSound from "@/hooks/useSound";
 
 interface QuizSectionProps {
   items:      ApiQuizItem[];
@@ -24,6 +25,7 @@ function normalise(s: string): string {
 // ---------------------------------------------------------------------------
 
 export default function QuizSection({ items, onContinue }: QuizSectionProps) {
+  const { play } = useSound();
   const [index,        setIndex]        = useState(0);
   const [selected,     setSelected]     = useState<OptionKey | null>(null);
   // fill_in_blank state
@@ -53,7 +55,12 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
   function handleSelect(key: OptionKey) {
     if (selected) return;
     setSelected(key);
-    if (key === current.correct_option) setCorrect((c) => c + 1);
+    if (key === current.correct_option) {
+      setCorrect((c) => c + 1);
+      play("correct");
+    } else {
+      play("wrong");
+    }
   }
 
   // Auto-advance 700ms after multiple-choice answer.
@@ -80,7 +87,12 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
       normalise(fillInput) === normalise(current.correct_answer);
     setFillCorrect(isCorrect);
     setFillAnswered(true);
-    if (isCorrect) setCorrect((c) => c + 1);
+    if (isCorrect) {
+      setCorrect((c) => c + 1);
+      play("correct");
+    } else {
+      play("wrong");
+    }
   }
 
   // Auto-advance 1200ms after fill-in-blank answer.
@@ -134,20 +146,20 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-500"
+            className="h-full rounded-full transition-all duration-slow"
             style={{ background: "linear-gradient(to right, var(--color-success), var(--color-accent))", width: `${(index / items.length) * 100}%` }}
           />
         </div>
-        <span className="text-[11px]" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)" }}>{index + 1}/{items.length}</span>
+        <span className="text-xs" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)" }}>{index + 1}/{items.length}</span>
       </div>
 
       {/* Question */}
-      <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}>
-        <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
+      <div className="rounded-lg p-5" style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}>
+        <p className="text-base font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
           {current.question}
         </p>
         {isFill && (
-          <p className="text-[11px] mt-1.5" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)" }}>Type your answer below</p>
+          <p className="text-xs mt-1.5" style={{ color: "color-mix(in srgb, var(--color-text-secondary) 60%, transparent)" }}>Type your answer below</p>
         )}
       </div>
 
@@ -159,13 +171,13 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
               key={key}
               onClick={() => handleSelect(key)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-[13px] transition-all duration-200",
+                "flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm transition-all duration-normal",
                 optionStyle(key)
               )}
               style={optionInlineStyle(key)}
             >
               <span className={cn(
-                "w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0 border",
+                "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 border",
                 selected && key === current.correct_option
                   ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
                   : selected && key === selected
@@ -190,7 +202,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
       {/* ── Fill-in-blank ── */}
       {isFill && (
         <div className="flex flex-col gap-3">
-          <div className={cn("rounded-xl border transition-all duration-200", fillBorderClass)} style={{ background: "var(--color-primary-soft)", ...fillBorderInline }}>
+          <div className={cn("rounded-xl border transition-all duration-normal", fillBorderClass)} style={{ background: "var(--color-primary-soft)", ...fillBorderInline }}>
             <input
               ref={fillRef}
               type="text"
@@ -199,7 +211,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
               onKeyDown={(e) => { if (e.key === "Enter") handleFillSubmit(); }}
               disabled={fillAnswered}
               placeholder="Type your answer…"
-              className="w-full bg-transparent px-4 py-3.5 text-[14px] outline-none rounded-xl"
+              className="w-full bg-transparent px-4 py-3.5 text-sm outline-none rounded-xl"
               style={{ color: "var(--color-text)" }}
             />
           </div>
@@ -207,7 +219,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
           {/* Feedback */}
           {fillAnswered && (
             <div className={cn(
-              "rounded-xl px-4 py-2.5 text-[13px] font-medium",
+              "rounded-xl px-4 py-2.5 text-sm font-medium",
               fillCorrect
                 ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
                 : "bg-red-500/10 border border-red-500/30 text-red-300"
@@ -221,7 +233,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
           <button
             onClick={handleFillSubmit}
             disabled={fillAnswered || !fillInput.trim()}
-            className="self-end px-5 py-2.5 rounded-xl text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            className="self-end px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
             style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
           >
             Check Answer

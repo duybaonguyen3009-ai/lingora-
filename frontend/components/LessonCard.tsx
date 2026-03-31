@@ -29,9 +29,9 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
   return (
     <div
       className={cn(
-        "rounded-[16px] p-[18px] relative overflow-hidden",
+        "rounded-lg p-4 relative overflow-hidden",
         "border",
-        "transition-all duration-200 animate-fadeSlideUp",
+        "transition-all duration-normal animate-fadeSlideUp",
         isLocked ? "opacity-55 cursor-not-allowed" : "cursor-pointer hover:-translate-y-[2px]",
       )}
       style={{
@@ -63,7 +63,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       {/* Recommended pill */}
       {isRecommended && (
         <span
-          className="absolute top-3 right-3.5 text-[9px] font-bold uppercase tracking-[0.8px] px-[7px] py-[2px] rounded-[5px]"
+          className="absolute top-3 right-3.5 text-xs font-bold uppercase tracking-[0.8px] px-2 py-0.5 rounded-sm"
           style={{ color: "var(--color-accent)", backgroundColor: "rgba(45,168,255,0.12)" }}
         >
           Recommended
@@ -72,7 +72,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
 
       {/* Header row */}
       <div className="flex items-start justify-between mb-2.5">
-        <span className={cn("inline-flex items-center gap-[5px] text-[10.5px] font-semibold uppercase tracking-[0.5px] px-2 py-[3px] rounded-[6px]", typeConfig.className)}>
+        <span className={cn("inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.5px] px-2 py-1 rounded-sm", typeConfig.className)}>
           {lesson.type === "vocabulary" && (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           )}
@@ -94,7 +94,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
         {/* Status icon */}
         <div
           className={cn(
-            "w-6 h-6 rounded-full flex items-center justify-center text-[11px] flex-shrink-0",
+            "w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0",
           )}
           style={{
             ...(isCompleted ? { backgroundColor: "rgba(46,211,198,0.15)", color: "var(--color-success)" } : {}),
@@ -109,12 +109,12 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       </div>
 
       {/* Title */}
-      <div className="font-sora font-semibold text-[14px] mb-[5px] leading-[1.3] pr-8">
+      <div className="font-sora font-semibold text-sm mb-1 leading-[1.3] pr-8">
         {lesson.title}
       </div>
 
       {/* Meta */}
-      <div className="flex items-center gap-3 text-[11.5px] mb-3" style={{ color: "var(--color-text-secondary)" }}>
+      <div className="flex items-center gap-3 text-xs mb-3" style={{ color: "var(--color-text-secondary)" }}>
         <span className="flex items-center gap-1">
           <IconClock size={11} />
           {lesson.duration} min

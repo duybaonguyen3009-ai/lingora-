@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Button from "@/components/ui/Button";
 import type { EndSessionResult, CriteriaFeedback } from "@/lib/types";
 
 interface ScenarioSummaryProps {
@@ -9,8 +10,8 @@ interface ScenarioSummaryProps {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 80) return "#34D399";
-  if (score >= 60) return "#fbbf24";
+  if (score >= 80) return "var(--color-success)";
+  if (score >= 60) return "var(--color-warning)";
   return "#f87171";
 }
 
@@ -78,19 +79,19 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         {hasBandScore && (
           <div className="flex justify-center">
             <div
-              className="px-6 py-3 rounded-2xl text-center"
+              className="px-6 py-3 rounded-lg text-center"
               style={{
                 background: `${scoreColor(result.overallScore)}15`,
                 border: `2px solid ${scoreColor(result.overallScore)}40`,
               }}
             >
-              <div className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
+              <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--color-text-secondary)" }}>
                 Estimated Band Score
               </div>
               <div className="text-3xl font-bold" style={{ color: scoreColor(result.overallScore) }}>
                 {result.bandScore!.toFixed(1)}
               </div>
-              <div className="text-[11px] mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+              <div className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
                 out of 9.0
               </div>
             </div>
@@ -114,7 +115,7 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
               >
                 {animatedScore}
               </div>
-              <div className="text-[13px]" style={{ color: "var(--color-text-secondary)" }}>
+              <div className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
                 / 100
               </div>
             </div>
@@ -128,21 +129,21 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         >
           <div>
             <div className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{result.turnCount}</div>
-            <div className="text-[12px]">turns</div>
+            <div className="text-xs">turns</div>
           </div>
           <div>
             <div className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{result.wordCount}</div>
-            <div className="text-[12px]">words</div>
+            <div className="text-xs">words</div>
           </div>
           <div>
             <div className="text-lg font-bold" style={{ color: "var(--color-text)" }}>{formatDuration(result.durationMs)}</div>
-            <div className="text-[12px]">duration</div>
+            <div className="text-xs">duration</div>
           </div>
         </div>
 
         {/* Sub-score bars with per-criterion feedback */}
         <div
-          className="rounded-2xl p-5 flex flex-col gap-5"
+          className="rounded-lg p-5 flex flex-col gap-5"
           style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
         >
           {subScores.map((s) => {
@@ -154,8 +155,8 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
             return (
               <div key={s.label}>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-[13px] font-medium" style={{ color: "var(--color-text)" }}>{s.label}</span>
-                  <span className="text-[13px] font-bold" style={{ color: scoreColor(s.value) }}>{s.value}</span>
+                  <span className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{s.label}</span>
+                  <span className="text-sm font-bold" style={{ color: scoreColor(s.value) }}>{s.value}</span>
                 </div>
                 <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
                   <div
@@ -164,7 +165,7 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
                   />
                 </div>
                 {feedback && (
-                  <p className="text-[12px] mt-1.5 leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                  <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
                     {feedback}
                   </p>
                 )}
@@ -176,17 +177,17 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         {/* Speech Flow Insights */}
         {result.speechInsights && result.speechInsights.hesitationLevel !== "unknown" && (
           <div
-            className="rounded-2xl p-5"
+            className="rounded-lg p-5"
             style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
           >
-            <div className="text-[12px] font-bold mb-3" style={{ color: "var(--color-primary)" }}>
+            <div className="text-xs font-bold mb-3" style={{ color: "var(--color-primary)" }}>
               Speaking Flow
             </div>
             <div className="grid grid-cols-2 gap-3">
               {/* Hesitation */}
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Hesitation</span>
-                <span className={`text-[14px] font-semibold ${
+                <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Hesitation</span>
+                <span className={`text-sm font-semibold ${
                   result.speechInsights.hesitationLevel === "low" ? "text-emerald-400" :
                   result.speechInsights.hesitationLevel === "medium" ? "text-amber-400" :
                   "text-red-400"
@@ -198,8 +199,8 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
               {/* WPM */}
               {result.speechInsights.avgWordsPerMinute && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Speaking Rate</span>
-                  <span className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>
+                  <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Speaking Rate</span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                     {result.speechInsights.avgWordsPerMinute} wpm
                   </span>
                 </div>
@@ -207,8 +208,8 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
               {/* Fillers */}
               {result.speechInsights.totalFillerCount > 0 && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Filler Words</span>
-                  <span className="text-[14px] font-semibold text-amber-400">
+                  <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Filler Words</span>
+                  <span className="text-sm font-semibold text-amber-400">
                     {result.speechInsights.totalFillerCount} detected
                   </span>
                 </div>
@@ -216,8 +217,8 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
               {/* Self-corrections */}
               {result.speechInsights.totalSelfCorrections > 0 && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Self-corrections</span>
-                  <span className="text-[14px] font-semibold" style={{ color: "var(--color-text)" }}>
+                  <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>Self-corrections</span>
+                  <span className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                     {result.speechInsights.totalSelfCorrections}
                   </span>
                 </div>
@@ -229,8 +230,8 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
                 {result.speechInsights.fillerSummary.map((f, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-medium"
-                    style={{ background: "rgba(251, 191, 36, 0.08)", color: "#fbbf24", border: "1px solid rgba(251, 191, 36, 0.15)" }}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={{ background: "var(--color-warning-soft)", color: "var(--color-warning)", border: "1px solid color-mix(in srgb, var(--color-warning) 15%, transparent)" }}
                   >
                     {f}
                   </span>
@@ -243,13 +244,13 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         {/* Coach feedback */}
         {result.coachFeedback && (
           <div
-            className="rounded-2xl p-5"
+            className="rounded-lg p-5"
             style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
           >
-            <div className="text-[12px] font-bold mb-2.5" style={{ color: "var(--color-primary)" }}>
+            <div className="text-xs font-bold mb-2.5" style={{ color: "var(--color-primary)" }}>
               Coach Feedback
             </div>
-            <p className="text-[15px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+            <p className="text-base leading-relaxed" style={{ color: "var(--color-text)" }}>
               {result.coachFeedback}
             </p>
           </div>
@@ -258,25 +259,25 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         {/* Vocabulary Intelligence — Two tiers */}
         {(hasVocabulary || hasImprovementVocab) && (
           <div
-            className="rounded-2xl p-5"
+            className="rounded-lg p-5"
             style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
           >
-            <div className="text-[12px] font-bold mb-3" style={{ color: "var(--color-primary)" }}>
+            <div className="text-xs font-bold mb-3" style={{ color: "var(--color-primary)" }}>
               Vocabulary Analysis
             </div>
 
             {/* Strengths */}
             {hasVocabulary && (
               <div className="mb-4">
-                <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#34D399" }}>
+                <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-success)" }}>
                   Strong Usage
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {result.notableVocabulary!.map((word, i) => (
                     <span
                       key={i}
-                      className="px-3 py-1.5 rounded-full text-[13px] font-medium"
-                      style={{ background: "rgba(52, 211, 153, 0.1)", color: "#34D399", border: "1px solid rgba(52, 211, 153, 0.2)" }}
+                      className="px-3 py-1.5 rounded-full text-sm font-medium"
+                      style={{ background: "var(--color-success-soft)", color: "var(--color-success)", border: "1px solid color-mix(in srgb, var(--color-success) 20%, transparent)" }}
                     >
                       {word}
                     </span>
@@ -288,15 +289,15 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
             {/* Areas for improvement */}
             {hasImprovementVocab && (
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#fbbf24" }}>
+                <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-warning)" }}>
                   Needs Improvement
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {result.improvementVocabulary!.map((word, i) => (
                     <span
                       key={i}
-                      className="px-3 py-1.5 rounded-full text-[13px] font-medium"
-                      style={{ background: "rgba(251, 191, 36, 0.1)", color: "#fbbf24", border: "1px solid rgba(251, 191, 36, 0.2)" }}
+                      className="px-3 py-1.5 rounded-full text-sm font-medium"
+                      style={{ background: "var(--color-warning-soft)", color: "var(--color-warning)", border: "1px solid color-mix(in srgb, var(--color-warning) 20%, transparent)" }}
                     >
                       {word}
                     </span>
@@ -310,22 +311,22 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         {/* Turn-by-turn tips */}
         {result.turnFeedback && result.turnFeedback.length > 0 && (
           <div
-            className="rounded-2xl p-5"
+            className="rounded-lg p-5"
             style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
           >
-            <div className="text-[12px] font-bold mb-3" style={{ color: "var(--color-primary)" }}>
+            <div className="text-xs font-bold mb-3" style={{ color: "var(--color-primary)" }}>
               Turn Tips
             </div>
             <div className="flex flex-col gap-3">
               {result.turnFeedback.map((tf, i) => (
                 <div key={i} className="flex gap-2.5 items-start">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5"
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
                     style={{ background: "var(--color-primary-soft)", color: "var(--color-primary)" }}
                   >
                     {tf.turnIndex}
                   </div>
-                  <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
                     {tf.tip}
                   </p>
                 </div>
@@ -335,13 +336,14 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
         )}
 
         {/* Done button */}
-        <button
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
           onClick={onClose}
-          style={{ background: "var(--color-primary)", color: "#fff" }}
-          className="w-full py-3.5 rounded-xl font-semibold text-[15px] hover:opacity-90 transition-opacity"
         >
           Done
-        </button>
+        </Button>
       </div>
     </div>
   );

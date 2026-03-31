@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { IconX } from "./Icons";
-import LingonaLogo from "./LingonaLogo";
+import Mascot from "@/components/ui/Mascot";
 
 const TIPS = [
   "Try speaking for 5 minutes each morning — consistency beats long sessions.",
@@ -20,24 +20,24 @@ export default function CoachTipCard() {
 
   return (
     <div
-      className="relative flex items-start gap-3.5 p-5 rounded-2xl"
+      className="relative flex items-start gap-3.5 p-5 rounded-lg"
       style={{
         backgroundColor: "var(--color-primary-soft)",
         border: "1px solid var(--color-border)",
         borderLeft: "3px solid var(--color-primary)",
       }}
     >
-      <LingonaLogo size={36} className="flex-shrink-0 mt-0.5" />
+      <Mascot size={44} className="flex-shrink-0 mt-0.5" />
 
       <div className="flex-1 min-w-0">
         <p
-          className="font-semibold text-[13px] mb-1"
+          className="font-semibold text-sm mb-1"
           style={{ color: "var(--color-primary)" }}
         >
           Coach tip
         </p>
         <p
-          className="text-[14px] leading-relaxed"
+          className="text-sm leading-relaxed"
           style={{ color: "var(--color-text)" }}
         >
           {tip}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import Button from "@/components/ui/Button";
 import type { PronunciationResult, WordDetail } from "@/lib/types";
 
 interface PronunciationResultsProps {
@@ -71,10 +72,10 @@ function ScoreCircle({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-[28px] font-bold tabular-nums" style={{ color: "var(--color-text)" }}>
+        <span className="text-xl font-bold tabular-nums" style={{ color: "var(--color-text)" }}>
           {animatedScore}
         </span>
-        <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>/ 100</span>
+        <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>/ 100</span>
       </div>
     </div>
   );
@@ -84,14 +85,14 @@ function SubScoreBar({ label, score }: { label: string; score: number }) {
   const color = scoreColor(score);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] w-[100px] text-right" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
+      <span className="text-xs w-[100px] text-right" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
           className="h-full rounded-full transition-all duration-700 ease-out"
           style={{ width: `${score}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-[12px] font-semibold tabular-nums w-8" style={{ color }}>
+      <span className="text-xs font-semibold tabular-nums w-8" style={{ color }}>
         {Math.round(score)}
       </span>
     </div>
@@ -105,7 +106,7 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
       <button
         onClick={onClick}
         className={cn(
-          "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 border"
+          "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-normal border"
         )}
         style={{
           color,
@@ -114,7 +115,7 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
         }}
       >
         {word.word}
-        <span className="ml-1.5 text-[10px] opacity-60">{Math.round(word.score)}</span>
+        <span className="ml-1.5 text-xs opacity-60">{Math.round(word.score)}</span>
       </button>
 
       {isExpanded && word.phonemes.length > 0 && (
@@ -122,13 +123,13 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
           {word.phonemes.map((p, i) => (
             <div
               key={i}
-              className="flex flex-col items-center px-1.5 py-1 rounded text-[10px]"
+              className="flex flex-col items-center px-1.5 py-1 rounded text-xs"
               style={{ backgroundColor: `${scoreColor(p.score)}15` }}
             >
               <span className="font-mono font-semibold" style={{ color: scoreColor(p.score) }}>
                 {p.phoneme}
               </span>
-              <span className="text-[9px]" style={{ color: "var(--color-text-secondary)" }}>{Math.round(p.score)}</span>
+              <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{Math.round(p.score)}</span>
             </div>
           ))}
         </div>
@@ -151,7 +152,7 @@ export default function PronunciationResults({
       <div className="flex flex-col items-center gap-2">
         <ScoreCircle score={result.overallScore} />
         <p
-          className="text-[15px] font-semibold"
+          className="text-base font-semibold"
           style={{ color: scoreColor(result.overallScore) }}
         >
           {scoreLabel(result.overallScore)}
@@ -169,7 +170,7 @@ export default function PronunciationResults({
       {/* Word breakdown */}
       {result.words.length > 0 && (
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.8px] mb-2" style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}>
+          <p className="text-xs font-bold uppercase tracking-[0.8px] mb-2" style={{ color: "var(--color-text-secondary)", opacity: 0.6 }}>
             Word Breakdown
           </p>
           <div className="flex flex-wrap gap-2">
@@ -182,7 +183,7 @@ export default function PronunciationResults({
               />
             ))}
           </div>
-          <p className="text-[10px] mt-2" style={{ color: "var(--color-text-secondary)", opacity: 0.4 }}>
+          <p className="text-xs mt-2" style={{ color: "var(--color-text-secondary)", opacity: 0.4 }}>
             Tap a word to see phoneme details
           </p>
         </div>
@@ -190,28 +191,23 @@ export default function PronunciationResults({
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button
+        <Button
+          variant="soft"
+          size="lg"
+          className="flex-1"
           onClick={onTryAgain}
-          className="flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200"
-          style={{
-            backgroundColor: "var(--color-primary-soft)",
-            border: "1px solid var(--color-primary-glow)",
-            color: "var(--color-primary)",
-          }}
         >
           Try Again
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
+          size="lg"
+          className="flex-1"
           onClick={onNext}
-          className="flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all duration-200 text-white"
-          style={{
-            background: isLast
-              ? "linear-gradient(135deg, var(--color-primary), var(--color-accent))"
-              : "var(--color-primary)",
-          }}
+          style={!isLast ? { background: "var(--color-primary)" } : undefined}
         >
-          {isLast ? "Finish Lesson" : "Next →"}
-        </button>
+          {isLast ? "Finish Lesson" : "Next \u2192"}
+        </Button>
       </div>
     </div>
   );

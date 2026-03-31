@@ -1,7 +1,7 @@
 export function ProgressBar({ level, xp, xpToNext }: { level: number; xp: number; xpToNext: number }) {
   const pct = Math.round((xp / (xp + xpToNext)) * 100);
   return (
-    <div className="rounded-2xl border p-5" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}>
+    <div className="rounded-lg border p-5" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div
@@ -11,11 +11,11 @@ export function ProgressBar({ level, xp, xpToNext }: { level: number; xp: number
             {level}
           </div>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>Level {level}</p>
-            <p className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>{xp} / {xp + xpToNext} XP to next level</p>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Level {level}</p>
+            <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{xp} / {xp + xpToNext} XP to next level</p>
           </div>
         </div>
-        <span className="text-[12px] font-bold" style={{ color: "var(--color-success)" }}>{pct}%</span>
+        <span className="text-xs font-bold" style={{ color: "var(--color-success)" }}>{pct}%</span>
       </div>
       <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))", boxShadow: "0 0 12px rgba(46,211,198,0.4)" }} />

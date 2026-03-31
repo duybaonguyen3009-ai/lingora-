@@ -92,7 +92,7 @@ export default function VocabPracticeCard() {
   if (mode === "card" || mode === "loading") {
     return (
       <div
-        className="rounded-2xl p-5 relative overflow-hidden"
+        className="rounded-lg p-5 relative overflow-hidden"
         style={{
           border: "1px solid rgba(46,211,198,0.2)",
           background: "linear-gradient(135deg, rgba(46,211,198,0.06), rgba(45,168,255,0.04))",
@@ -117,21 +117,21 @@ export default function VocabPracticeCard() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-[15px] font-bold" style={{ color: "var(--color-text)" }}>
+            <h3 className="text-base font-bold" style={{ color: "var(--color-text)" }}>
               Quick Vocab Practice
             </h3>
-            <p className="text-[12px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
               Test yourself on {QUICK_PRACTICE_SIZE} random words. Learn, then type from memory.
             </p>
 
             {error && (
-              <p className="text-[11px] mt-2 text-red-400">{error}</p>
+              <p className="text-xs mt-2 text-red-400">{error}</p>
             )}
 
             <button
               onClick={loadVocab}
               disabled={mode === "loading"}
-              className="mt-3 px-5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 disabled:opacity-60"
+              className="mt-3 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-normal disabled:opacity-60"
               style={{
                 background: "var(--color-success)",
                 color: "var(--color-bg)",
@@ -156,29 +156,29 @@ export default function VocabPracticeCard() {
   if (mode === "done") {
     return (
       <div
-        className="rounded-2xl p-5 text-center"
+        className="rounded-lg p-5 text-center"
         style={{
           border: "1px solid rgba(46,211,198,0.2)",
           background: "linear-gradient(135deg, rgba(46,211,198,0.06), rgba(45,168,255,0.04))",
         }}
       >
-        <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--color-text)" }}>
+        <p className="text-base font-semibold mb-1" style={{ color: "var(--color-text)" }}>
           Session complete!
         </p>
-        <p className="text-[12px] mb-4" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs mb-4" style={{ color: "var(--color-text-secondary)" }}>
           Practice again with a new set of words?
         </p>
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={handleRestart}
-            className="px-5 py-2 rounded-xl text-[13px] font-semibold"
+            className="px-5 py-2 rounded-xl text-sm font-semibold"
             style={{ background: "var(--color-success)", color: "var(--color-bg)" }}
           >
             Practice Again
           </button>
           <button
             onClick={() => setMode("card")}
-            className="px-5 py-2 rounded-xl text-[13px] font-semibold"
+            className="px-5 py-2 rounded-xl text-sm font-semibold"
             style={{ background: "var(--color-primary-soft)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
           >
             Done
@@ -191,7 +191,7 @@ export default function VocabPracticeCard() {
   // ── Active mode — full VocabSection ──
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-lg p-5"
       style={{
         border: "1px solid var(--color-border)",
         background: "var(--color-bg-card)",
@@ -201,7 +201,7 @@ export default function VocabPracticeCard() {
       <div className="flex justify-end mb-2">
         <button
           onClick={() => setMode("card")}
-          className="text-[12px] font-medium px-3 py-1 rounded-lg transition-opacity hover:opacity-70"
+          className="text-xs font-medium px-3 py-1 rounded-lg transition-opacity hover:opacity-70"
           style={{ color: "var(--color-text-secondary)" }}
         >
           Exit

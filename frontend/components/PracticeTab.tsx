@@ -119,7 +119,7 @@ export default function PracticeTab({ onLessonComplete, streak = 0 }: PracticeTa
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
           <span
-            className="text-[11px] font-bold uppercase tracking-[1.5px]"
+            className="text-xs font-bold uppercase tracking-[1.5px]"
             style={{ color: "var(--color-text-secondary)", opacity: 0.5 }}
           >
             Quick Review

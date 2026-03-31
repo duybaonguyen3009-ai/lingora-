@@ -15,21 +15,8 @@ import { loginUser, migrateGuestProgress } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { getGuestUserId, clearGuestUserId } from "@/lib/guestUser";
 import { cn } from "@/lib/utils";
-
-// ─── Shared input style ────────────────────────────────────────────────────────
-
-const inputCls = cn(
-  "w-full h-11 px-4 rounded-[10px] text-[14px]",
-  "border outline-none",
-  "transition-all duration-200",
-  "[color-scheme:dark]",   // native inputs respect dark mode
-);
-
-const inputStyle: React.CSSProperties = {
-  color: "var(--color-text)",
-  backgroundColor: "var(--color-primary-soft)",
-  borderColor: "var(--color-border)",
-};
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -82,12 +69,12 @@ export default function LoginPage() {
       {/* ── Logo + heading ── */}
       <div className="text-center mb-8">
         <div
-          className="inline-flex items-center justify-center w-12 h-12 rounded-[14px] mb-4"
+          className="inline-flex items-center justify-center w-12 h-12 rounded-md mb-4"
           style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))" }}
         >
-          <span className="font-sora font-black text-[20px]" style={{ color: "var(--color-bg)" }}>L</span>
+          <span className="font-sora font-black text-lg" style={{ color: "var(--color-bg)" }}>L</span>
         </div>
-        <h1 className="font-sora font-black text-[26px] tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
+        <h1 className="font-sora font-black text-xl tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
           Welcome back
         </h1>
         <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>Sign in to continue your learning</p>
@@ -95,7 +82,7 @@ export default function LoginPage() {
 
       {/* ── Card ── */}
       <div
-        className="rounded-[20px] p-7 border"
+        className="rounded-lg p-7 border"
         style={{
           borderColor:           "var(--color-border)",
           background:            "rgba(11,34,57,0.75)",
@@ -108,34 +95,33 @@ export default function LoginPage() {
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Email address
             </label>
-            <input
+            <Input
               type="email"
+              inputSize="md"
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className={inputCls}
-              style={inputStyle}
             />
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
               Password
             </label>
             <div className="relative">
-              <input
+              <Input
                 type={showPassword ? "text" : "password"}
+                inputSize="md"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={cn(inputCls, "pr-11")}
-                style={inputStyle}
+                className="pr-11"
               />
               <button
                 type="button"
@@ -151,32 +137,30 @@ export default function LoginPage() {
 
           {/* Error banner */}
           {error && (
-            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-[9px] bg-red-500/10 border border-red-500/20 text-red-400 text-[13px]">
-              <span className="mt-[1px] flex-shrink-0">⚠</span>
+            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-sm bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <span className="mt-px flex-shrink-0">⚠</span>
               <span>{error}</span>
             </div>
           )}
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={submitting}
             disabled={submitting}
-            className={cn(
-              "h-11 mt-1 rounded-[10px] font-sora font-bold text-[13.5px]",
-              "transition-all duration-200",
-              "hover:-translate-y-[1px]",
-              "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0",
-            )}
-            style={{ color: "var(--color-bg)", backgroundColor: "var(--color-success)", boxShadow: "0 4px 20px rgba(46,211,198,0.35)" }}
+            className="mt-1"
           >
             {submitting ? "Signing in…" : "Sign In"}
-          </button>
+          </Button>
         </form>
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-          <span className="text-[11px] uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>or</span>
+          <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>or</span>
           <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
         </div>
 
@@ -184,9 +168,9 @@ export default function LoginPage() {
         <Link
           href="/"
           className={cn(
-            "flex items-center justify-center h-11 rounded-[10px]",
-            "text-[13.5px] font-medium",
-            "border transition-all duration-200",
+            "flex items-center justify-center h-11 rounded-md",
+            "text-sm font-medium",
+            "border transition-all duration-normal",
           )}
           style={{ color: "var(--color-text-secondary)", borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}
         >
@@ -195,7 +179,7 @@ export default function LoginPage() {
       </div>
 
       {/* Sign-up link */}
-      <p className="text-center text-[13px] mt-5" style={{ color: "var(--color-text-secondary)" }}>
+      <p className="text-center text-sm mt-5" style={{ color: "var(--color-text-secondary)" }}>
         Don&apos;t have an account?{" "}
         <Link
           href="/register"

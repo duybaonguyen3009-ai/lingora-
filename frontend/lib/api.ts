@@ -94,7 +94,7 @@ async function apiFetch<T>(path: string): Promise<T> {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `API error ${res.status}`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't load this right now. Give it another try?`);
   }
   return (json as { data: T }).data;
 }
@@ -109,7 +109,7 @@ async function apiPost<T>(path: string, body: unknown): Promise<T> {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `API error ${res.status}`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't complete that request. Give it another try?`);
   }
   return (json as { data: T }).data;
 }
@@ -147,8 +147,8 @@ async function apiFetchAuth<T>(path: string): Promise<T> {
       // Distinguish "never logged in" from "session expired"
       throw new Error(
         initialToken
-          ? "Session expired. Please log in again."
-          : "Please log in to continue."
+          ? "Your session timed out — let's pick up where you left off"
+          : "Please sign in to continue."
       );
     }
     res = await makeReq(useAuthStore.getState().accessToken);
@@ -156,7 +156,7 @@ async function apiFetchAuth<T>(path: string): Promise<T> {
 
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `API error ${res.status}`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't complete that request. Give it another try?`);
   }
   return (json as { data: T }).data;
 }
@@ -185,8 +185,8 @@ async function apiPostAuth<T>(path: string, body: unknown): Promise<T> {
       // Distinguish "never logged in" from "session expired"
       throw new Error(
         initialToken
-          ? "Session expired. Please log in again."
-          : "Please log in to continue."
+          ? "Your session timed out — let's pick up where you left off"
+          : "Please sign in to continue."
       );
     }
     res = await makeReq(useAuthStore.getState().accessToken);
@@ -194,7 +194,7 @@ async function apiPostAuth<T>(path: string, body: unknown): Promise<T> {
 
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `API error ${res.status}`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't complete that request. Give it another try?`);
   }
   return (json as { data: T }).data;
 }
@@ -514,7 +514,7 @@ export async function uploadAudioBlob(
     headers: { "Content-Type": blob.type || "audio/webm" },
   });
   if (!res.ok) {
-    throw new Error(`Audio upload failed (${res.status})`);
+    throw new Error(`We couldn't upload your recording. Give it another try?`);
   }
 }
 
@@ -634,7 +634,7 @@ export async function loginUser(payload: ApiLoginPayload): Promise<ApiAuthData> 
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `Login failed (${res.status})`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't sign you in right now. Please try again`);
   }
   const data = (json as { data: ApiAuthData }).data;
   useAuthStore.getState().setAuth(data.user, data.accessToken);
@@ -654,7 +654,7 @@ export async function registerUser(payload: ApiRegisterPayload): Promise<ApiRegi
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `Registration failed (${res.status})`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't create your account right now. Please try again`);
   }
   const data = (json as { data: ApiRegisterData }).data;
   useAuthStore.getState().setAuth(data.user, data.accessToken);
@@ -674,7 +674,7 @@ export async function refreshSession(): Promise<ApiAuthData> {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error((json as { message?: string }).message ?? `Refresh failed (${res.status})`);
+    throw new Error((json as { message?: string }).message ?? `We couldn't restore your session. Please sign in again`);
   }
   const data = (json as { data: ApiAuthData }).data;
   useAuthStore.getState().setAuth(data.user, data.accessToken);

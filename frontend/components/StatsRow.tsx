@@ -50,29 +50,29 @@ function StatCardItem({ stat, delay }: { stat: StatCard; delay: number }) {
   return (
     <div
       className={cn(
-        "rounded-[16px] p-[18px] bg-[#0B2239] border border-white/[0.07]",
-        "transition-all duration-200 cursor-default",
-        "hover:-translate-y-[2px] hover:border-[#2ED3C6]/20",
+        "rounded-lg p-4 border border-white/[0.07]",
+        "transition-all duration-normal cursor-default",
+        "hover:-translate-y-[2px] hover:border-emerald-400/20",
         "animate-fadeSlideUp"
       )}
-      style={{ animationDelay: `${delay}ms`, boxShadow: "none" }}
+      style={{ animationDelay: `${delay}ms`, boxShadow: "none", background: "var(--color-bg-card)" }}
       onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.25)")}
       onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.boxShadow = "none")}
     >
       <div className="flex items-start justify-between mb-3">
-        <div className={cn("w-9 h-9 rounded-[10px] flex items-center justify-center", config.iconBg)}>
+        <div className={cn("w-9 h-9 rounded-md flex items-center justify-center", config.iconBg)}>
           {ICONS[stat.id]}
         </div>
-        <span className="text-[11px] font-semibold text-green-400 flex items-center gap-0.5">
+        <span className="text-xs font-semibold text-green-400 flex items-center gap-0.5">
           {stat.trend}
         </span>
       </div>
 
-      <div className="font-sora font-black text-[26px] tracking-[-0.5px] leading-none mb-1">
+      <div className="font-sora font-black text-xl tracking-[-0.5px] leading-none mb-1">
         {displayValue}
-        <span className="text-[14px] font-medium text-[#A6B3C2] ml-0.5">{stat.unit}</span>
+        <span className="text-sm font-medium ml-0.5" style={{ color: "var(--color-text-muted)" }}>{stat.unit}</span>
       </div>
-      <div className="text-[11.5px] text-[#A6B3C2] uppercase tracking-[0.5px]">{stat.label}</div>
+      <div className="text-xs uppercase tracking-[0.5px]" style={{ color: "var(--color-text-muted)" }}>{stat.label}</div>
 
       {/* Progress bar */}
       <div className="h-[3px] bg-white/5 rounded-full mt-3.5 overflow-hidden">

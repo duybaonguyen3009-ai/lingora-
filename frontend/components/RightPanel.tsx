@@ -19,9 +19,9 @@ function DailyGoal() {
   const offset = GOAL_CIRCUMFERENCE - (progress / 100) * GOAL_CIRCUMFERENCE;
 
   return (
-    <div className="rounded-[16px] p-5 bg-[#0B2239] border border-white/[0.07]">
-      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-[14px]">
-        <div className="w-6 h-6 rounded-[7px] flex items-center justify-center bg-[#2ED3C6]/10 text-[#2ED3C6]">
+    <div className="rounded-lg p-5 border border-white/[0.07]" style={{ background: "var(--color-bg-card)" }}>
+      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-sm">
+        <div className="w-6 h-6 rounded-sm flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--color-teal) 10%, transparent)", color: "var(--color-teal)" }}>
           <IconClock size={13} />
         </div>
         Daily Goal
@@ -53,32 +53,36 @@ function DailyGoal() {
             </defs>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-sora font-black text-[19px] text-[#2ED3C6] leading-none">{progress}%</span>
-            <span className="text-[8.5px] text-[#A6B3C2] mt-0.5 tracking-[0.3px]">of daily goal</span>
+            <span className="font-sora font-black text-lg leading-none" style={{ color: "var(--color-teal)" }}>{progress}%</span>
+            <span className="text-xs mt-0.5 tracking-[0.3px]" style={{ color: "var(--color-text-muted)" }}>of daily goal</span>
           </div>
         </div>
 
         <div>
-          <p className="text-[12.5px] text-[#A6B3C2]">
-            <strong className="text-[#E6EDF3] font-semibold">20 / 30 min</strong> studied today
+          <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            <strong className="font-semibold" style={{ color: "var(--color-text)" }}>20 / 30 min</strong> studied today
           </p>
-          <p className="text-[11.5px] text-[#A6B3C2] mt-1">10 more minutes to hit your goal!</p>
+          <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>10 more minutes to hit your goal!</p>
         </div>
       </div>
 
       {/* Tasks */}
       <div className="flex flex-col gap-2">
         {mockGoalTasks.map((task, i) => (
-          <div key={i} className="flex items-center gap-2.5 text-[12.5px]">
-            <div className={cn(
-              "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px]",
-              task.done
-                ? "bg-[#2ED3C6]/15 text-[#2ED3C6]"
-                : "bg-white/[0.05] border border-white/[0.12] text-[#A6B3C2]"
-            )}>
+          <div key={i} className="flex items-center gap-2.5 text-xs">
+            <div
+              className={cn(
+                "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs",
+                !task.done && "bg-white/[0.05] border border-white/[0.12]"
+              )}
+              style={task.done
+                ? { background: "color-mix(in srgb, var(--color-teal) 15%, transparent)", color: "var(--color-teal)" }
+                : { color: "var(--color-text-muted)" }
+              }
+            >
               {task.done && <IconCheck />}
             </div>
-            <span className={task.done ? "text-[#A6B3C2] line-through" : "text-[#E6EDF3]"}>
+            <span style={{ color: task.done ? "var(--color-text-muted)" : "var(--color-text)" }} className={task.done ? "line-through" : ""}>
               {task.label}
             </span>
           </div>
@@ -97,9 +101,9 @@ function SkillProgress() {
   }, []);
 
   return (
-    <div className="rounded-[16px] p-5 bg-[#0B2239] border border-white/[0.07]">
-      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-[14px]">
-        <div className="w-6 h-6 rounded-[7px] flex items-center justify-center bg-[#2DA8FF]/10 text-[#2DA8FF]">
+    <div className="rounded-lg p-5 border border-white/[0.07]" style={{ background: "var(--color-bg-card)" }}>
+      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-sm">
+        <div className="w-6 h-6 rounded-sm flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--color-accent) 10%, transparent)", color: "var(--color-accent)" }}>
           <IconBarChart size={13} />
         </div>
         Skill Progress
@@ -108,7 +112,7 @@ function SkillProgress() {
       <div className="flex flex-col gap-3">
         {mockSkills.map((skill, i) => (
           <div key={skill.name} className="flex items-center gap-2.5">
-            <span className="text-[12.5px] text-[#A6B3C2] w-[76px] flex-shrink-0">{skill.name}</span>
+            <span className="text-xs w-[76px] flex-shrink-0" style={{ color: "var(--color-text-muted)" }}>{skill.name}</span>
             <div className="flex-1 h-[6px] bg-white/[0.05] rounded-full overflow-hidden">
               <div
                 className={cn("h-full rounded-full bg-gradient-to-r", skill.color)}
@@ -118,7 +122,7 @@ function SkillProgress() {
                 }}
               />
             </div>
-            <span className="font-sora text-[11.5px] font-bold text-[#E6EDF3] w-[30px] text-right">
+            <span className="font-sora text-xs font-bold w-[30px] text-right" style={{ color: "var(--color-text)" }}>
               {skill.value}%
             </span>
           </div>
@@ -141,9 +145,9 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function StudyCalendar() {
   return (
-    <div className="rounded-[16px] p-5 bg-[#0B2239] border border-white/[0.07]">
-      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-[14px]">
-        <div className="w-6 h-6 rounded-[7px] flex items-center justify-center bg-[#2ED3C6]/10 text-[#2ED3C6]">
+    <div className="rounded-lg p-5 border border-white/[0.07]" style={{ background: "var(--color-bg-card)" }}>
+      <div className="flex items-center gap-2 mb-4 font-sora font-bold text-sm">
+        <div className="w-6 h-6 rounded-sm flex items-center justify-center" style={{ background: "color-mix(in srgb, var(--color-teal) 10%, transparent)", color: "var(--color-teal)" }}>
           <IconCalendar />
         </div>
         Study Activity
@@ -152,7 +156,7 @@ function StudyCalendar() {
       {/* Day labels */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {DAY_LABELS.map((d) => (
-          <div key={d} className="text-[9px] text-[#A6B3C2]/60 text-center">{d}</div>
+          <div key={d} className="text-xs text-center" style={{ color: "color-mix(in srgb, var(--color-text-muted) 60%, transparent)" }}>{d}</div>
         ))}
       </div>
 
@@ -161,7 +165,7 @@ function StudyCalendar() {
         {mockHeatmap.map((day, i) => (
           <div
             key={i}
-            className="aspect-square rounded-[4px] cursor-pointer transition-all duration-200 hover:opacity-80 hover:scale-110"
+            className="aspect-square rounded-sm cursor-pointer transition-all duration-normal hover:opacity-80 hover:scale-110"
             style={{
               backgroundColor: HEATMAP_BG[day.level],
               outline: day.isToday ? "1.5px solid #2ED3C6" : undefined,
@@ -173,11 +177,11 @@ function StudyCalendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-1.5 mt-2.5 text-[10px] text-[#A6B3C2]">
+      <div className="flex items-center gap-1.5 mt-2.5 text-xs" style={{ color: "var(--color-text-muted)" }}>
         <span>Less</span>
-        <div className="flex gap-[3px]">
+        <div className="flex gap-1">
           {[0, 1, 2, 3, 4].map((l) => (
-            <div key={l} className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: HEATMAP_BG[l] }} />
+            <div key={l} className="w-[10px] h-[10px] rounded-sm" style={{ backgroundColor: HEATMAP_BG[l] }} />
           ))}
         </div>
         <span>More</span>

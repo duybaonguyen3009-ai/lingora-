@@ -265,7 +265,7 @@ export default function IeltsConversation({
 
     async function init() {
       if (!useAuthStore.getState().accessToken) {
-        setErrorMsg("Please log in to start the exam.");
+        setErrorMsg("Sign in to start the exam and track your progress.");
         setPhase("error");
         return;
       }
@@ -307,7 +307,7 @@ export default function IeltsConversation({
         }
       } catch (err: unknown) {
         if (cancelled) return;
-        setErrorMsg(err instanceof Error ? err.message : "Failed to start session");
+        setErrorMsg(err instanceof Error ? err.message : "Hmm, something didn't work. Let's try again!");
         setPhase("error");
       }
     }
@@ -764,10 +764,10 @@ export default function IeltsConversation({
           </button>
 
           <div className="flex-1 min-w-0">
-            <div className="font-sora font-bold text-[14px]" style={{ color: 'var(--ielts-text)' }}>
+            <div className="font-sora font-bold text-sm" style={{ color: 'var(--ielts-text)' }}>
               IELTS Speaking Test
             </div>
-            <div className="text-[11px]" style={{ color: 'var(--ielts-text-secondary)' }}>
+            <div className="text-xs" style={{ color: 'var(--ielts-text-secondary)' }}>
               {phase === "part1" ? "Part 1 — Interview" :
                phase.startsWith("part2") ? "Part 2 — Long Turn" :
                phase === "part3" ? "Part 3 — Discussion" :
@@ -781,7 +781,7 @@ export default function IeltsConversation({
               {[1, 2, 3].map((p) => (
                 <div
                   key={p}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-500 ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-slow ${
                     p === currentPart ? "ielts-part-active" :
                     p < currentPart ? "ielts-part-done" :
                     "ielts-part-future"
@@ -815,10 +815,10 @@ export default function IeltsConversation({
                 </div>
               </div>
               <div className="text-center">
-                <p className="font-sora font-bold text-[20px]" style={{ color: 'var(--ielts-text)' }}>
+                <p className="font-sora font-bold text-lg" style={{ color: 'var(--ielts-text)' }}>
                   Entering exam room
                 </p>
-                <p className="text-[14px] mt-3 max-w-[280px] mx-auto leading-relaxed" style={{ color: 'var(--ielts-text-muted)' }}>
+                <p className="text-sm mt-3 max-w-[280px] mx-auto leading-relaxed" style={{ color: 'var(--ielts-text-muted)' }}>
                   Your examiner is preparing. The test will begin shortly.
                 </p>
               </div>
@@ -833,17 +833,17 @@ export default function IeltsConversation({
           {/* ═══ ERROR ═══ */}
           {phase === "error" && (
             <div className="flex-1 flex flex-col items-center justify-center gap-5 py-24">
-              <div className="text-[40px]">{!isAuthenticated ? "🔒" : "⚠️"}</div>
-              <p className="text-[16px] font-medium text-center" style={{ color: 'var(--ielts-text-secondary)' }}>
-                {errorMsg || "Something went wrong"}
+              <div className="text-2xl">{!isAuthenticated ? "🔒" : "⚠️"}</div>
+              <p className="text-base font-medium text-center" style={{ color: 'var(--ielts-text-secondary)' }}>
+                {errorMsg || "Oops! Let's try that again"}
               </p>
               <div className="flex gap-3">
                 {!isAuthenticated && (
-                  <button onClick={() => router.push("/login")} className="ielts-btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold">
+                  <button onClick={() => router.push("/login")} className="ielts-btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold">
                     Sign In
                   </button>
                 )}
-                <button onClick={onClose} className="underline text-[14px]" style={{ color: 'var(--ielts-text-secondary)' }}>Go back</button>
+                <button onClick={onClose} className="underline text-sm" style={{ color: 'var(--ielts-text-secondary)' }}>Go back</button>
               </div>
             </div>
           )}
@@ -859,10 +859,10 @@ export default function IeltsConversation({
                 </div>
               </div>
               <div className="text-center">
-                <p className="font-sora font-bold text-[18px]" style={{ color: 'var(--ielts-text)' }}>
+                <p className="font-sora font-bold text-lg" style={{ color: 'var(--ielts-text)' }}>
                   Analysing your performance
                 </p>
-                <p className="text-[13px] mt-2 max-w-[260px] mx-auto" style={{ color: 'var(--ielts-text-muted)' }}>
+                <p className="text-sm mt-2 max-w-[260px] mx-auto" style={{ color: 'var(--ielts-text-muted)' }}>
                   Evaluating fluency, vocabulary, grammar, and pronunciation...
                 </p>
               </div>
@@ -870,7 +870,7 @@ export default function IeltsConversation({
               <div className="w-52 flex flex-col gap-3 mt-2">
                 {["Fluency", "Vocabulary", "Grammar", "Pronunciation"].map((label, i) => (
                   <div key={label} className="flex items-center gap-3">
-                    <span className="text-[10px] w-20 text-right uppercase tracking-wider" style={{ color: 'var(--ielts-text-muted)' }}>{label}</span>
+                    <span className="text-xs w-20 text-right uppercase tracking-wider" style={{ color: 'var(--ielts-text-muted)' }}>{label}</span>
                     <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--ielts-score-track)' }}>
                       <div className="ielts-score-loading" style={{ animationDelay: `${i * 0.2}s` }} />
                     </div>
@@ -885,13 +885,13 @@ export default function IeltsConversation({
             <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20 animate-fadeIn">
               <div className="ielts-orb ielts-orb-speaking">
                 <div className="ielts-orb-inner">
-                  <span className="text-[20px] font-bold" style={{ color: 'var(--ielts-text)' }}>2</span>
+                  <span className="text-lg font-bold" style={{ color: 'var(--ielts-text)' }}>2</span>
                 </div>
               </div>
-              <p className="font-sora font-bold text-[18px] text-center" style={{ color: 'var(--ielts-text)' }}>
+              <p className="font-sora font-bold text-lg text-center" style={{ color: 'var(--ielts-text)' }}>
                 Moving to Part 2
               </p>
-              <p className="text-[13px] text-center max-w-[260px]" style={{ color: 'var(--ielts-text-muted)' }}>
+              <p className="text-sm text-center max-w-[260px]" style={{ color: 'var(--ielts-text-muted)' }}>
                 You will receive a task card. You have 1 minute to prepare.
               </p>
             </div>
@@ -904,23 +904,23 @@ export default function IeltsConversation({
               <div className="ielts-cue-card">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-2 h-2 rounded-full bg-indigo-400" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-300">
+                  <span className="text-xs font-bold uppercase tracking-[0.15em] text-indigo-300">
                     Task Card
                   </span>
                 </div>
-                <p className="text-[18px] font-semibold leading-snug mb-4" style={{ color: 'var(--ielts-text)' }}>
+                <p className="text-lg font-semibold leading-snug mb-4" style={{ color: 'var(--ielts-text)' }}>
                   {cueCard.topic}
                 </p>
-                <p className="text-[11px] font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-muted)' }}>
+                <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-muted)' }}>
                   You should say:
                 </p>
                 <ul className="flex flex-col gap-2.5">
                   {cueCard.prompts.map((prompt, i) => (
                     <li key={i} className="flex gap-3 items-start">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 bg-indigo-500/20 text-indigo-300">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 bg-indigo-500/20 text-indigo-300">
                         {i + 1}
                       </span>
-                      <span className="text-[14px] leading-relaxed" style={{ color: 'var(--ielts-text-secondary)' }}>{prompt}</span>
+                      <span className="text-sm leading-relaxed" style={{ color: 'var(--ielts-text-secondary)' }}>{prompt}</span>
                     </li>
                   ))}
                 </ul>
@@ -929,8 +929,8 @@ export default function IeltsConversation({
               {/* Timer + controls */}
               <div className="flex flex-col items-center gap-5">
                 <div className={`ielts-timer ${timerUrgent ? "ielts-timer-urgent" : ""}`}>
-                  <span className="text-[11px] uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Preparation time</span>
-                  <span className="font-mono text-[36px] font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
+                  <span className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Preparation time</span>
+                  <span className="font-mono text-2xl font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
                 </div>
 
                 {/* Heartbeat pulse when timer is low */}
@@ -940,7 +940,7 @@ export default function IeltsConversation({
 
                 <button
                   onClick={handlePrepSkip}
-                  className="ielts-btn-primary px-8 py-3 rounded-xl text-[14px] font-semibold"
+                  className="ielts-btn-primary px-8 py-3 rounded-xl text-sm font-semibold"
                 >
                   I&apos;m Ready — Start Speaking
                 </button>
@@ -953,15 +953,15 @@ export default function IeltsConversation({
             <div className="flex flex-col gap-5 animate-fadeIn">
               {/* Compact cue card reminder */}
               <div className="ielts-cue-card-mini">
-                <span className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Topic:</span>
-                <span className="text-[13px] ml-2" style={{ color: 'var(--ielts-text-secondary)' }}>{cueCard.topic}</span>
+                <span className="text-xs uppercase tracking-wider text-indigo-300 font-bold">Topic:</span>
+                <span className="text-sm ml-2" style={{ color: 'var(--ielts-text-secondary)' }}>{cueCard.topic}</span>
               </div>
 
               {/* Timer */}
               <div className="flex flex-col items-center gap-5">
                 <div className={`ielts-timer ${timerUrgent ? "ielts-timer-urgent" : ""}`}>
-                  <span className="text-[11px] uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Speaking time</span>
-                  <span className="font-mono text-[36px] font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
+                  <span className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--ielts-text-muted)' }}>Speaking time</span>
+                  <span className="font-mono text-2xl font-bold" style={{ color: 'var(--ielts-text)' }}>{timerDisplay}</span>
                 </div>
 
                 {/* Central mic orb */}
@@ -995,14 +995,14 @@ export default function IeltsConversation({
 
                 {/* Silence nudge — triggered by 4s of no speech during Part 2 */}
                 {part2SilenceNudge && !part2Nudge && (
-                  <div className="px-4 py-2.5 rounded-xl text-[13px] text-blue-300/90 bg-blue-500/10 border border-blue-500/20 text-center max-w-[300px] animate-fadeIn">
+                  <div className="px-4 py-2.5 rounded-xl text-sm text-blue-300/90 bg-blue-500/10 border border-blue-500/20 text-center max-w-[300px] animate-fadeIn">
                     {part2SilenceNudge}
                   </div>
                 )}
 
                 {/* Nudge message when user tries to end too early */}
                 {part2Nudge && (
-                  <div className="px-4 py-2.5 rounded-xl text-[13px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 text-center max-w-[300px] animate-fadeIn">
+                  <div className="px-4 py-2.5 rounded-xl text-sm text-amber-300/90 bg-amber-500/10 border border-amber-500/20 text-center max-w-[300px] animate-fadeIn">
                     {part2Nudge}
                   </div>
                 )}
@@ -1010,7 +1010,7 @@ export default function IeltsConversation({
                 <button
                   onClick={handlePart2End}
                   disabled={isProcessing}
-                  className="ielts-btn-ghost px-6 py-2 rounded-xl text-[13px]"
+                  className="ielts-btn-ghost px-6 py-2 rounded-xl text-sm"
                 >
                   Finish Speaking
                 </button>
@@ -1024,13 +1024,13 @@ export default function IeltsConversation({
               {/* Previous Q&A transcript (collapsed) */}
               {qaPairs.length > 1 && (
                 <div className="ielts-transcript">
-                  <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-faint)' }}>
+                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--ielts-text-faint)' }}>
                     Previous responses
                   </div>
                   {qaPairs.slice(0, -1).map((pair) => (
                     <div key={pair.idx} className="mb-3 last:mb-0">
-                      <p className="text-[11px] mb-0.5" style={{ color: 'var(--ielts-text-muted)' }}>Q{pair.idx}: {pair.q}</p>
-                      <p className="text-[12px]" style={{ color: 'var(--ielts-text-secondary)' }}>{pair.a}</p>
+                      <p className="text-xs mb-0.5" style={{ color: 'var(--ielts-text-muted)' }}>Q{pair.idx}: {pair.q}</p>
+                      <p className="text-xs" style={{ color: 'var(--ielts-text-secondary)' }}>{pair.a}</p>
                     </div>
                   ))}
                 </div>
@@ -1047,13 +1047,13 @@ export default function IeltsConversation({
                       </svg>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-300">Examiner</span>
+                      <span className="text-xs font-bold uppercase tracking-[0.15em] text-indigo-300">Examiner</span>
                       {examinerSpeaking && (
-                        <span className="ml-2 text-[9px] text-indigo-400 animate-pulse">Speaking...</span>
+                        <span className="ml-2 text-xs text-indigo-400 animate-pulse">Speaking...</span>
                       )}
                     </div>
                   </div>
-                  <p className="text-[17px] font-medium leading-relaxed" style={{ color: 'var(--ielts-text)' }}>
+                  <p className="text-lg font-medium leading-relaxed" style={{ color: 'var(--ielts-text)' }}>
                     {latestExaminerMsg.content}
                   </p>
                 </div>
@@ -1081,8 +1081,8 @@ export default function IeltsConversation({
               {/* Last user answer */}
               {latestUserMsg && qaPairs.length > 0 && (
                 <div className="ielts-user-answer animate-answerIn">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60">Your answer</span>
-                  <p className="text-[14px] mt-1" style={{ color: 'var(--ielts-answer-text)' }}>{latestUserMsg.content}</p>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400/60">Your answer</span>
+                  <p className="text-sm mt-1" style={{ color: 'var(--ielts-answer-text)' }}>{latestUserMsg.content}</p>
                 </div>
               )}
             </div>
@@ -1099,9 +1099,9 @@ export default function IeltsConversation({
             {voice.isRecording && (
               <div className="flex items-center gap-2 mb-2 animate-fadeIn">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[11px] text-red-400 font-medium">Recording</span>
+                <span className="text-xs text-red-400 font-medium">Recording</span>
                 {voice.interimTranscript && (
-                  <span className="text-[12px] italic truncate flex-1" style={{ color: 'var(--ielts-text-muted)' }}>{voice.interimTranscript}</span>
+                  <span className="text-xs italic truncate flex-1" style={{ color: 'var(--ielts-text-muted)' }}>{voice.interimTranscript}</span>
                 )}
               </div>
             )}
@@ -1151,7 +1151,7 @@ export default function IeltsConversation({
             </div>
 
             {!voice.isSupported && (
-              <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--ielts-text-faint)' }}>
+              <p className="text-xs mt-2 text-center" style={{ color: 'var(--ielts-text-faint)' }}>
                 Voice input requires Chrome or Edge
               </p>
             )}

@@ -29,7 +29,7 @@ export default function GrammarExplanation({
 }: GrammarExplanationProps) {
   return (
     <div
-      className="rounded-2xl overflow-hidden transition-all duration-300"
+      className="rounded-lg overflow-hidden transition-all duration-normal"
       style={{
         border: isCorrect
           ? "1px solid rgba(16,185,129,0.3)"
@@ -50,14 +50,14 @@ export default function GrammarExplanation({
       >
         <span className="text-lg">{isCorrect ? "\u2705" : "\u274C"}</span>
         <span
-          className="text-[14px] font-bold"
-          style={{ color: isCorrect ? "#10B981" : "#EF4444" }}
+          className="text-sm font-bold"
+          style={{ color: isCorrect ? "var(--color-success)" : "var(--color-error)" }}
         >
           {isCorrect ? "Correct!" : "Incorrect"}
         </span>
         {!isCorrect && (
-          <span className="text-[12px] ml-auto" style={{ color: "var(--color-text-secondary)" }}>
-            Correct answer: <strong style={{ color: "#10B981" }}>{correctAnswer}</strong>
+          <span className="text-xs ml-auto" style={{ color: "var(--color-text-secondary)" }}>
+            Correct answer: <strong style={{ color: "var(--color-success)" }}>{correctAnswer}</strong>
           </span>
         )}
       </div>
@@ -66,10 +66,10 @@ export default function GrammarExplanation({
       <div className="px-4 py-3.5 flex flex-col gap-3">
         {/* Why */}
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
             Why
           </span>
-          <p className="text-[13px] mt-0.5 leading-relaxed" style={{ color: "var(--color-text)" }}>
+          <p className="text-sm mt-0.5 leading-relaxed" style={{ color: "var(--color-text)" }}>
             {isCorrect ? explanation.whyCorrect : (explanation.whyWrong ?? explanation.whyCorrect)}
           </p>
         </div>
@@ -82,21 +82,21 @@ export default function GrammarExplanation({
             border: "1px solid rgba(139,92,246,0.15)",
           }}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider text-violet-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-violet-400">
             Rule
           </span>
-          <p className="text-[12px] mt-0.5 leading-relaxed" style={{ color: "var(--color-text)" }}>
+          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "var(--color-text)" }}>
             {explanation.rule}
           </p>
         </div>
 
         {/* Example */}
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
             Example
           </span>
           <p
-            className="text-[13px] mt-0.5 italic leading-relaxed"
+            className="text-sm mt-0.5 italic leading-relaxed"
             style={{ color: "var(--color-text-secondary)" }}
           >
             &ldquo;{explanation.example}&rdquo;

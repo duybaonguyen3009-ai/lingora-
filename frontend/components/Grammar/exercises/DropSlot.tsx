@@ -97,7 +97,7 @@ export default function DropSlot({
         ref={setNodeRef}
         className={cn(
           "rounded-xl border-2 px-3 py-2 min-h-[42px] min-w-[80px] flex items-center justify-center",
-          "transition-all duration-200 ease-out",
+          "transition-all duration-normal ease-out",
           isEmpty && variant === "empty" && "border-dashed",
           !isEmpty && "border-solid",
           isOver && "scale-[1.05]",
@@ -122,7 +122,7 @@ export default function DropSlot({
         {isEmpty ? (
           <span
             className={cn(
-              "text-[12px] font-medium",
+              "text-xs font-medium",
               isOver ? "opacity-0" : "opacity-60"
             )}
             style={{ color: "rgba(139,92,246,0.6)" }}

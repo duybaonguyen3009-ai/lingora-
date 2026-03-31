@@ -20,6 +20,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { ApiVocabItem } from "@/lib/api";
+import Button from "@/components/ui/Button";
+import useSound from "@/hooks/useSound";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Types
@@ -84,18 +86,18 @@ function ExerciseHeader({
     <div className="flex flex-col items-center gap-3 mb-5">
       <div className="flex items-center gap-2">
         <span
-          className="text-[10px] font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
+          className="text-xs font-bold uppercase tracking-[1px] px-2.5 py-1 rounded-full"
           style={{ backgroundColor: `${labelColor}18`, color: labelColor }}
         >
           {label}
         </span>
-        <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+        <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
           {current} / {total}
         </span>
       </div>
       <div className="w-full max-w-[360px] h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
-          className="h-full rounded-full transition-all duration-500"
+          className="h-full rounded-full transition-all duration-slow"
           style={{
             width: `${progress}%`,
             background: `linear-gradient(to right, ${labelColor}, var(--color-accent))`,
@@ -133,41 +135,38 @@ function LearnPhase({
       />
 
       <div
-        className="w-full max-w-[360px] rounded-2xl p-6 flex flex-col items-center gap-4 transition-all duration-300"
+        className="w-full max-w-[360px] rounded-lg p-6 flex flex-col items-center gap-4 transition-all duration-normal"
         style={{
           border: showMeaning ? "1px solid rgba(46,211,198,0.25)" : "1px solid var(--color-border)",
           background: "var(--color-bg-card)",
           minHeight: 200,
         }}
       >
-        <p className="text-[26px] font-sora font-bold text-center" style={{ color: "var(--color-text)" }}>
+        <p className="text-xl font-sora font-bold text-center" style={{ color: "var(--color-text)" }}>
           {current.word}
         </p>
         {current.pronunciation && (
-          <p className="text-[13px]" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
             {current.pronunciation}
           </p>
         )}
         {!showMeaning ? (
-          <button
+          <Button
+            variant="soft"
+            size="md"
             onClick={() => setShowMeaning(true)}
-            className="mt-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200"
-            style={{
-              background: "var(--color-primary-soft)",
-              border: "1px solid var(--color-border)",
-              color: "var(--color-text-secondary)",
-            }}
+            className="mt-2"
           >
             Show meaning
-          </button>
+          </Button>
         ) : (
           <div className="flex flex-col items-center gap-3 animate-fadeSlideUp">
             <div className="w-10 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-            <p className="text-[16px] font-semibold text-center" style={{ color: "var(--color-success)" }}>
+            <p className="text-base font-semibold text-center" style={{ color: "var(--color-success)" }}>
               {current.meaning}
             </p>
             {current.example_sentence && (
-              <p className="text-[12px] text-center italic max-w-[280px]" style={{ color: "var(--color-text-secondary)", opacity: 0.7 }}>
+              <p className="text-xs text-center italic max-w-[280px]" style={{ color: "var(--color-text-secondary)", opacity: 0.7 }}>
                 &ldquo;{current.example_sentence}&rdquo;
               </p>
             )}
@@ -176,20 +175,20 @@ function LearnPhase({
       </div>
 
       {showMeaning && (
-        <button
+        <Button
+          variant="success"
+          size="lg"
+          fullWidth
+          className="max-w-[360px]"
           onClick={() => {
             if (isLast) { onComplete(); return; }
             setShowMeaning(false);
             setIndex((i) => i + 1);
           }}
-          className="w-full max-w-[360px] py-3 rounded-xl font-semibold text-[14px] transition-all duration-200"
-          style={{
-            background: isLast ? "linear-gradient(to right, var(--color-success), var(--color-accent))" : "var(--color-success)",
-            color: "var(--color-bg)",
-          }}
+          style={isLast ? { background: "linear-gradient(to right, var(--color-success), var(--color-accent))" } : undefined}
         >
-          {isLast ? "Start Practice →" : "Got it →"}
-        </button>
+          {isLast ? "Start Practice \u2192" : "Got it \u2192"}
+        </Button>
       )}
     </div>
   );
@@ -220,6 +219,7 @@ function MatchPhase({
     return shuffle(pairs);
   }, [matchItems]);
 
+  const { play } = useSound();
   const [selected, setSelected] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [wrongPair, setWrongPair] = useState<[string, string] | null>(null);
@@ -246,6 +246,7 @@ function MatchPhase({
 
     if (first.itemId === tile.itemId) {
       // Correct match
+      play("correct");
       const newMatched = new Set(matched);
       newMatched.add(first.id);
       newMatched.add(tile.id);
@@ -259,6 +260,7 @@ function MatchPhase({
       }]);
     } else {
       // Wrong match — flash red briefly
+      play("wrong");
       setWrongPair([selected, tile.id]);
       setResults((prev) => [...prev, {
         word: first.type === "word" ? first.text : tile.text,
@@ -291,7 +293,7 @@ function MatchPhase({
         progress={progress}
       />
 
-      <p className="text-[13px] text-center" style={{ color: "var(--color-text-secondary)" }}>
+      <p className="text-sm text-center" style={{ color: "var(--color-text-secondary)" }}>
         Tap a word, then tap its meaning
       </p>
 
@@ -307,7 +309,7 @@ function MatchPhase({
               onClick={() => handleTileClick(tile)}
               disabled={isMatched}
               className={cn(
-                "px-3 py-3.5 rounded-xl border text-[13px] font-medium transition-all duration-200 text-center min-h-[52px]",
+                "px-3 py-3.5 rounded-xl border text-sm font-medium transition-all duration-normal text-center min-h-[52px]",
                 isMatched && "opacity-40 scale-95",
               )}
               style={{
@@ -341,7 +343,7 @@ function MatchPhase({
       </div>
 
       {allMatched && (
-        <p className="text-[13px] font-semibold animate-fadeSlideUp" style={{ color: "var(--color-success)" }}>
+        <p className="text-sm font-semibold animate-fadeSlideUp" style={{ color: "var(--color-success)" }}>
           All matched! ✓
         </p>
       )}
@@ -362,6 +364,7 @@ function ContextPhase({
   allItems: ApiVocabItem[]; // all items for distractor generation
   onComplete: (results: ExerciseResult[]) => void;
 }) {
+  const { play } = useSound();
   const shuffled = useMemo(() => shuffle(items), [items]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -409,6 +412,7 @@ function ContextPhase({
   function handleSelect(word: string) {
     if (selected !== null) return;
     setSelected(word);
+    if (word === current.word) play("correct"); else play("wrong");
     setResults((prev) => [...prev, {
       word: current.word,
       meaning: current.meaning,
@@ -429,13 +433,13 @@ function ContextPhase({
 
       {/* Sentence with blank */}
       <div
-        className="w-full max-w-[360px] rounded-2xl p-5"
+        className="w-full max-w-[360px] rounded-lg p-5"
         style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.5px] mb-2" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.5px] mb-2" style={{ color: "var(--color-text-secondary)" }}>
           Complete the sentence
         </p>
-        <p className="text-[15px] font-medium leading-relaxed" style={{ color: "var(--color-text)" }}>
+        <p className="text-base font-medium leading-relaxed" style={{ color: "var(--color-text)" }}>
           &ldquo;{sentenceWithBlank}&rdquo;
         </p>
       </div>
@@ -453,7 +457,7 @@ function ContextPhase({
               onClick={() => handleSelect(word)}
               disabled={selected !== null}
               className={cn(
-                "px-4 py-3 rounded-xl border text-[13px] font-semibold transition-all duration-200",
+                "px-4 py-3 rounded-xl border text-sm font-semibold transition-all duration-normal",
               )}
               style={{
                 borderColor: showResult
@@ -490,7 +494,7 @@ function ContextPhase({
       {selected !== null && (
         <div
           className={cn(
-            "text-[13px] font-medium text-center animate-fadeSlideUp",
+            "text-sm font-medium text-center animate-fadeSlideUp",
             isCorrect ? "text-emerald-400" : "text-red-400"
           )}
         >
@@ -512,6 +516,7 @@ function RecallPhase({
   items: ApiVocabItem[];
   onComplete: (results: ExerciseResult[]) => void;
 }) {
+  const { play } = useSound();
   const shuffled = useMemo(() => shuffle(items), [items]);
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
@@ -533,6 +538,7 @@ function RecallPhase({
     const isCorrect = normalize(input) === normalize(current.word);
     setCorrect(isCorrect);
     setAnswered(true);
+    if (isCorrect) play("correct"); else play("wrong");
     setResults((prev) => [...prev, {
       word: current.word,
       meaning: current.meaning,
@@ -568,13 +574,13 @@ function RecallPhase({
       />
 
       <div
-        className="w-full max-w-[360px] rounded-2xl p-6 flex flex-col items-center gap-4"
+        className="w-full max-w-[360px] rounded-lg p-6 flex flex-col items-center gap-4"
         style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)", minHeight: 140 }}
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.5px]" style={{ color: "var(--color-text-secondary)" }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.5px]" style={{ color: "var(--color-text-secondary)" }}>
           Type the word
         </p>
-        <p className="text-[18px] font-semibold text-center" style={{ color: "var(--color-accent)" }}>
+        <p className="text-lg font-semibold text-center" style={{ color: "var(--color-accent)" }}>
           {current.meaning}
         </p>
       </div>
@@ -582,7 +588,7 @@ function RecallPhase({
       <div className="w-full max-w-[360px]">
         <div
           className={cn(
-            "rounded-xl border transition-all duration-200",
+            "rounded-xl border transition-all duration-normal",
             answered
               ? correct ? "border-emerald-500/50 bg-emerald-500/[0.06]" : "border-red-500/50 bg-red-500/[0.06]"
               : ""
@@ -600,7 +606,7 @@ function RecallPhase({
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
-            className="w-full bg-transparent px-4 py-3.5 text-[14px] outline-none rounded-xl text-center font-semibold"
+            className="w-full bg-transparent px-4 py-3.5 text-sm outline-none rounded-xl text-center font-semibold"
             style={{ color: "var(--color-text)" }}
           />
         </div>
@@ -608,7 +614,7 @@ function RecallPhase({
         {answered && (
           <div
             className={cn(
-              "mt-3 rounded-xl px-4 py-2.5 text-[13px] font-medium text-center animate-fadeSlideUp",
+              "mt-3 rounded-xl px-4 py-2.5 text-sm font-medium text-center animate-fadeSlideUp",
               correct ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
                       : "bg-red-500/10 border border-red-500/30 text-red-300"
             )}
@@ -618,14 +624,17 @@ function RecallPhase({
         )}
 
         {!answered && (
-          <button
+          <Button
+            variant="success"
+            size="lg"
+            fullWidth
             onClick={handleSubmit}
             disabled={!input.trim()}
-            className="w-full mt-3 py-3 rounded-xl text-[14px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
+            className="mt-3"
+            style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))" }}
           >
             Check
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -673,12 +682,12 @@ function ResultsPhase({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[28px] font-sora font-bold" style={{ color: "var(--color-text)" }}>{pct}%</span>
-          <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>accuracy</span>
+          <span className="text-xl font-sora font-bold" style={{ color: "var(--color-text)" }}>{pct}%</span>
+          <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>accuracy</span>
         </div>
       </div>
 
-      <p className="text-[16px] font-semibold text-center" style={{ color: "var(--color-text)" }}>
+      <p className="text-base font-semibold text-center" style={{ color: "var(--color-text)" }}>
         {pct === 100 ? "Perfect! You nailed it."
           : pct >= 70 ? "Great job! Keep it up."
           : pct >= 40 ? "Good effort. Review the words you missed."
@@ -693,7 +702,7 @@ function ResultsPhase({
           return (
             <div
               key={type}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs"
               style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)" }}
             >
               <span className="font-semibold capitalize" style={{ color: "var(--color-text)" }}>{type}</span>
@@ -710,11 +719,11 @@ function ResultsPhase({
           <div
             key={i}
             className={cn(
-              "flex items-center gap-3 px-4 py-2.5 rounded-xl border text-[13px]",
+              "flex items-center gap-3 px-4 py-2.5 rounded-xl border text-sm",
               r.correct ? "border-emerald-500/20 bg-emerald-500/[0.05]" : "border-red-500/20 bg-red-500/[0.05]"
             )}
           >
-            <span className={cn("w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px]",
+            <span className={cn("w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs",
               r.correct ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
             )}>
               {r.correct ? "✓" : "✗"}
@@ -728,13 +737,16 @@ function ResultsPhase({
         ))}
       </div>
 
-      <button
+      <Button
+        variant="success"
+        size="lg"
+        fullWidth
+        className="max-w-[360px]"
         onClick={onContinue}
-        className="w-full max-w-[360px] py-3 rounded-xl font-semibold text-[14px] transition-all duration-200"
-        style={{ background: "linear-gradient(to right, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
+        style={{ background: "linear-gradient(to right, var(--color-success), var(--color-accent))" }}
       >
-        Continue →
-      </button>
+        Continue &rarr;
+      </Button>
     </div>
   );
 }
@@ -776,7 +788,7 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
           {phases.filter((p) => p !== "results").map((p, i) => (
             <div
               key={p}
-              className="flex-1 h-1 rounded-full transition-all duration-300"
+              className="flex-1 h-1 rounded-full transition-all duration-normal"
               style={{
                 background:
                   phases.indexOf(p) < phaseIndex

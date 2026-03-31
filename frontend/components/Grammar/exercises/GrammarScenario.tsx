@@ -85,32 +85,32 @@ export default function GrammarScenario({
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", diffColor)}>
+        <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
           {exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1)}
         </span>
-        <span className="text-[11px] font-semibold" style={{ color: "var(--color-accent)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-accent)" }}>
           {exercise.category}
         </span>
       </div>
 
       {/* Scenario card */}
       <div
-        className="rounded-2xl p-5"
+        className="rounded-lg p-5"
         style={{
           border: "1px solid rgba(168,85,247,0.2)",
           background: "rgba(168,85,247,0.04)",
         }}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#A855F7" }}>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-primary)" }}>
           💬 Situation
         </p>
-        <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
+        <p className="text-base font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
           {exercise.scenario}
         </p>
       </div>
 
       {/* Task */}
-      <p className="text-[12px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+      <p className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
         {exercise.task}
       </p>
 
@@ -147,7 +147,7 @@ export default function GrammarScenario({
               onClick={() => handleSelect(i)}
               disabled={submitted}
               className={cn(
-                "w-full px-4 py-3 rounded-xl border text-left text-[13px] transition-all duration-200",
+                "w-full px-4 py-3 rounded-xl border text-left text-sm transition-all duration-normal",
                 !submitted && "cursor-pointer hover:opacity-80",
                 submitted && "cursor-default"
               )}
@@ -156,9 +156,9 @@ export default function GrammarScenario({
               <span
                 style={{
                   color: submitted && isAnswer
-                    ? "#10B981"
+                    ? "var(--color-success)"
                     : submitted && isSelected && !isAnswer
-                    ? "#EF4444"
+                    ? "var(--color-error)"
                     : "var(--color-text)",
                 }}
               >
@@ -180,10 +180,10 @@ export default function GrammarScenario({
             background: "var(--color-bg-card)",
           }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
+          <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
             {isCorrect ? "✓ Correct!" : "✗ Not quite"} — Why?
           </p>
-          <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
             {exercise.explanation}
           </p>
         </div>
@@ -195,7 +195,7 @@ export default function GrammarScenario({
           onClick={handleSubmit}
           disabled={selectedIdx === null}
           className={cn(
-            "w-full py-3 rounded-xl font-semibold text-[14px] transition-all",
+            "w-full py-3 rounded-xl font-semibold text-sm transition-all",
             selectedIdx !== null ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
           )}
           style={{
@@ -212,7 +212,7 @@ export default function GrammarScenario({
       {submitted && (
         <button
           onClick={onNext}
-          className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
           style={{
             background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
           }}

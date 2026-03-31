@@ -13,6 +13,7 @@
  */
 
 import type { SpeakingMetricsData, MetricDay } from "@/lib/types";
+import Mascot from "@/components/ui/Mascot";
 
 // ---------------------------------------------------------------------------
 // Stat card
@@ -42,7 +43,7 @@ function StatCard({
         {value}
       </span>
       <span
-        className="text-[10px] text-center leading-tight"
+        className="text-xs text-center leading-tight"
         style={{ color: "var(--color-text-secondary)" }}
       >
         {label}
@@ -207,13 +208,13 @@ export default function SpeakingMetrics({ data, loading }: SpeakingMetricsProps)
   if (data.totalAttempts === 0) {
     return (
       <div
-        className="rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
+        className="rounded-lg p-6 flex flex-col items-center gap-3 text-center"
         style={{
           background: "var(--color-bg-card)",
           border: "1px solid var(--color-border)",
         }}
       >
-        <span className="text-3xl">🎤</span>
+        <Mascot size={64} className="opacity-70" />
         <p className="text-sm font-medium" style={{ color: "var(--color-text)" }}>
           No speaking practice yet
         </p>
@@ -261,14 +262,14 @@ export default function SpeakingMetrics({ data, loading }: SpeakingMetricsProps)
       {/* Chart */}
       {data.trend.length >= 2 && (
         <div
-          className="rounded-2xl p-4"
+          className="rounded-lg p-4"
           style={{
             background: "var(--color-bg-card)",
             border: "1px solid var(--color-border)",
           }}
         >
           <p
-            className="text-[10px] font-medium mb-3 uppercase tracking-wider"
+            className="text-xs font-medium mb-3 uppercase tracking-wider"
             style={{ color: "var(--color-text-secondary)" }}
           >
             Score trend

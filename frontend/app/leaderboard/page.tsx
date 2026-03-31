@@ -21,20 +21,20 @@ export default function LeaderboardPage() {
     <div className="min-h-screen px-4 sm:px-8 py-10 max-w-2xl mx-auto" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-[28px] font-sora font-bold tracking-tight">Leaderboard</h1>
-        <p className="text-[14px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+        <h1 className="text-xl font-sora font-bold tracking-tight">Leaderboard</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
           Top learners ranked by XP earned
         </p>
       </div>
 
       {/* Scope tabs */}
-      <div className="flex items-center border rounded-[12px] p-[4px] gap-1 mb-6 w-fit" style={{ backgroundColor: "var(--color-primary-soft)", borderColor: "var(--color-border)" }}>
+      <div className="flex items-center border rounded-md p-1 gap-1 mb-6 w-fit" style={{ backgroundColor: "var(--color-primary-soft)", borderColor: "var(--color-border)" }}>
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setScope(tab.id)}
             className={cn(
-              "px-5 py-2 rounded-[9px] text-[13px] font-medium transition-all duration-200",
+              "px-5 py-2 rounded-sm text-sm font-medium transition-all duration-normal",
               scope !== tab.id && "hover:opacity-80"
             )}
             style={scope === tab.id
@@ -64,8 +64,8 @@ export default function LeaderboardPage() {
         <>
           {/* My entry (if outside top 50) */}
           {data.myEntry && !data.entries.some((e) => e.userId === data.myEntry?.userId) && (
-            <div className="mb-4 rounded-[14px] border px-4 py-3 flex items-center gap-4" style={{ borderColor: "color-mix(in srgb, var(--color-success) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--color-success) 6%, transparent)" }}>
-              <span className="w-8 text-right text-[13px] font-medium" style={{ color: "var(--color-text-secondary)" }}>
+            <div className="mb-4 rounded-md border px-4 py-3 flex items-center gap-4" style={{ borderColor: "color-mix(in srgb, var(--color-success) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--color-success) 6%, transparent)" }}>
+              <span className="w-8 text-right text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>
                 #{data.myEntry.rank}
               </span>
               <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs"
@@ -73,11 +73,11 @@ export default function LeaderboardPage() {
                 {data.myEntry.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold truncate">
-                  {data.myEntry.name} <span className="text-[11px]" style={{ color: "var(--color-success)" }}>You</span>
+                <p className="text-sm font-semibold truncate">
+                  {data.myEntry.name} <span className="text-xs" style={{ color: "var(--color-success)" }}>You</span>
                 </p>
               </div>
-              <span className="font-bold text-[14px]" style={{ color: "var(--color-success)" }}>
+              <span className="font-bold text-sm" style={{ color: "var(--color-success)" }}>
                 {data.myEntry.xp.toLocaleString()} XP
               </span>
             </div>
@@ -98,7 +98,7 @@ export default function LeaderboardPage() {
                   <div
                     key={entry.userId}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-3 rounded-[14px] border transition-all duration-200",
+                      "flex items-center gap-4 px-4 py-3 rounded-md border transition-all duration-normal",
                     )}
                     style={isMe
                       ? { borderColor: "color-mix(in srgb, var(--color-success) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--color-success) 6%, transparent)" }
@@ -106,7 +106,7 @@ export default function LeaderboardPage() {
                     }
                   >
                     {/* Rank */}
-                    <span className="w-8 text-right text-[13px] font-medium flex-shrink-0" style={{ color: "var(--color-text-secondary)" }}>
+                    <span className="w-8 text-right text-sm font-medium flex-shrink-0" style={{ color: "var(--color-text-secondary)" }}>
                       {medal ?? `#${entry.rank}`}
                     </span>
 
@@ -125,17 +125,17 @@ export default function LeaderboardPage() {
 
                     {/* Name */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium truncate">
+                      <p className="text-sm font-medium truncate">
                         {entry.name}
                         {isMe && (
-                          <span className="ml-1.5 text-[11px] font-semibold" style={{ color: "var(--color-success)" }}>You</span>
+                          <span className="ml-1.5 text-xs font-semibold" style={{ color: "var(--color-success)" }}>You</span>
                         )}
                       </p>
                     </div>
 
                     {/* XP */}
                     <span
-                      className="font-bold text-[14px] flex-shrink-0"
+                      className="font-bold text-sm flex-shrink-0"
                       style={{ color: isMe ? "var(--color-success)" : "var(--color-text)" }}
                     >
                       {entry.xp.toLocaleString()} XP

@@ -22,7 +22,9 @@ import type {
   EndSessionResult,
 } from "@/lib/types";
 import ScenarioSummary from "./ScenarioSummary";
+import Button from "@/components/ui/Button";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
+import useSound from "@/hooks/useSound";
 
 interface ScenarioConversationProps {
   scenario: Scenario;
@@ -55,6 +57,7 @@ export default function ScenarioConversation({
   onComplete,
 }: ScenarioConversationProps) {
   const router = useRouter();
+  const { play } = useSound();
   const isAuthenticated = useAuthStore((s) => !!s.user);
   const [phase, setPhase] = useState<Phase>("loading");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -88,7 +91,7 @@ export default function ScenarioConversation({
 
     // Gate behind authentication
     if (!useAuthStore.getState().accessToken) {
-      setError("Please log in to start a conversation.");
+      setError("Sign in to start a conversation and track your progress.");
       setPhase("error");
       return;
     }
@@ -112,7 +115,7 @@ export default function ScenarioConversation({
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.message || "Failed to start session");
+        setError(err.message || "Hmm, something didn't work. Let's try again!");
         setPhase("error");
       });
 
@@ -172,8 +175,9 @@ export default function ScenarioConversation({
           },
         ];
       });
+      play("ai", 0.3);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to send message";
+      const msg = err instanceof Error ? err.message : "Message didn't go through — try sending again";
       setError(msg);
       setTurns((prev) => prev.filter((t) => t.id !== tempUserTurn.id));
     } finally {
@@ -194,7 +198,7 @@ export default function ScenarioConversation({
       setPhase("summary");
       onComplete?.();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to end session";
+      const msg = err instanceof Error ? err.message : "Oops! We couldn't wrap up the session. Let's try that again";
       setError(msg);
       setPhase("error");
     }
@@ -239,22 +243,22 @@ export default function ScenarioConversation({
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <PartnerAvatar />
           <div className="min-w-0">
-            <div style={{ color: "var(--color-text)" }} className="font-semibold text-[14px] truncate">
+            <div style={{ color: "var(--color-text)" }} className="font-semibold text-sm truncate">
               {scenario.title}
             </div>
-            <div style={{ color: "var(--color-text-secondary)" }} className="text-[11px]">
+            <div style={{ color: "var(--color-text-secondary)" }} className="text-xs">
               {scenario.difficulty} · {scenario.category} · {userTurnCount} turns
             </div>
           </div>
         </div>
         {phase === "conversation" && userTurnCount >= 2 && (
-          <button
+          <Button
+            variant="soft"
+            size="sm"
             onClick={handleEndConversation}
-            style={{ background: "var(--color-primary)", color: "#fff" }}
-            className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold hover:opacity-90 transition-opacity"
           >
             End Session
-          </button>
+          </Button>
         )}
       </div>
 
@@ -265,7 +269,7 @@ export default function ScenarioConversation({
           {phase === "loading" && (
             <div className="flex flex-col items-center justify-center py-20 gap-3 animate-phase-in">
               <PartnerAvatar speaking />
-              <p className="text-[14px]" style={{ color: "var(--color-text-secondary)" }}>Starting conversation...</p>
+              <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Starting conversation...</p>
               <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
             </div>
           )}
@@ -273,19 +277,19 @@ export default function ScenarioConversation({
           {/* Error */}
           {phase === "error" && (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="text-[40px]">{!isAuthenticated ? "🔒" : "⚠️"}</div>
-              <div style={{ color: "var(--color-warning)" }} className="text-lg font-medium text-center">{error || "Something went wrong"}</div>
+              <div className="text-2xl">{!isAuthenticated ? "🔒" : "⚠️"}</div>
+              <div style={{ color: "var(--color-warning)" }} className="text-lg font-medium text-center">{error || "Oops! Let's try that again"}</div>
               <div className="flex gap-3">
                 {!isAuthenticated && (
-                  <button
+                  <Button
+                    variant="success"
+                    size="md"
                     onClick={() => router.push("/login")}
-                    className="px-6 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
-                    style={{ background: "var(--color-success)", color: "#fff" }}
                   >
                     Sign In
-                  </button>
+                  </Button>
                 )}
-                <button onClick={onClose} style={{ color: "var(--color-primary)" }} className="underline text-[15px]">Go back</button>
+                <Button variant="ghost" size="md" onClick={onClose}>Go back</Button>
               </div>
             </div>
           )}
@@ -294,7 +298,7 @@ export default function ScenarioConversation({
           {phase === "ending" && (
             <div className="flex flex-col items-center justify-center py-20 gap-3 animate-phase-in">
               <PartnerAvatar speaking />
-              <p className="text-[15px]" style={{ color: "var(--color-text-secondary)" }}>Analysing your conversation...</p>
+              <p className="text-base" style={{ color: "var(--color-text-secondary)" }}>Analysing your conversation...</p>
               <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: "var(--color-border)", borderTopColor: "var(--color-primary)" }} />
             </div>
           )}
@@ -313,8 +317,8 @@ export default function ScenarioConversation({
                     color: turn.role === "user" ? "#fff" : "var(--color-text)",
                     border: turn.role === "assistant" ? "1px solid var(--color-border)" : "none",
                   }}
-                  className={`max-w-[72%] px-4 py-3 text-[15px] leading-relaxed ${
-                    turn.role === "user" ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-bl-md"
+                  className={`max-w-[72%] px-4 py-3 text-base leading-relaxed ${
+                    turn.role === "user" ? "rounded-lg rounded-br-md" : "rounded-lg rounded-bl-md"
                   }`}
                 >
                   {turn.content}
@@ -328,7 +332,7 @@ export default function ScenarioConversation({
               <PartnerAvatar speaking />
               <div
                 style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
-                className="px-4 py-3 rounded-2xl rounded-bl-md"
+                className="px-4 py-3 rounded-lg rounded-bl-md"
               >
                 <div className="flex gap-1.5">
                   {[0, 200, 400].map((delay) => (
@@ -353,7 +357,7 @@ export default function ScenarioConversation({
         >
           <div className="max-w-xl mx-auto px-4 py-3.5">
             {userTurnCount < 2 && (
-              <div style={{ color: "var(--color-text-secondary)" }} className="text-[11px] text-center mb-2">
+              <div style={{ color: "var(--color-text-secondary)" }} className="text-xs text-center mb-2">
                 Reply at least 2 times to end the conversation
               </div>
             )}
@@ -361,7 +365,7 @@ export default function ScenarioConversation({
             {/* Live transcript */}
             {voice.isRecording && voice.interimTranscript && (
               <div
-                className="mb-2 px-3 py-2 rounded-xl text-[13px] italic"
+                className="mb-2 px-3 py-2 rounded-xl text-sm italic"
                 style={{ background: "var(--color-primary-soft)", color: "var(--color-text)" }}
               >
                 {voice.interimTranscript}
@@ -403,7 +407,7 @@ export default function ScenarioConversation({
                 onKeyDown={handleKeyDown}
                 placeholder="Type or speak your reply..."
                 rows={1}
-                className="flex-1 resize-none rounded-xl px-3.5 py-2.5 text-[15px] outline-none transition-colors placeholder:opacity-40"
+                className="flex-1 resize-none rounded-xl px-3.5 py-2.5 text-base outline-none transition-colors placeholder:opacity-40"
                 style={{
                   background: "var(--color-bg-secondary)",
                   color: "var(--color-text)",
@@ -414,7 +418,7 @@ export default function ScenarioConversation({
               <button
                 onClick={handleSend}
                 disabled={!inputText.trim() || sending}
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 disabled:opacity-30"
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-normal disabled:opacity-30"
                 style={{
                   background: inputText.trim() && !sending ? "var(--color-primary)" : "var(--color-border)",
                   color: inputText.trim() && !sending ? "#fff" : "var(--color-text-secondary)",
@@ -427,7 +431,7 @@ export default function ScenarioConversation({
             </div>
 
             {!voice.isSupported && (
-              <p className="text-[11px] mt-2 text-center" style={{ color: "var(--color-text-secondary)" }}>
+              <p className="text-xs mt-2 text-center" style={{ color: "var(--color-text-secondary)" }}>
                 Voice input requires Chrome or Edge.
               </p>
             )}

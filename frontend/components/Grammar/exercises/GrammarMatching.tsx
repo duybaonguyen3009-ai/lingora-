@@ -161,19 +161,19 @@ export default function GrammarMatching({
       <div className="flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center gap-2">
-          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", diffColor)}>
+          <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
             {exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1)}
           </span>
         </div>
 
         <div
-          className="rounded-2xl p-4"
+          className="rounded-lg p-4"
           style={GRAMMAR_CARD_STYLE}
         >
-          <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+          <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
             {exercise.instruction}
           </p>
-          <p className="text-[11px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+          <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
             Drag items from the left into the matching slot on the right
           </p>
         </div>
@@ -217,7 +217,7 @@ export default function GrammarMatching({
                       onClick={() => handleClearSlot(ri)}
                       disabled={submitted}
                       className={cn(
-                        "px-2.5 py-1 rounded-lg font-semibold text-[12px] transition-all",
+                        "px-2.5 py-1 rounded-lg font-semibold text-xs transition-all",
                         !submitted && "cursor-pointer hover:opacity-80"
                       )}
                       style={{
@@ -233,8 +233,8 @@ export default function GrammarMatching({
                           : "rgba(46,211,198,0.3)"),
                         color: submitted
                           ? slotVariant === "correct"
-                            ? "#10B981"
-                            : "#EF4444"
+                            ? "var(--color-success)"
+                            : "var(--color-error)"
                           : "var(--color-success)",
                       }}
                     >
@@ -245,7 +245,7 @@ export default function GrammarMatching({
 
                 {/* Right label */}
                 <div
-                  className="flex-1 px-3 py-2.5 rounded-xl text-[12px] font-semibold text-center"
+                  className="flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold text-center"
                   style={{
                     background: "var(--color-primary-soft)",
                     border: "1px solid var(--color-border)",
@@ -268,12 +268,12 @@ export default function GrammarMatching({
               background: "rgba(16,185,129,0.05)",
             }}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#10B981" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
               Correct Matches
             </p>
             <div className="flex flex-col gap-1">
               {exercise.pairs.map((p) => (
-                <p key={p.left} className="text-[12px]" style={{ color: "var(--color-text)" }}>
+                <p key={p.left} className="text-xs" style={{ color: "var(--color-text)" }}>
                   <strong>{p.left}</strong> → {p.right}
                 </p>
               ))}
@@ -290,10 +290,10 @@ export default function GrammarMatching({
               background: "var(--color-bg-card)",
             }}
           >
-            <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
               {allCorrect ? `✓ Perfect! ${correctCount}/${exercise.pairs.length}` : `${correctCount}/${exercise.pairs.length} correct`} — Summary
             </p>
-            <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
               {exercise.explanation}
             </p>
           </div>
@@ -305,7 +305,7 @@ export default function GrammarMatching({
             onClick={handleSubmit}
             disabled={!allMatched}
             className={cn(
-              "w-full py-3 rounded-xl font-semibold text-[14px] transition-all",
+              "w-full py-3 rounded-xl font-semibold text-sm transition-all",
               allMatched ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
             )}
             style={{
@@ -322,7 +322,7 @@ export default function GrammarMatching({
         {submitted && (
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
             }}

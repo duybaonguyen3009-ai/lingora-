@@ -43,7 +43,7 @@ export default function XpProgressBar({
     <div className={`flex items-center gap-2 ${className}`}>
       {/* Level badge */}
       <div
-        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold font-sora"
+        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-sora"
         style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))", color: "var(--color-bg)" }}
         title={`Level ${level}`}
       >
@@ -67,11 +67,11 @@ export default function XpProgressBar({
         </div>
 
         {/* XP labels */}
-        <div className="flex justify-between mt-[3px]">
-          <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
             {xpInLevel.toLocaleString()} XP
           </span>
-          <span className="text-[10px]" style={{ color: "var(--color-text-secondary)" }}>
+          <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
             {isMaxLevel ? "MAX" : `${(xpInLevel + xpToNextLevel).toLocaleString()} XP`}
           </span>
         </div>

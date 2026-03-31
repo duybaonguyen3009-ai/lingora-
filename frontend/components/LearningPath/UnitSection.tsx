@@ -15,7 +15,7 @@ export function UnitSection({ unit, onOpen }: { unit: UnitData; onOpen: (id: str
       <div className="flex items-center gap-3 mb-2">
         <div
           className={cn(
-            "h-8 px-3 rounded-lg flex items-center gap-2 text-[12px] font-bold border",
+            "h-8 px-3 rounded-lg flex items-center gap-2 text-xs font-bold border",
             pct === 100 ? "bg-emerald-500/15 border-emerald-500/25 text-emerald-400" : ""
           )}
           style={
@@ -29,15 +29,15 @@ export function UnitSection({ unit, onOpen }: { unit: UnitData; onOpen: (id: str
           {pct === 100 && <IconCheck size={10} />}
           {unit.title}
         </div>
-        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", unit.level === "B1" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : unit.level === "B2" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-violet-500/10 border-violet-500/20 text-violet-400")}>
+        <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", unit.level === "B1" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : unit.level === "B2" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-violet-500/10 border-violet-500/20 text-violet-400")}>
           {unit.level}
         </span>
         <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-        <span className="text-[11px]" style={{ color: "rgba(166,179,194,0.6)" }}>{completedCount}/{totalCount}</span>
+        <span className="text-xs" style={{ color: "rgba(166,179,194,0.6)" }}>{completedCount}/{totalCount}</span>
       </div>
 
       {unit.description && (
-        <p className="text-[12px] text-center mb-6" style={{ color: "rgba(166,179,194,0.5)" }}>{unit.description}</p>
+        <p className="text-xs text-center mb-6" style={{ color: "rgba(166,179,194,0.5)" }}>{unit.description}</p>
       )}
 
       <div className="mx-auto max-w-[200px] mb-6">

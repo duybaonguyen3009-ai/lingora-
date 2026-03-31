@@ -231,7 +231,7 @@ export default function PassiveSentenceBuilder({
         }}
       >
         <div
-          className="w-full max-w-[420px] rounded-2xl p-6 flex flex-col items-center gap-5"
+          className="w-full max-w-[420px] rounded-lg p-6 flex flex-col items-center gap-5"
           style={{
             border: "1px solid var(--color-border)",
             background: "var(--color-bg)",
@@ -243,7 +243,7 @@ export default function PassiveSentenceBuilder({
             style={{
               background: score >= 70
                 ? "linear-gradient(135deg, var(--color-success), var(--color-accent))"
-                : "linear-gradient(135deg, #F59E0B, #D97706)",
+                : "linear-gradient(135deg, var(--color-warning), #D97706)",
               boxShadow: score >= 70
                 ? "0 0 32px rgba(46,211,198,0.3)"
                 : "0 0 32px rgba(245,158,11,0.3)",
@@ -252,10 +252,10 @@ export default function PassiveSentenceBuilder({
             {score >= 90 ? "\u{1F31F}" : score >= 70 ? "\u{1F3C6}" : "\u{1F4AA}"}
           </div>
           <div className="text-center">
-            <p className="text-[20px] font-sora font-bold" style={{ color: "var(--color-text)" }}>
+            <p className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
               {score >= 90 ? "Excellent!" : score >= 70 ? "Well done!" : "Keep practicing!"}
             </p>
-            <p className="text-[13px] mt-1" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
               Build Passive Sentences
             </p>
           </div>
@@ -263,12 +263,12 @@ export default function PassiveSentenceBuilder({
             className="px-6 py-3 rounded-full"
             style={{ border: "1px solid rgba(46,211,198,0.25)", background: "rgba(46,211,198,0.08)" }}
           >
-            <span className="text-[24px] font-sora font-bold" style={{ color: "var(--color-success)" }}>{score}%</span>
-            <span className="text-[13px] ml-2" style={{ color: "var(--color-text-secondary)" }}>({correctCount}/{EXERCISES.length} correct)</span>
+            <span className="text-xl font-sora font-bold" style={{ color: "var(--color-success)" }}>{score}%</span>
+            <span className="text-sm ml-2" style={{ color: "var(--color-text-secondary)" }}>({correctCount}/{EXERCISES.length} correct)</span>
           </div>
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
           >
             Continue
@@ -289,18 +289,18 @@ export default function PassiveSentenceBuilder({
       <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-[16px]"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-base"
           style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
         >
           &times;
         </button>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-500 ease-out"
+            className="h-full rounded-full transition-all duration-slow ease-out"
             style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }}
           />
         </div>
-        <span className="text-[12px] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           {exerciseIndex + 1}/{EXERCISES.length}
         </span>
       </div>
@@ -310,30 +310,30 @@ export default function PassiveSentenceBuilder({
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           {/* Difficulty badge */}
           <div className="flex items-center gap-2 mb-4">
-            <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border", diffColor)}>
+            <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
               {current.difficulty.charAt(0).toUpperCase() + current.difficulty.slice(1)}
             </span>
-            <span className="text-[11px]" style={{ color: "var(--color-text-secondary)" }}>
+            <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
               Drag words to build the passive sentence
             </span>
           </div>
 
           {/* Active sentence prompt */}
           <div
-            className="rounded-2xl p-5 mb-4"
+            className="rounded-lg p-5 mb-4"
             style={GRAMMAR_CARD_STYLE}
           >
-            <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
               Active Voice
             </p>
-            <p className="text-[15px] font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
+            <p className="text-base font-semibold leading-relaxed" style={{ color: "var(--color-text)" }}>
               {current.activeSentence}
             </p>
           </div>
 
           {/* Drop slots */}
           <div
-            className="rounded-2xl p-4 mb-4"
+            className="rounded-lg p-4 mb-4"
             style={{
               border: phase === "feedback"
                 ? isCurrentCorrect
@@ -345,7 +345,7 @@ export default function PassiveSentenceBuilder({
                 : "rgba(46,211,198,0.03)",
             }}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-secondary)" }}>
               {phase === "feedback" ? (isCurrentCorrect ? "✓ Correct!" : "✗ Not quite") : "Your Answer — drop words here"}
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -369,12 +369,12 @@ export default function PassiveSentenceBuilder({
                         onClick={() => handleClearSlot(i)}
                         disabled={phase !== "building"}
                         className={cn(
-                          "px-2 py-0.5 rounded-lg font-semibold text-[12px]",
+                          "px-2 py-0.5 rounded-lg font-semibold text-xs",
                           phase === "building" && "cursor-pointer hover:opacity-80"
                         )}
                         style={{
                           color: phase === "feedback"
-                            ? slotVariant === "correct" ? "#10B981" : "#EF4444"
+                            ? slotVariant === "correct" ? "var(--color-success)" : "var(--color-error)"
                             : "var(--color-success)",
                         }}
                       >
@@ -393,10 +393,10 @@ export default function PassiveSentenceBuilder({
               className="rounded-xl p-3 mb-4"
               style={{ border: "1px solid rgba(16,185,129,0.2)", background: "rgba(16,185,129,0.05)" }}
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#10B981" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--color-success)" }}>
                 Correct Answer
               </p>
-              <p className="text-[13px] font-semibold" style={{ color: "var(--color-text)" }}>
+              <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
                 {current.passiveSentence}
               </p>
             </div>
@@ -424,10 +424,10 @@ export default function PassiveSentenceBuilder({
               className="rounded-xl p-4 mb-5"
               style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}
             >
-              <p className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>
                 Rule
               </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-text)" }}>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--color-text)" }}>
                 {current.explanation}
               </p>
             </div>
@@ -439,7 +439,7 @@ export default function PassiveSentenceBuilder({
               {placed.some((w) => w !== null) && (
                 <button
                   onClick={handleReset}
-                  className="flex-1 py-3 rounded-xl font-semibold text-[13px] transition-all"
+                  className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all"
                   style={{ border: "1px solid var(--color-border)", background: "var(--color-primary-soft)", color: "var(--color-text-secondary)" }}
                 >
                   Reset
@@ -449,7 +449,7 @@ export default function PassiveSentenceBuilder({
                 onClick={handleSubmit}
                 disabled={!allSlotsFilled}
                 className={cn(
-                  "flex-1 py-3 rounded-xl font-semibold text-[14px] transition-all",
+                  "flex-1 py-3 rounded-xl font-semibold text-sm transition-all",
                   allSlotsFilled ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
                 )}
                 style={{
@@ -467,7 +467,7 @@ export default function PassiveSentenceBuilder({
           {phase === "feedback" && (
             <button
               onClick={handleNext}
-              className="w-full py-3.5 rounded-xl font-semibold text-[14px] text-white transition-all hover:opacity-90"
+              className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
               style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
             >
               {isLast ? "See Results" : "Next Exercise →"}
