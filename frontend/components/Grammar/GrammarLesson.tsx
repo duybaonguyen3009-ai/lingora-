@@ -278,7 +278,7 @@ export default function GrammarLessonView({
       <div className={GRAMMAR_CONTENT_CONTAINER}>
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           {/* Difficulty badge */}
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>
               {current.difficulty.charAt(0).toUpperCase() + current.difficulty.slice(1)}
             </span>
@@ -297,7 +297,7 @@ export default function GrammarLessonView({
           )}
 
           {/* Question card with inline blanks */}
-          <div className="rounded-lg p-5 mb-3 w-full" style={GRAMMAR_CARD_STYLE}>
+          <div className="rounded-lg p-4 lg:p-3.5 mb-3 w-full" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
               <div className="text-base font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
                 {sentenceParts.map((part, i) => (
@@ -415,7 +415,7 @@ export default function GrammarLessonView({
 
           {/* Explanation */}
           {showingFeedback && (
-            <div className="mb-4 w-full animate-in fade-in slide-in-from-bottom-2 duration-normal">
+            <div className="mb-3 lg:mb-2 w-full animate-in fade-in slide-in-from-bottom-2 duration-normal">
               <GrammarExplanation
                 isCorrect={isCorrect}
                 correctAnswer={current.options[current.correctIndex]}

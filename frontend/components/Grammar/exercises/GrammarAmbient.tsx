@@ -95,6 +95,9 @@ export const GRAMMAR_CARD_STYLE: React.CSSProperties = {
 /**
  * Shared content container class for all grammar overlay screens.
  * Controls max-width, padding, centering, and vertical layout.
+ *
+ * On mobile: scrollable (overflow-y-auto) with bottom padding for BottomNav.
+ * On lg+: no scroll (overflow-hidden), content centered vertically in viewport.
  */
 export const GRAMMAR_CONTENT_CONTAINER =
-  "flex-1 overflow-y-auto pt-4 pb-24 px-5 max-w-[540px] lg:max-w-[680px] xl:max-w-[760px] mx-auto w-full relative z-10 flex flex-col items-center min-h-0 lg:justify-center lg:min-h-full";
+  "flex-1 overflow-y-auto lg:overflow-hidden pt-2 pb-20 lg:pb-4 px-5 max-w-[540px] lg:max-w-[680px] xl:max-w-[760px] mx-auto w-full relative z-10 flex flex-col items-center justify-center min-h-0";

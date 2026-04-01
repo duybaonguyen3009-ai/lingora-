@@ -267,7 +267,7 @@ export default function GrammarExam({
       {/* Content */}
       <div className={GRAMMAR_CONTENT_CONTAINER}>
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold" style={{ color: "var(--color-text-secondary)" }}>Question {index + 1} of {questions.length}</span>
           </div>
 
@@ -278,7 +278,7 @@ export default function GrammarExam({
           )}
 
           {/* Question card */}
-          <div className="rounded-lg p-5 mb-3 w-full" style={GRAMMAR_CARD_STYLE}>
+          <div className="rounded-lg p-4 lg:p-3.5 mb-3 w-full" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
               <div className="text-base font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
                 {sentenceParts.map((part, i) => (
@@ -352,7 +352,7 @@ export default function GrammarExam({
           )}
 
           {showingFeedback && current && (
-            <div className="mb-4 w-full">
+            <div className="mb-3 lg:mb-2 w-full">
               <GrammarExplanation
                 isCorrect={isCorrect}
                 correctAnswer={current.options[current.correctIndex]}

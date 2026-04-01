@@ -41,7 +41,7 @@ export default function GrammarExplanation({
     >
       {/* Header */}
       <div
-        className="px-4 py-3 flex items-center gap-2.5"
+        className="px-4 py-2 lg:py-1.5 flex items-center gap-2.5"
         style={{
           borderBottom: isCorrect
             ? "1px solid rgba(16,185,129,0.15)"
@@ -63,7 +63,7 @@ export default function GrammarExplanation({
       </div>
 
       {/* Body */}
-      <div className="px-4 py-3.5 flex flex-col gap-3">
+      <div className="px-4 py-2.5 lg:py-2 flex flex-col gap-2 lg:gap-1.5">
         {/* Why */}
         <div>
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>
