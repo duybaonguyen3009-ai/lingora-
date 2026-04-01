@@ -524,7 +524,7 @@ export default function GrammarTab() {
   }
 
   return (
-    <div className="max-w-[600px] mx-auto">
+    <div className="max-w-[600px] lg:max-w-[800px] xl:max-w-[960px] mx-auto">
       {/* Progress hero */}
       <ProgressHero
         completedCount={progress.completedLessonsCount}

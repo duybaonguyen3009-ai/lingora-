@@ -137,7 +137,7 @@ export default function HomePage() {
       <Topbar streak={displayStreak} />
 
       <main className="flex-1 overflow-y-auto pb-24 relative z-10">
-        <div className="max-w-xl mx-auto px-5 py-6">
+        <div className={`mx-auto px-5 py-6 ${activeTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-xl"}`}>
 
           {/* ── HOME TAB ── */}
           {activeTab === "home" && (
