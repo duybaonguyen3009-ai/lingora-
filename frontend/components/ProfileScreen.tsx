@@ -10,6 +10,7 @@
 import SpeakingMetrics from "./SpeakingMetrics";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import { useAuthStore } from "@/lib/stores/authStore";
 import type { SpeakingMetricsData, GamificationData } from "@/lib/types";
 
 interface ProfileScreenProps {
@@ -121,7 +122,8 @@ function BadgeGrid({ badges }: { badges: Array<{ slug: string; name: string; awa
 }
 
 export default function ProfileScreen({ userId, metrics, metricsLoading, gamification }: ProfileScreenProps) {
-  const isGuest = !userId || userId.startsWith("guest-");
+  const user = useAuthStore((s) => s.user);
+  const isGuest = !user;
 
   return (
     <div className="flex flex-col gap-5">
@@ -133,7 +135,7 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
             background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
           }}
         >
-          {isGuest ? "G" : "AN"}
+          {isGuest ? "G" : user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
         </div>
         <div>
           <h2 className="text-lg font-sora font-bold" style={{ color: "var(--color-text)" }}>
