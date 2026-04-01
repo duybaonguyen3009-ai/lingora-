@@ -29,6 +29,9 @@ function createStorageProvider() {
   if (_provider) return _provider;
 
   const provider = process.env.STORAGE_PROVIDER || "mock";
+  if (provider === "mock" && process.env.NODE_ENV === "production") {
+    console.warn("[storage] WARNING: STORAGE_PROVIDER is 'mock' in production. Audio uploads will be lost on restart.");
+  }
 
   switch (provider) {
     case "r2":

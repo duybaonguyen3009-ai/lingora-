@@ -22,6 +22,9 @@ function createTtsProvider() {
   if (_provider) return _provider;
 
   const provider = process.env.TTS_PROVIDER || "mock";
+  if (provider === "mock" && process.env.NODE_ENV === "production") {
+    console.warn("[tts] WARNING: TTS_PROVIDER is 'mock' in production. Users will not hear examiner voice.");
+  }
   console.log(`[tts] Provider selected: "${provider}" (env TTS_PROVIDER=${process.env.TTS_PROVIDER || "(not set)"})`);
 
   switch (provider) {
