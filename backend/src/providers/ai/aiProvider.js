@@ -25,6 +25,9 @@ function createAiProvider() {
   if (_provider) return _provider;
 
   const provider = process.env.AI_PROVIDER || "mock";
+  if (provider === "mock" && process.env.NODE_ENV === "production") {
+    console.warn("[ai] WARNING: AI_PROVIDER is 'mock' in production. Users will receive fake AI responses.");
+  }
   console.log(`[ai] Provider selected: "${provider}" (env AI_PROVIDER=${process.env.AI_PROVIDER || "(not set)"})`);
 
   switch (provider) {

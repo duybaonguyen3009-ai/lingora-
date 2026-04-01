@@ -45,12 +45,18 @@ const Onboarding: React.FC = () => {
   const [animating, setAnimating] = useState(false);
 
   /* ── Check localStorage on mount ─────────────────────────────────── */
+  // If the splash screen was just shown this session, delay onboarding
+  // so they don't stack on top of each other (splash 1.8s + fade 0.4s).
   useEffect(() => {
     try {
       const done = localStorage.getItem(STORAGE_KEY);
-      if (!done) {
-        setVisible(true);
-      }
+      if (done) return;
+
+      const splashJustShown = sessionStorage.getItem("lingona-splash-shown");
+      const delay = splashJustShown ? 2400 : 0;
+
+      const timer = setTimeout(() => setVisible(true), delay);
+      return () => clearTimeout(timer);
     } catch {
       // localStorage unavailable — don't show onboarding
     }
@@ -217,6 +223,15 @@ const Onboarding: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Skip button ───────────────────────────────────────────────── */}
+      <button
+        onClick={finish}
+        className="absolute top-6 right-6 text-sm transition-colors"
+        style={{ color: "var(--color-text-secondary)" }}
+      >
+        Skip
+      </button>
 
       {/* ── Step indicator dots ───────────────────────────────────────── */}
       <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-2">

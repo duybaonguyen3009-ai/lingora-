@@ -431,8 +431,8 @@ export default function ScenarioConversation({
             </div>
 
             {!voice.isSupported && (
-              <p className="text-xs mt-2 text-center" style={{ color: "var(--color-text-secondary)" }}>
-                Voice input requires Chrome or Edge.
+              <p className="text-xs mt-2 px-3 py-1.5 rounded text-center" style={{ color: "var(--color-text-secondary)", backgroundColor: "var(--color-primary-soft)" }}>
+                Voice input is not available in this browser. Use Chrome or Edge for the best experience, or type your answers below.
               </p>
             )}
           </div>

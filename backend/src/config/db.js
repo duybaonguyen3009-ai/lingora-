@@ -18,6 +18,10 @@ const pool = new Pool({
   max: 10,                 // maximum number of clients in the pool
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+  // Railway (and most managed Postgres providers) require SSL connections.
+  // rejectUnauthorized: false is needed because managed providers use
+  // self-signed certificates.
+  ssl: config.env === "production" ? { rejectUnauthorized: false } : false,
 });
 
 // Surface connection errors without crashing — the error handler in each

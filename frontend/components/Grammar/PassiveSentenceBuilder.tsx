@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./exercises/DragToken";
 import DropSlot from "./exercises/DropSlot";
-import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE } from "./exercises/GrammarAmbient";
+import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE, GRAMMAR_CONTENT_CONTAINER } from "./exercises/GrammarAmbient";
 import { useGrammarSounds } from "./exercises/useGrammarSounds";
 
 // ---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ export default function PassiveSentenceBuilder({
     >
       <GrammarAmbientGlow />
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
+      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-bg)", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-full flex items-center justify-center text-base"
@@ -294,7 +294,7 @@ export default function PassiveSentenceBuilder({
         >
           &times;
         </button>
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+        <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
             className="h-full rounded-full transition-all duration-slow ease-out"
             style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }}
@@ -306,7 +306,7 @@ export default function PassiveSentenceBuilder({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] lg:max-w-[750px] xl:max-w-[900px] mx-auto w-full relative z-10 flex flex-col min-h-0 lg:justify-center lg:min-h-full">
+      <div className={GRAMMAR_CONTENT_CONTAINER}>
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
           {/* Difficulty badge */}
           <div className="flex items-center gap-2 mb-4">
@@ -404,7 +404,7 @@ export default function PassiveSentenceBuilder({
 
           {/* Draggable word bank */}
           {phase === "building" && (
-            <div className="flex flex-wrap gap-2 mb-5">
+            <div className="flex flex-wrap gap-2 mb-3 w-full">
               {current.shuffledBlocks.map((word, i) => (
                 <DragToken
                   key={`${word}-${i}`}
@@ -421,7 +421,7 @@ export default function PassiveSentenceBuilder({
           {/* Explanation */}
           {phase === "feedback" && (
             <div
-              className="rounded-xl p-4 mb-5"
+              className="rounded-xl p-4 mb-4 w-full"
               style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-card)" }}
             >
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-accent)" }}>

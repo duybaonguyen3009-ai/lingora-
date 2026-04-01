@@ -22,7 +22,7 @@ const app = createApp();
 
 const server = app.listen(PORT, () => {
   console.log("─────────────────────────────────────────");
-  console.log(`  Lingora API`);
+  console.log(`  Lingona API`);
   console.log(`  Env  : ${NODE_ENV}`);
   console.log(`  Port : ${PORT}`);
   console.log(`  URL  : http://localhost:${PORT}`);

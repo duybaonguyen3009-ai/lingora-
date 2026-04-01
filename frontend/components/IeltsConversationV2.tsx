@@ -782,7 +782,7 @@ export default function IeltsConversationV2({
       const state = result.ieltsState;
 
       if (state) {
-        console.log(`[ielts-ui] part=${state.part} phase=${state.phase} qIdx=${state.questionIndex}`);
+        if (process.env.NODE_ENV === "development") console.log(`[ielts-ui] part=${state.part} phase=${state.phase} qIdx=${state.questionIndex}`);
 
         if (state.phase === "part1_transition") {
           // This should only happen if identity check path was skipped somehow
@@ -990,7 +990,7 @@ export default function IeltsConversationV2({
       // Check the IELTS state from the response
       const state = result.ieltsState;
       if (state) {
-        console.log(`[ielts-ui] handlePart2End: part=${state.part} phase=${state.phase}`);
+        if (process.env.NODE_ENV === "development") console.log(`[ielts-ui] handlePart2End: part=${state.part} phase=${state.phase}`);
         if (state.phase === "long_turn") {
           // Backend was still at cue_card when we submitted — re-submit to advance
           setIsProcessing(false);
@@ -1264,7 +1264,7 @@ export default function IeltsConversationV2({
     try {
       localStorage.setItem(key, JSON.stringify({ accuracy, timestamp: Date.now() }));
     } catch { /* localStorage might be full — ignore */ }
-    console.log(`[ielts-v2] Accuracy feedback: ${accuracy} for session ${sessionId}`);
+    if (process.env.NODE_ENV === "development") console.log(`[ielts-v2] Accuracy feedback: ${accuracy} for session ${sessionId}`);
   }, [sessionId]);
 
   if (phase === "summary" && diagnosticData) {
@@ -1720,8 +1720,8 @@ export default function IeltsConversationV2({
             </div>
 
             {!voice.isSupported && (
-              <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--ielts-text-faint)' }}>
-                Voice input requires Chrome or Edge
+              <p className="text-xs mt-2 px-3 py-1.5 rounded text-center" style={{ color: 'var(--ielts-text-faint)', backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                Voice input is not available in this browser. Use Chrome or Edge for the best experience, or type your answers below.
               </p>
             )}
           </div>

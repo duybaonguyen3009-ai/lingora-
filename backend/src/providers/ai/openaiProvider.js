@@ -65,10 +65,11 @@ function getClient() {
  * @returns {Promise<any>}
  */
 function withTimeout(promise, ms = OPENAI_TIMEOUT_MS) {
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error(`OpenAI request timed out after ${ms}ms`)), ms)
-  );
-  return Promise.race([promise, timeout]);
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`OpenAI request timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 // ---------------------------------------------------------------------------
@@ -129,10 +130,9 @@ async function generateResponse(systemPrompt, conversationHistory, options = {})
       ...conversationHistory,
     ];
 
-    console.log(`[ai] provider: openai`);
-    console.log(`[ai] model: ${_model}`);
-    console.log(`[ai] messages: ${messages.length} total (system + ${conversationHistory.length} conversation)`);
-    console.log(`[ai] messages payload: ${JSON.stringify(messages.map(m => ({ role: m.role, content: m.content.slice(0, 120) + (m.content.length > 120 ? "..." : "") })))}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[ai] provider: openai, model: ${_model}, messages: ${messages.length}`);
+    }
 
     const response = await withTimeout(
       openai.chat.completions.create({

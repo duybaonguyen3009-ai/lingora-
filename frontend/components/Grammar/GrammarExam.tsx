@@ -14,7 +14,7 @@ import GrammarExplanation from "./GrammarExplanation";
 import DragDropProvider, { type DragEndEvent } from "./exercises/DragDropProvider";
 import DragToken, { DragTokenOverlay } from "./exercises/DragToken";
 import DropSlot from "./exercises/DropSlot";
-import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE } from "./exercises/GrammarAmbient";
+import { GrammarAmbientGlow, GRAMMAR_CARD_STYLE, GRAMMAR_CONTENT_CONTAINER } from "./exercises/GrammarAmbient";
 import { useGrammarSounds } from "./exercises/useGrammarSounds";
 import {
   extractDragTokens,
@@ -254,9 +254,9 @@ export default function GrammarExam({
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--color-bg)" }}>
       <GrammarAmbientGlow />
-      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)" }}>
+      <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-bg)", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-base" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>&times;</button>
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
+        <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div className="h-full rounded-full transition-all duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
         <div className={cn("flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold border", timeWarning ? "bg-red-500/10 border-red-500/25 text-red-400" : "border-transparent")} style={!timeWarning ? { background: "var(--color-primary-soft)", color: "var(--color-text-secondary)" } : {}}>
@@ -265,9 +265,9 @@ export default function GrammarExam({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] lg:max-w-[750px] xl:max-w-[900px] mx-auto w-full relative z-10 flex flex-col min-h-0 lg:justify-center lg:min-h-full">
+      <div className={GRAMMAR_CONTENT_CONTAINER}>
         <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold" style={{ color: "var(--color-text-secondary)" }}>Question {index + 1} of {questions.length}</span>
           </div>
 
@@ -278,7 +278,7 @@ export default function GrammarExam({
           )}
 
           {/* Question card */}
-          <div className="rounded-lg p-5 mb-5" style={GRAMMAR_CARD_STYLE}>
+          <div className="rounded-lg p-4 lg:p-3.5 mb-3 w-full" style={GRAMMAR_CARD_STYLE}>
             {hasBlank ? (
               <div className="text-base font-semibold leading-[2.2] flex flex-wrap items-center gap-x-1" style={{ color: "var(--color-text)" }}>
                 {sentenceParts.map((part, i) => (
@@ -324,7 +324,7 @@ export default function GrammarExam({
 
           {/* Drag tokens */}
           {phase === "question" && (
-            <div className="flex flex-wrap gap-2.5 mb-5">
+            <div className="flex flex-wrap gap-2.5 mb-3 w-full">
               {dragTokens.map((token, i) => {
                 const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption !== null;
                 return (
@@ -338,7 +338,7 @@ export default function GrammarExam({
 
           {/* Multi-blank submit */}
           {isMultiBlank && phase === "question" && isAnswered && (
-            <Button variant="primary" size="lg" fullWidth className="mb-5" onClick={handleSubmitMultiBlank}>
+            <Button variant="primary" size="lg" fullWidth className="mb-4 w-full" onClick={handleSubmitMultiBlank}>
               Check Answer
             </Button>
           )}
@@ -352,7 +352,7 @@ export default function GrammarExam({
           )}
 
           {showingFeedback && current && (
-            <div className="mb-5">
+            <div className="mb-3 lg:mb-2 w-full">
               <GrammarExplanation
                 isCorrect={isCorrect}
                 correctAnswer={current.options[current.correctIndex]}

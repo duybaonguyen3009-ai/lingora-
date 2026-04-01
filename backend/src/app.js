@@ -95,7 +95,7 @@ function createApp() {
   // When using the mock storage provider, the frontend PUTs audio blobs to
   // /mock-storage/:key.  This route accepts the binary body and stores it
   // in-memory so the mock speech provider can access it.
-  if ((process.env.STORAGE_PROVIDER || "mock") === "mock") {
+  if ((process.env.STORAGE_PROVIDER || "mock") === "mock" && process.env.NODE_ENV !== "production") {
     const mockStorage = require("./providers/storage/mockStorage");
     app.put("/mock-storage/:key", express.raw({ type: "*/*", limit: "10mb" }), (req, res) => {
       const key = decodeURIComponent(req.params.key);

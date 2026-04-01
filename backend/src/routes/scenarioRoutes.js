@@ -11,6 +11,7 @@
 
 const { Router } = require("express");
 const { verifyToken } = require("../middleware/auth");
+const { aiLimiters, ttsLimiters } = require("../middleware/rateLimiters");
 const scenarioController = require("../controllers/scenarioController");
 
 const router = Router();
@@ -24,15 +25,15 @@ router.get("/sessions", verifyToken, scenarioController.getUserSessions);
 router.get("/sessions/:sessionId", verifyToken, scenarioController.getSession);
 
 // POST /api/v1/scenarios/sessions/:sessionId/turns
-router.post("/sessions/:sessionId/turns", verifyToken, scenarioController.submitTurn);
+router.post("/sessions/:sessionId/turns", verifyToken, ...aiLimiters, scenarioController.submitTurn);
 
 // POST /api/v1/scenarios/sessions/:sessionId/end
-router.post("/sessions/:sessionId/end", verifyToken, scenarioController.endSession);
+router.post("/sessions/:sessionId/end", verifyToken, ...aiLimiters, scenarioController.endSession);
 
 // ---- TTS (text-to-speech for examiner voice, MUST come before /:scenarioId) --
 
 // POST /api/v1/scenarios/tts
-router.post("/tts", verifyToken, scenarioController.synthesizeSpeech);
+router.post("/tts", verifyToken, ...ttsLimiters, scenarioController.synthesizeSpeech);
 
 // ---- Scenario catalogue (public) -----------------------------------------
 
@@ -45,6 +46,6 @@ router.get("/:scenarioId", scenarioController.getScenario);
 // ---- Start session (authenticated) ----------------------------------------
 
 // POST /api/v1/scenarios/:scenarioId/start
-router.post("/:scenarioId/start", verifyToken, scenarioController.startSession);
+router.post("/:scenarioId/start", verifyToken, ...aiLimiters, scenarioController.startSession);
 
 module.exports = router;

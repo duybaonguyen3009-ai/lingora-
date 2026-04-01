@@ -113,7 +113,7 @@ export default function GrammarFillBlank({
 
   return (
     <DragDropProvider onDragEnd={handleDragEnd} renderOverlay={renderOverlay}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 w-full">
         {/* Category + difficulty */}
         <div className="flex items-center gap-2">
           <span className={cn("text-xs font-bold px-2 py-0.5 rounded border", diffColor)}>

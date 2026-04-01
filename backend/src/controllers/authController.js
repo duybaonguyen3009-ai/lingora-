@@ -103,7 +103,7 @@ async function register(req, res, next) {
         email: (v) => EMAIL_REGEX.test(v) ? null : "email must be a valid email address.",
         password: (v) => v.length >= 8 ? null : "password must be at least 8 characters.",
         role: (v) => {
-          const valid = ["kid", "teacher", "parent", "admin"];
+          const valid = ["kid", "teacher", "parent"];
           return valid.includes(v) ? null : `role must be one of: ${valid.join(", ")}.`;
         },
         dob: (v) => {

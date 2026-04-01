@@ -89,6 +89,12 @@ async function getProgress(req, res, next) {
       return next(err);
     }
 
+    if (req.user.id !== userId) {
+      const err = new Error("You can only view your own progress.");
+      err.status = 403;
+      return next(err);
+    }
+
     const progress = await progressService.getProgress(userId);
 
     return sendSuccess(res, {

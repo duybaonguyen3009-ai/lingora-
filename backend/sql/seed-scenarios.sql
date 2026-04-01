@@ -6,7 +6,7 @@
 
 BEGIN;
 
-INSERT INTO scenarios (id, title, description, category, difficulty, system_prompt, opening_message, emoji, tags, estimated_turns) VALUES
+INSERT INTO scenarios (id, title, description, category, difficulty, system_prompt, opening_message, emoji, tags, expected_turns) VALUES
 
 -- daily (2)
 (

@@ -640,22 +640,42 @@ export async function getScenarioHistory(): Promise<SessionDetail[]> {
 /**
  * POST /api/v1/scenarios/tts — synthesize speech from text.
  * Returns audio blob (mp3) or null if TTS is not available (204).
+ *
+ * Uses the same 401-retry pattern as apiPostAuth so the examiner's voice
+ * keeps working even if the access token expires mid-IELTS exam (the exam
+ * can run 14+ minutes against a 15-minute token).
  */
 export async function synthesizeSpeech(text: string): Promise<Blob | null> {
-  const token = useAuthStore.getState().accessToken;
-  const res = await fetch(`${BASE_URL}/scenarios/tts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ text }),
-  });
+  const makeReq = (token: string | null) =>
+    fetch(`${BASE_URL}/scenarios/tts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: JSON.stringify({ text }),
+    });
 
-  if (res.status === 204) return null; // TTS not available (mock mode)
-  if (!res.ok) return null; // Graceful fallback — never block the exam flow
+  try {
+    const initialToken = useAuthStore.getState().accessToken;
+    let res = await makeReq(initialToken);
 
-  return res.blob();
+    // Silent refresh on 401 — same pattern as apiPostAuth
+    if (res.status === 401) {
+      const ok = await tryRefresh();
+      if (ok) {
+        res = await makeReq(useAuthStore.getState().accessToken);
+      }
+    }
+
+    if (res.status === 204) return null; // TTS not available (mock mode)
+    if (!res.ok) return null; // Graceful fallback — never block the exam flow
+
+    return res.blob();
+  } catch {
+    return null; // Network error — degrade to text-only
+  }
 }
 
 // ---------------------------------------------------------------------------

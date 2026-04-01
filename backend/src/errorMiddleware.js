@@ -29,9 +29,17 @@ function notFound(req, res, next) {
 function errorHandler(err, req, res, next) {
   const statusCode = err.status || err.statusCode || 500;
 
+  // For 5xx errors in production, return a generic message to avoid leaking
+  // internal details (DB connection strings, file paths, stack info).
+  // 4xx errors are intentional and safe to surface to the client.
+  const isServerError = statusCode >= 500;
+  const isProduction  = process.env.NODE_ENV === "production";
+
   const payload = {
     success: false,
-    message: err.message || "Internal Server Error",
+    message: (isServerError && isProduction)
+      ? "Something went wrong. Please try again later."
+      : (err.message || "Internal Server Error"),
   };
 
   // Include stack trace only during development

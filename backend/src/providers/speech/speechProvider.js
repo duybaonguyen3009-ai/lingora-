@@ -37,6 +37,9 @@ function createSpeechProvider() {
   if (_provider) return _provider;
 
   const provider = process.env.SPEECH_PROVIDER || "mock";
+  if (provider === "mock" && process.env.NODE_ENV === "production") {
+    console.warn("[speech] WARNING: SPEECH_PROVIDER is 'mock' in production. Users will receive fake pronunciation scores.");
+  }
 
   switch (provider) {
     case "azure":

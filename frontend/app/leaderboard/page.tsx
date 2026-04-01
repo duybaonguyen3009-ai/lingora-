@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
@@ -21,6 +22,13 @@ export default function LeaderboardPage() {
     <div className="min-h-screen px-4 sm:px-8 py-10 max-w-2xl mx-auto" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}>
       {/* Header */}
       <div className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-sm mb-4 transition-colors"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          <span aria-hidden>←</span> Back to home
+        </Link>
         <h1 className="text-xl font-sora font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
           Top learners ranked by XP earned

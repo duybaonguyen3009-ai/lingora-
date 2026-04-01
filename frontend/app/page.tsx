@@ -11,7 +11,6 @@ import TodayFocusCard from "@/components/TodayFocusCard";
 import { GrammarTab } from "@/components/Grammar";
 import ScenarioList from "@/components/ScenarioList";
 import ScenarioConversation from "@/components/ScenarioConversation";
-import IeltsConversation from "@/components/IeltsConversation";
 import IeltsConversationV2 from "@/components/IeltsConversationV2";
 import ExamScreen from "@/components/ExamScreen";
 import ProfileScreen from "@/components/ProfileScreen";
@@ -136,7 +135,7 @@ export default function HomePage() {
       />
       <Topbar streak={displayStreak} />
 
-      <main className="flex-1 overflow-y-auto pb-24 relative z-10">
+      <main className="flex-1 overflow-y-auto pb-24">
         <div className={`mx-auto px-5 py-6 ${activeTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-xl"}`}>
 
           {/* ── HOME TAB ── */}
@@ -171,10 +170,11 @@ export default function HomePage() {
           )}
 
           {/* ── GRAMMAR TAB — Gamified tenses curriculum ── */}
+          {/* No animate-fadeSlideUp wrapper here — the CSS animation's
+              transform: translateY(0) creates a stacking context that traps
+              grammar lesson/exam overlays (fixed z-50) below BottomNav (z-40). */}
           {activeTab === "practice" && (
-            <div className="animate-fadeSlideUp">
-              <GrammarTab />
-            </div>
+            <GrammarTab />
           )}
 
           {/* ── EXAM TAB ── */}

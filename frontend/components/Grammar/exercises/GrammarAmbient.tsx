@@ -81,10 +81,23 @@ export function GrammarAmbientGlow() {
 
 /**
  * Elevated card style props for grammar exercise cards.
+ * Deepened shadow and border for better contrast against background.
  */
 export const GRAMMAR_CARD_STYLE: React.CSSProperties = {
-  border: "1px solid rgba(139,92,246,0.12)",
+  border: "1px solid rgba(139,92,246,0.18)",
   background: "color-mix(in srgb, var(--color-bg-card) 92%, rgba(139,92,246,0.06))",
   boxShadow:
-    "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.04)",
+    "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.05)",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)",
 };
+
+/**
+ * Shared content container class for all grammar overlay screens.
+ * Controls max-width, padding, centering, and vertical layout.
+ *
+ * On mobile: scrollable (overflow-y-auto) with bottom padding for BottomNav.
+ * On lg+: no scroll (overflow-hidden), content centered vertically in viewport.
+ */
+export const GRAMMAR_CONTENT_CONTAINER =
+  "flex-1 overflow-y-auto lg:overflow-hidden pt-2 pb-20 lg:pb-4 px-5 max-w-[540px] lg:max-w-[680px] xl:max-w-[760px] mx-auto w-full relative z-10 flex flex-col items-center justify-center min-h-0";

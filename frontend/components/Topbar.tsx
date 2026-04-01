@@ -3,12 +3,18 @@
 import { IconFire } from "./Icons";
 import ThemeToggle from "./ThemeToggle";
 import Mascot from "@/components/ui/Mascot";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 interface TopbarProps {
   streak?: number;
 }
 
 export default function Topbar({ streak = 0 }: TopbarProps) {
+  const user = useAuthStore((s) => s.user);
+  const initials = user?.name
+    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
+
   return (
     <header
       className="h-16 px-5 flex items-center justify-between gap-4 flex-shrink-0"
@@ -58,7 +64,7 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
             background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
           }}
         >
-          AN
+          {initials}
         </div>
       </div>
       {streak > 0 && (

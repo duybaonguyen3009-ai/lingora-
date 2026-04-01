@@ -21,16 +21,6 @@ import Input from "@/components/ui/Input";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function minDateISO(): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - 100);
-  return d.toISOString().split("T")[0];
-}
-
 // ─── Shared select style (Input component handles <input> elements) ───────────
 
 const selectCls = cn(
@@ -58,7 +48,6 @@ export default function RegisterPage() {
   const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role,         setRole]         = useState<"kid" | "teacher" | "parent">("kid");
-  const [dob,          setDob]          = useState("");
   const [error,        setError]        = useState<string | null>(null);
   const [submitting,   setSubmitting]   = useState(false);
 
@@ -83,19 +72,12 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const result = await registerUser({
+      await registerUser({
         name:     name.trim(),
         email:    email.trim().toLowerCase(),
         password,
         role,
-        ...(dob ? { dob } : {}),
       });
-
-      // COPPA: under-13 account created but parental consent needed (Task 7)
-      if (result.needsParentalConsent) {
-        // TODO (Task 7): redirect to "/consent-pending" page
-        console.info("[COPPA] Parental consent required for:", result.user.email);
-      }
 
       // Migrate any progress accumulated as a guest into the new account.
       // Non-critical: swallow errors so a migration hiccup never blocks registration.
@@ -206,45 +188,22 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Role + Date of birth — side by side */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
-                I am a…
-              </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as "kid" | "teacher" | "parent")}
-                className={cn(selectCls, "cursor-pointer")}
-                style={selectStyle}
-              >
-                <option value="kid">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="parent">Parent</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
-                Date of birth
-              </label>
-              <Input
-                type="date"
-                inputSize="md"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                max={todayISO()}
-                min={minDateISO()}
-                className="cursor-pointer"
-              />
-            </div>
+          {/* Role */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium tracking-[0.2px]" style={{ color: "var(--color-text-secondary)" }}>
+              I am a…
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "kid" | "teacher" | "parent")}
+              className={cn(selectCls, "cursor-pointer")}
+              style={selectStyle}
+            >
+              <option value="kid">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="parent">Parent</option>
+            </select>
           </div>
-
-          {/* COPPA notice */}
-          <p className="text-xs leading-[1.6]" style={{ color: "var(--color-text-secondary)" }}>
-            Date of birth is used for COPPA age verification. Accounts for users
-            under 13 require a parent or guardian&apos;s email consent before activation.
-          </p>
 
           {/* Error banner */}
           {error && (

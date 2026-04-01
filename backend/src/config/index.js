@@ -7,8 +7,20 @@ const env = process.env.NODE_ENV || "development";
 // In development we fall back to insecure placeholders so new engineers can
 // run the app without any setup, but log a warning.
 if (env === "production") {
-  if (!process.env.JWT_ACCESS_SECRET) {
-    throw new Error("JWT_ACCESS_SECRET environment variable is required in production.");
+  const required = {
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+    DATABASE_URL:      process.env.DATABASE_URL,
+    CORS_ORIGIN:       process.env.CORS_ORIGIN,
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+
+  if (missing.length) {
+    throw new Error(
+      `Missing required environment variable(s) in production: ${missing.join(", ")}`
+    );
   }
 }
 
