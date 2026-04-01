@@ -495,7 +495,11 @@ function UnitCard({
 // Main Component
 // ---------------------------------------------------------------------------
 
-export default function GrammarTab() {
+interface GrammarTabProps {
+  onOverlayChange?: (open: boolean) => void;
+}
+
+export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
   const progress = useGrammarProgress();
   const [activeLesson, setActiveLesson] = useState<GrammarLessonType | null>(null);
   const [activeExamUnit, setActiveExamUnit] = useState<GrammarUnit | null>(null);
@@ -503,6 +507,12 @@ export default function GrammarTab() {
 
   // English Tense accordion — collapsed by default
   const [tensesExpanded, setTensesExpanded] = useState(false);
+
+  // Notify parent when a full-screen overlay is active so it can hide Topbar/BottomNav
+  const overlayOpen = !!(activeLesson || activeExamUnit || showFinalExam);
+  useEffect(() => {
+    onOverlayChange?.(overlayOpen);
+  }, [overlayOpen, onOverlayChange]);
 
   // Gamification state
   const [xpGain, setXpGain] = useState<number | null>(null);

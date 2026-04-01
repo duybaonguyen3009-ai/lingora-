@@ -44,6 +44,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
   const [ieltsScenario, setIeltsScenario] = useState<Scenario | null>(null);
+  const [grammarOverlayOpen, setGrammarOverlayOpen] = useState(false);
 
   const userId = useCurrentUserId();
   const { progress } = useProgress(userId);
@@ -133,7 +134,7 @@ export default function HomePage() {
         variant={blobVariant}
         centerGlow={activeTab === "home" || activeTab === "speak"}
       />
-      <Topbar streak={displayStreak} />
+      {!grammarOverlayOpen && <Topbar streak={displayStreak} />}
 
       <main className="flex-1 overflow-y-auto pb-24">
         <div className={`mx-auto px-5 py-6 ${activeTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-xl"}`}>
@@ -174,7 +175,7 @@ export default function HomePage() {
               transform: translateY(0) creates a stacking context that traps
               grammar lesson/exam overlays (fixed z-50) below BottomNav (z-40). */}
           {activeTab === "practice" && (
-            <GrammarTab />
+            <GrammarTab onOverlayChange={setGrammarOverlayOpen} />
           )}
 
           {/* ── EXAM TAB ── */}
@@ -201,7 +202,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      <BottomNav active={activeTab} onChange={setActiveTab} />
+      {!grammarOverlayOpen && <BottomNav active={activeTab} onChange={setActiveTab} />}
       <Onboarding />
     </div>
   );
