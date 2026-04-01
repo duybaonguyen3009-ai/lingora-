@@ -348,7 +348,7 @@ export default function ModalVerbsLesson({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] lg:max-w-[750px] xl:max-w-[900px] mx-auto w-full relative z-10 flex flex-col lg:justify-center">
+      <div className="flex-1 overflow-y-auto px-5 py-6 pb-24 max-w-[500px] lg:max-w-[750px] xl:max-w-[900px] mx-auto w-full relative z-10 flex flex-col min-h-0 lg:justify-center lg:min-h-full">
         {current.type === "explanation" && (
           <ExplanationPanel
             key={`exp-${current.dataIndex}`}

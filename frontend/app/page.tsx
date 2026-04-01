@@ -94,11 +94,10 @@ export default function HomePage() {
     setActiveTab(rec.actionTarget);
   };
 
-  // Full-screen IELTS overlay — V2 (experimental) or V1 (stable)
+  // Full-screen IELTS overlay — V2 is now the default
   if (ieltsScenario) {
-    const IeltsComponent = isExperimental ? IeltsConversationV2 : IeltsConversation;
     return (
-      <IeltsComponent
+      <IeltsConversationV2
         scenario={ieltsScenario}
         onClose={() => { setIeltsScenario(null); }}
         onComplete={handleConversationComplete}
