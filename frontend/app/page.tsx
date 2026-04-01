@@ -11,7 +11,6 @@ import TodayFocusCard from "@/components/TodayFocusCard";
 import { GrammarTab } from "@/components/Grammar";
 import ScenarioList from "@/components/ScenarioList";
 import ScenarioConversation from "@/components/ScenarioConversation";
-import IeltsConversation from "@/components/IeltsConversation";
 import IeltsConversationV2 from "@/components/IeltsConversationV2";
 import ExamScreen from "@/components/ExamScreen";
 import ProfileScreen from "@/components/ProfileScreen";
