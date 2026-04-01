@@ -140,22 +140,21 @@ export default function GrammarExam({
           return updated;
         });
       } else {
-        if (overId !== "exam-slot" || droppedOption !== null) return;
+        if (overId !== "exam-slot") return;
         setDroppedOption(tokenText);
-        const wasCorrect = tokenText === current.options[current.correctIndex];
-        if (wasCorrect) setCorrectCount((c) => c + 1);
-        setTimeout(() => { wasCorrect ? playCorrect() : playWrong(); setPhase("explanation"); }, 300);
       }
     },
-    [phase, isMultiBlank, blankCount, droppedOption, current, playCorrect, playWrong]
+    [phase, isMultiBlank, blankCount]
   );
 
-  const handleSubmitMultiBlank = useCallback(() => {
+  const handleCheckAnswer = useCallback(() => {
     if (!isAnswered || phase !== "question") return;
-    const correct = validateMultiBlankAnswer(blankAnswers, correctParts);
+    const correct = isMultiBlank
+      ? validateMultiBlankAnswer(blankAnswers, correctParts)
+      : droppedOption === current.options[current.correctIndex];
     if (correct) setCorrectCount((c) => c + 1);
     setTimeout(() => { correct ? playCorrect() : playWrong(); setPhase("explanation"); }, 300);
-  }, [isAnswered, phase, blankAnswers, correctParts, playCorrect, playWrong]);
+  }, [isAnswered, phase, isMultiBlank, blankAnswers, correctParts, droppedOption, current, playCorrect, playWrong]);
 
   const handleClearSlot = useCallback(
     (slotIdx: number) => {
@@ -303,12 +302,17 @@ export default function GrammarExam({
                         )
                       ) : (
                         droppedOption ? (
-                          <span className={cn("inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
-                            showingFeedback && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
-                            showingFeedback && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
-                          )} style={!showingFeedback ? { borderColor: "rgba(46,211,198,0.4)", background: "rgba(46,211,198,0.1)", color: "var(--color-success)" } : undefined}>
-                            {droppedOption}
-                          </span>
+                          showingFeedback ? (
+                            <span className={cn("inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
+                              isCorrect ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400" : "border-red-500/40 bg-red-500/15 text-red-400"
+                            )}>
+                              {droppedOption}
+                            </span>
+                          ) : (
+                            <button onClick={() => setDroppedOption(null)} className="inline-flex px-2 py-0.5 rounded-lg font-bold text-sm border cursor-pointer hover:opacity-80" style={{ borderColor: "rgba(46,211,198,0.4)", background: "rgba(46,211,198,0.1)", color: "var(--color-success)" }}>
+                              {droppedOption} ×
+                            </button>
+                          )
                         ) : (
                           <DropSlot id="exam-slot" placeholder="___" className="inline-flex min-w-[90px]" />
                         )
@@ -326,7 +330,7 @@ export default function GrammarExam({
           {phase === "question" && (
             <div className="flex flex-wrap gap-2.5 mb-3 w-full">
               {dragTokens.map((token, i) => {
-                const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption !== null;
+                const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption === token;
                 return (
                   <DragToken key={`${token}-${i}`} id={`eopt-${token}`} disabled={isUsed} variant={isUsed ? "placed" : "default"}>
                     {token}
@@ -336,9 +340,9 @@ export default function GrammarExam({
             </div>
           )}
 
-          {/* Multi-blank submit */}
-          {isMultiBlank && phase === "question" && isAnswered && (
-            <Button variant="primary" size="lg" fullWidth className="mb-4 w-full" onClick={handleSubmitMultiBlank}>
+          {/* Check Answer button */}
+          {phase === "question" && isAnswered && (
+            <Button variant="primary" size="lg" fullWidth className="mb-4 w-full" onClick={handleCheckAnswer}>
               Check Answer
             </Button>
           )}

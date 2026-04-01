@@ -127,30 +127,26 @@ export default function GrammarLessonView({
           return updated;
         });
       } else {
-        // Single-blank: existing behavior
-        if (overId !== "answer-slot" || droppedOption !== null) return;
+        // Single-blank: place answer without grading — user must click "Check Answer"
+        if (overId !== "answer-slot") return;
         setDroppedOption(tokenText);
-        const wasCorrect = tokenText === current.options[current.correctIndex];
-        if (wasCorrect) setCorrectCount((c) => c + 1);
-        setTimeout(() => {
-          wasCorrect ? playCorrect() : playWrong();
-          setPhase("explanation");
-        }, 300);
       }
     },
-    [phase, isMultiBlank, blankCount, droppedOption, current, playCorrect, playWrong]
+    [phase, isMultiBlank, blankCount]
   );
 
-  // Multi-blank: submit all answers
-  const handleSubmitMultiBlank = useCallback(() => {
+  // Submit answer (both single-blank and multi-blank)
+  const handleCheckAnswer = useCallback(() => {
     if (!isAnswered || phase !== "question") return;
-    const correct = validateMultiBlankAnswer(blankAnswers, correctParts);
+    const correct = isMultiBlank
+      ? validateMultiBlankAnswer(blankAnswers, correctParts)
+      : droppedOption === current.options[current.correctIndex];
     if (correct) setCorrectCount((c) => c + 1);
     setTimeout(() => {
       correct ? playCorrect() : playWrong();
       setPhase("explanation");
     }, 300);
-  }, [isAnswered, phase, blankAnswers, correctParts, playCorrect, playWrong]);
+  }, [isAnswered, phase, isMultiBlank, blankAnswers, correctParts, droppedOption, current, playCorrect, playWrong]);
 
   // Clear a multi-blank slot
   const handleClearSlot = useCallback(
@@ -288,7 +284,7 @@ export default function GrammarLessonView({
           </div>
 
           {/* Instruction */}
-          {phase === "question" && !isAnswered && (
+          {phase === "question" && (
             <p className="text-xs font-semibold mb-3" style={{ color: "var(--color-text-secondary)" }}>
               {isMultiBlank
                 ? `Drag the correct word into each blank (${blankCount} blanks)`
@@ -337,22 +333,30 @@ export default function GrammarLessonView({
                           />
                         )
                       ) : (
-                        // Single-blank: existing behavior
+                        // Single-blank
                         droppedOption ? (
-                          <span
-                            className={cn(
-                              "inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
-                              showingFeedback && isCorrect && "border-emerald-500/40 bg-emerald-500/15 text-emerald-400",
-                              showingFeedback && !isCorrect && "border-red-500/40 bg-red-500/15 text-red-400"
-                            )}
-                            style={!showingFeedback ? {
-                              borderColor: "rgba(46,211,198,0.4)",
-                              background: "rgba(46,211,198,0.1)",
-                              color: "var(--color-success)",
-                            } : undefined}
-                          >
-                            {droppedOption}
-                          </span>
+                          showingFeedback ? (
+                            <span
+                              className={cn(
+                                "inline-block px-2 py-0.5 rounded-lg font-bold text-sm border",
+                                isCorrect ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400" : "border-red-500/40 bg-red-500/15 text-red-400"
+                              )}
+                            >
+                              {droppedOption}
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setDroppedOption(null)}
+                              className="inline-flex px-2 py-0.5 rounded-lg font-bold text-sm border cursor-pointer hover:opacity-80"
+                              style={{
+                                borderColor: "rgba(46,211,198,0.4)",
+                                background: "rgba(46,211,198,0.1)",
+                                color: "var(--color-success)",
+                              }}
+                            >
+                              {droppedOption} ×
+                            </button>
+                          )
                         ) : (
                           <DropSlot
                             id="answer-slot"
@@ -376,7 +380,7 @@ export default function GrammarLessonView({
           {phase === "question" && (
             <div className="flex flex-wrap gap-2.5 mb-3 w-full">
               {dragTokens.map((token, i) => {
-                const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption !== null;
+                const isUsed = isMultiBlank ? usedTokens.has(token) : droppedOption === token;
                 return (
                   <DragToken
                     key={`${token}-${i}`}
@@ -391,9 +395,9 @@ export default function GrammarLessonView({
             </div>
           )}
 
-          {/* Multi-blank: Check Answer button */}
-          {isMultiBlank && phase === "question" && isAnswered && (
-            <Button variant="primary" size="lg" fullWidth className="mb-4 w-full" onClick={handleSubmitMultiBlank}>
+          {/* Check Answer button — shown when answer is placed but not yet graded */}
+          {phase === "question" && isAnswered && (
+            <Button variant="primary" size="lg" fullWidth className="mb-4 w-full" onClick={handleCheckAnswer}>
               Check Answer
             </Button>
           )}
