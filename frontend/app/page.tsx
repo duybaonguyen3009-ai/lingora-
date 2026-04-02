@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Topbar from "@/components/Topbar";
 import BottomNav from "@/components/BottomNav";
@@ -27,6 +27,14 @@ import { getScenarios } from "@/lib/api";
 import type { Scenario, FocusRecommendation } from "@/lib/types";
 
 export default function HomePage() {
+  return (
+    <Suspense>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function HomePageContent() {
   const searchParams = useSearchParams();
   // Persist experimental flag in sessionStorage so it survives internal navigation
   const isExperimental = (() => {
