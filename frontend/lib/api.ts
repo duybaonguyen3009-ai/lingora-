@@ -41,7 +41,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://backend-production-b148.up.railway.app/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
 
 // ---------------------------------------------------------------------------
 // 401 Refresh Mutex

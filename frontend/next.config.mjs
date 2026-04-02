@@ -39,15 +39,12 @@ const nextConfig = {
   // ------------------------------------------------------------------
   // API proxy — keeps SameSite=Strict cookie working cross-domain.
   // ------------------------------------------------------------------
-  // Rewrites disabled — frontend calls Railway backend directly via
-  // NEXT_PUBLIC_API_URL to avoid Vercel Hobby DNS_HOSTNAME_RESOLVED_PRIVATE.
-  // Re-enable when using a custom domain with proper DNS.
-  // async rewrites() {
-  //   return [
-  //     { source: "/api/v1/:path*", destination: `${BACKEND_URL}/api/v1/:path*` },
-  //     { source: "/health",        destination: `${BACKEND_URL}/health` },
-  //   ];
-  // },
+  async rewrites() {
+    return [
+      { source: "/api/v1/:path*", destination: `${BACKEND_URL}/api/v1/:path*` },
+      { source: "/health",        destination: `${BACKEND_URL}/health` },
+    ];
+  },
 };
 
 // Wrap with Sentry only when NEXT_PUBLIC_SENTRY_DSN is set so that
