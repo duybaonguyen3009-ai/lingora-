@@ -160,7 +160,7 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
                 </div>
                 <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
                   <div
-                    className="h-full rounded-full transition-all duration-700"
+                    className="h-full rounded-full transition duration-700"
                     style={{ width: `${s.value}%`, background: scoreColor(s.value) }}
                   />
                 </div>

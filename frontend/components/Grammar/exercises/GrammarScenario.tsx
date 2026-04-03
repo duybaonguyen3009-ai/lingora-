@@ -147,7 +147,7 @@ export default function GrammarScenario({
               onClick={() => handleSelect(i)}
               disabled={submitted}
               className={cn(
-                "w-full px-4 py-3 rounded-xl border text-left text-sm transition-all duration-normal",
+                "w-full px-4 py-3 rounded-xl border text-left text-sm transition duration-normal",
                 !submitted && "cursor-pointer hover:opacity-80",
                 submitted && "cursor-default"
               )}
@@ -195,7 +195,7 @@ export default function GrammarScenario({
           onClick={handleSubmit}
           disabled={selectedIdx === null}
           className={cn(
-            "w-full py-3 rounded-xl font-semibold text-sm transition-all",
+            "w-full py-3 rounded-xl font-semibold text-sm transition",
             selectedIdx !== null ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
           )}
           style={{
@@ -212,7 +212,7 @@ export default function GrammarScenario({
       {submitted && (
         <button
           onClick={onNext}
-          className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+          className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition hover:opacity-90"
           style={{
             background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
           }}

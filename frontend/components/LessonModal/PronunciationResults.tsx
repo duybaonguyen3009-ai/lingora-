@@ -88,7 +88,7 @@ function SubScoreBar({ label, score }: { label: string; score: number }) {
       <span className="text-xs w-[100px] text-right" style={{ color: "var(--color-text-secondary)" }}>{label}</span>
       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="h-full rounded-full transition duration-700 ease-out"
           style={{ width: `${score}%`, backgroundColor: color }}
         />
       </div>
@@ -106,7 +106,7 @@ function WordPill({ word, isExpanded, onClick }: { word: WordDetail; isExpanded:
       <button
         onClick={onClick}
         className={cn(
-          "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-normal border"
+          "px-3 py-1.5 rounded-lg text-sm font-medium transition duration-normal border"
         )}
         style={{
           color,

@@ -102,7 +102,7 @@ export default function ContinueLearningCard({
         </div>
         <button
           onClick={onQuickReview}
-          className="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-normal hover:opacity-90"
+          className="w-full py-3 rounded-xl text-sm font-semibold transition duration-normal hover:opacity-90"
           style={{
             background: "var(--color-primary-soft)",
             border: "1px solid var(--color-border)",
@@ -187,7 +187,7 @@ export default function ContinueLearningCard({
         <div className="mb-4">
           <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
+              className="h-full rounded-full transition duration-700 ease-out"
               style={{
                 width: `${progressPct}%`,
                 background: "linear-gradient(90deg, var(--color-success), var(--color-accent))",
@@ -202,7 +202,7 @@ export default function ContinueLearningCard({
         {/* CTA */}
         <button
           onClick={() => onStartLesson(node.id)}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-normal hover:opacity-90 flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl text-sm font-semibold transition duration-normal hover:opacity-90 flex items-center justify-center gap-2"
           style={{
             background: "linear-gradient(135deg, var(--color-success), var(--color-accent))",
             color: "var(--color-bg)",

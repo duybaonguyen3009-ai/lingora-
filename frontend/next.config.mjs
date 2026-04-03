@@ -32,7 +32,9 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   images: {
+    formats: ["image/webp"],
     domains: [],
   },
 

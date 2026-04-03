@@ -97,7 +97,7 @@ function ExerciseHeader({
       </div>
       <div className="w-full max-w-[360px] h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
-          className="h-full rounded-full transition-all duration-slow"
+          className="h-full rounded-full transition duration-slow"
           style={{
             width: `${progress}%`,
             background: `linear-gradient(to right, ${labelColor}, var(--color-accent))`,
@@ -135,7 +135,7 @@ function LearnPhase({
       />
 
       <div
-        className="w-full max-w-[360px] rounded-lg p-6 flex flex-col items-center gap-4 transition-all duration-normal"
+        className="w-full max-w-[360px] rounded-lg p-6 flex flex-col items-center gap-4 transition duration-normal"
         style={{
           border: showMeaning ? "1px solid rgba(46,211,198,0.25)" : "1px solid var(--color-border)",
           background: "var(--color-bg-card)",
@@ -309,7 +309,7 @@ function MatchPhase({
               onClick={() => handleTileClick(tile)}
               disabled={isMatched}
               className={cn(
-                "px-3 py-3.5 rounded-xl border text-sm font-medium transition-all duration-normal text-center min-h-[52px]",
+                "px-3 py-3.5 rounded-xl border text-sm font-medium transition duration-normal text-center min-h-[52px]",
                 isMatched && "opacity-40 scale-95",
               )}
               style={{
@@ -457,7 +457,7 @@ function ContextPhase({
               onClick={() => handleSelect(word)}
               disabled={selected !== null}
               className={cn(
-                "px-4 py-3 rounded-xl border text-sm font-semibold transition-all duration-normal",
+                "px-4 py-3 rounded-xl border text-sm font-semibold transition duration-normal",
               )}
               style={{
                 borderColor: showResult
@@ -588,7 +588,7 @@ function RecallPhase({
       <div className="w-full max-w-[360px]">
         <div
           className={cn(
-            "rounded-xl border transition-all duration-normal",
+            "rounded-xl border transition duration-normal",
             answered
               ? correct ? "border-emerald-500/50 bg-emerald-500/[0.06]" : "border-red-500/50 bg-red-500/[0.06]"
               : ""
@@ -788,7 +788,7 @@ export default function VocabSection({ items, onContinue }: VocabSectionProps) {
           {phases.filter((p) => p !== "results").map((p, i) => (
             <div
               key={p}
-              className="flex-1 h-1 rounded-full transition-all duration-normal"
+              className="flex-1 h-1 rounded-full transition duration-normal"
               style={{
                 background:
                   phases.indexOf(p) < phaseIndex

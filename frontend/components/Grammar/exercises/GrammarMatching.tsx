@@ -217,7 +217,7 @@ export default function GrammarMatching({
                       onClick={() => handleClearSlot(ri)}
                       disabled={submitted}
                       className={cn(
-                        "px-2.5 py-1 rounded-lg font-semibold text-xs transition-all",
+                        "px-2.5 py-1 rounded-lg font-semibold text-xs transition",
                         !submitted && "cursor-pointer hover:opacity-80"
                       )}
                       style={{
@@ -305,7 +305,7 @@ export default function GrammarMatching({
             onClick={handleSubmit}
             disabled={!allMatched}
             className={cn(
-              "w-full py-3 rounded-xl font-semibold text-sm transition-all",
+              "w-full py-3 rounded-xl font-semibold text-sm transition",
               allMatched ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
             )}
             style={{
@@ -322,7 +322,7 @@ export default function GrammarMatching({
         {submitted && (
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
             }}

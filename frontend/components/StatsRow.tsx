@@ -51,7 +51,7 @@ function StatCardItem({ stat, delay }: { stat: StatCard; delay: number }) {
     <div
       className={cn(
         "rounded-lg p-4 border border-white/[0.07]",
-        "transition-all duration-normal cursor-default",
+        "transition duration-normal cursor-default",
         "hover:-translate-y-[2px] hover:border-emerald-400/20",
         "animate-fadeSlideUp"
       )}

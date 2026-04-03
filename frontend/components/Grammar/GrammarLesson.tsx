@@ -263,7 +263,7 @@ export default function GrammarLessonView({
           &times;
         </button>
         <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-          <div className="h-full rounded-full transition-all duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
+          <div className="h-full rounded-full transition duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
         <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>
           {index + 1}/{lesson.questions.length}

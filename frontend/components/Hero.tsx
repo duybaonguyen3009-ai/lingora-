@@ -68,7 +68,7 @@ export default function Hero() {
             className={cn(
               "inline-flex items-center gap-2 px-6 py-3 rounded-md",
               "font-sora font-bold text-sm tracking-[0.2px]",
-              "transition-all duration-normal",
+              "transition duration-normal",
               "hover:-translate-y-[2px]"
             )}
             style={{ boxShadow: "0 4px 24px rgba(46,211,198,0.35)", color: "var(--color-text)", background: "var(--color-teal)" }}

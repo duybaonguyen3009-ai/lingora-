@@ -781,7 +781,7 @@ export default function IeltsConversation({
               {[1, 2, 3].map((p) => (
                 <div
                   key={p}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-slow ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition duration-slow ${
                     p === currentPart ? "ielts-part-active" :
                     p < currentPart ? "ielts-part-done" :
                     "ielts-part-future"

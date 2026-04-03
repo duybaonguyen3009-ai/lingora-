@@ -18,7 +18,7 @@ export function ProgressBar({ level, xp, xpToNext }: { level: number; xp: number
         <span className="text-xs font-bold" style={{ color: "var(--color-success)" }}>{pct}%</span>
       </div>
       <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
-        <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))", boxShadow: "0 0 12px rgba(46,211,198,0.4)" }} />
+        <div className="h-full rounded-full transition duration-700 ease-out" style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))", boxShadow: "0 0 12px rgba(46,211,198,0.4)" }} />
       </div>
     </div>
   );

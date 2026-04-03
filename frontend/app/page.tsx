@@ -2,20 +2,23 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Topbar from "@/components/Topbar";
 import BottomNav from "@/components/BottomNav";
 import StartSpeakingCard from "@/components/StartSpeakingCard";
 import PracticeScenarios from "@/components/PracticeScenarios";
 import CoachTipCard from "@/components/CoachTipCard";
 import TodayFocusCard from "@/components/TodayFocusCard";
-import { GrammarTab } from "@/components/Grammar";
-import ScenarioList from "@/components/ScenarioList";
-import ScenarioConversation from "@/components/ScenarioConversation";
-import IeltsConversationV2 from "@/components/IeltsConversationV2";
-import ExamScreen from "@/components/ExamScreen";
-import ProfileScreen from "@/components/ProfileScreen";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import Onboarding from "@/components/Onboarding";
+
+/* Code-split heavy tab components — loaded on demand, not in initial bundle */
+const GrammarTab = dynamic(() => import("@/components/Grammar").then(m => ({ default: m.GrammarTab })), { ssr: false });
+const ScenarioList = dynamic(() => import("@/components/ScenarioList"), { ssr: false });
+const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversation"), { ssr: false });
+const IeltsConversationV2 = dynamic(() => import("@/components/IeltsConversationV2"), { ssr: false });
+const ExamScreen = dynamic(() => import("@/components/ExamScreen"), { ssr: false });
+const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr: false });
+const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";

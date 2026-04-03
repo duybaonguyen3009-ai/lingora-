@@ -256,7 +256,7 @@ export default function GrammarExam({
       <div className="flex items-center gap-3 px-4 py-3 relative z-10" style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-bg)", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
         <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-base" style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}>&times;</button>
         <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-          <div className="h-full rounded-full transition-all duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
+          <div className="h-full rounded-full transition duration-slow ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
         <div className={cn("flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold border", timeWarning ? "bg-red-500/10 border-red-500/25 text-red-400" : "border-transparent")} style={!timeWarning ? { background: "var(--color-primary-soft)", color: "var(--color-text-secondary)" } : {}}>
           ⏰ {timeStr}

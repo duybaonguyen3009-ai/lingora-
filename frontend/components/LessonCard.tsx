@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { getLessonTypeConfig, getLessonProgressColor } from "@/lib/utils";
 import { IconCheck, IconLock, IconPlay, IconClock } from "./Icons";
@@ -12,7 +12,7 @@ interface LessonCardProps {
   onClick?: () => void;
 }
 
-export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardProps) {
+export default React.memo(function LessonCard({ lesson, delay = 0, onClick }: LessonCardProps) {
   const [barLoaded, setBarLoaded] = useState(false);
   const typeConfig = getLessonTypeConfig(lesson.type);
   const progressColor = getLessonProgressColor(lesson.type);
@@ -31,7 +31,7 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       className={cn(
         "rounded-lg p-4 relative overflow-hidden",
         "border",
-        "transition-all duration-normal animate-fadeSlideUp",
+        "transition duration-normal animate-fadeSlideUp",
         isLocked ? "opacity-55 cursor-not-allowed" : "cursor-pointer hover:-translate-y-[2px]",
       )}
       style={{
@@ -142,4 +142,4 @@ export default function LessonCard({ lesson, delay = 0, onClick }: LessonCardPro
       </div>
     </div>
   );
-}
+})

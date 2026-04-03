@@ -41,7 +41,7 @@ export default function AiTutorCard() {
       </p>
 
       <button
-        className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-semibold transition-all duration-normal"
+        className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-semibold transition duration-normal"
         style={{ background: "color-mix(in srgb, var(--color-accent) 15%, transparent)", border: "1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)", color: "var(--color-accent)" }}
         onMouseEnter={(e) => { e.currentTarget.style.background = "color-mix(in srgb, var(--color-accent) 25%, transparent)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = "color-mix(in srgb, var(--color-accent) 15%, transparent)"; }}

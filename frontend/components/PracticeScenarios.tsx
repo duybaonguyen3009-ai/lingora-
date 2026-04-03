@@ -19,7 +19,7 @@ export default function PracticeScenarios({ onSelect }: PracticeScenariosProps) 
   return (
     <button
       onClick={() => onSelect("browse")}
-      className="flex items-center gap-4 p-4 rounded-lg transition-all duration-normal card-hover text-left w-full"
+      className="flex items-center gap-4 p-4 rounded-lg transition duration-normal card-hover text-left w-full"
       style={{
         backgroundColor: "var(--color-bg-card)",
         border: "1px solid var(--color-border)",

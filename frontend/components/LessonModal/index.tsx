@@ -154,7 +154,7 @@ export default function LessonModal({
                 onClose();
               }
             }}
-            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-normal text-base"
+            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition duration-normal text-base"
             style={{ background: "var(--color-primary-soft)", border: "1px solid var(--color-border)", color: "var(--color-text-secondary)" }}
           >
             ×
@@ -186,7 +186,7 @@ export default function LessonModal({
                     {steps.filter((s) => s !== "complete").map((s) => (
                       <div
                         key={s}
-                        className="flex-1 h-1 rounded-full transition-all duration-normal"
+                        className="flex-1 h-1 rounded-full transition duration-normal"
                         style={{
                           background:
                             s === step

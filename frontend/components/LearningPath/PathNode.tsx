@@ -33,7 +33,7 @@ function AiHintButton() {
       <button
         onClick={() => setShowHint((v) => !v)}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-normal border",
+          "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition duration-normal border",
           showHint
             ? "bg-violet-500/15 border-violet-500/25 text-violet-300"
             : "border-transparent"
@@ -95,11 +95,11 @@ export function PathNodeItem({ node, index, onOpen }: { node: PathNodeType; inde
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 transition-all duration-normal" style={{ transform: `translateX(${offset}px)` }}>
+    <div className="flex flex-col items-center gap-2 transition duration-normal" style={{ transform: `translateX(${offset}px)` }}>
       <button
         disabled={node.status === "locked"}
         onClick={node.status !== "locked" ? () => onOpen(node.id) : undefined}
-        className={cn("relative rounded-full flex items-center justify-center transition-all duration-normal", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed")}
+        className={cn("relative rounded-full flex items-center justify-center transition duration-normal", nodeSize, node.status !== "locked" && "cursor-pointer hover:scale-110", node.status === "locked" && "cursor-not-allowed")}
         style={{ ...bgStyle(), ...(node.status === "locked" ? { border: "2px solid var(--color-border)" } : {}) }}
       >
         {renderIcon()}

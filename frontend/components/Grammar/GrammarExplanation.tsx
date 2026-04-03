@@ -29,7 +29,7 @@ export default function GrammarExplanation({
 }: GrammarExplanationProps) {
   return (
     <div
-      className="rounded-lg overflow-hidden transition-all duration-normal"
+      className="rounded-lg overflow-hidden transition duration-normal"
       style={{
         border: isCorrect
           ? "1px solid rgba(16,185,129,0.3)"

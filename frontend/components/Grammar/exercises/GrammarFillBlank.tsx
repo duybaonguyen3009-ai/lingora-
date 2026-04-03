@@ -231,7 +231,7 @@ export default function GrammarFillBlank({
             onClick={handleSubmit}
             disabled={!selected}
             className={cn(
-              "w-full py-3 rounded-xl font-semibold text-sm transition-all",
+              "w-full py-3 rounded-xl font-semibold text-sm transition",
               selected ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
             )}
             style={{
@@ -248,7 +248,7 @@ export default function GrammarFillBlank({
         {submitted && (
           <button
             onClick={onNext}
-            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition hover:opacity-90"
             style={{
               background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
             }}

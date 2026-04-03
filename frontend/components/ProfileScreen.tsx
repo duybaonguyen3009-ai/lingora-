@@ -43,7 +43,7 @@ function LevelBadge({ level, xpInLevel, xpToNextLevel }: { level: number; xpInLe
         </div>
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-700"
+            className="h-full rounded-full transition duration-700"
             style={{ width: `${progress}%`, background: "var(--color-primary)" }}
           />
         </div>

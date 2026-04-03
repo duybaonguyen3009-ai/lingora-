@@ -114,7 +114,7 @@ export default function SpeakingSection({
           <div
             key={i}
             className={cn(
-              "h-1.5 rounded-full transition-all duration-normal",
+              "h-1.5 rounded-full transition duration-normal",
               i === index ? "w-6" : "w-2.5"
             )}
             style={{

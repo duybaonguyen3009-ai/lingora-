@@ -146,7 +146,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-slow"
+            className="h-full rounded-full transition duration-slow"
             style={{ background: "linear-gradient(to right, var(--color-success), var(--color-accent))", width: `${(index / items.length) * 100}%` }}
           />
         </div>
@@ -171,7 +171,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
               key={key}
               onClick={() => handleSelect(key)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm transition-all duration-normal",
+                "flex items-center gap-3 px-4 py-3 rounded-xl border text-left text-sm transition duration-normal",
                 optionStyle(key)
               )}
               style={optionInlineStyle(key)}
@@ -202,7 +202,7 @@ export default function QuizSection({ items, onContinue }: QuizSectionProps) {
       {/* ── Fill-in-blank ── */}
       {isFill && (
         <div className="flex flex-col gap-3">
-          <div className={cn("rounded-xl border transition-all duration-normal", fillBorderClass)} style={{ background: "var(--color-primary-soft)", ...fillBorderInline }}>
+          <div className={cn("rounded-xl border transition duration-normal", fillBorderClass)} style={{ background: "var(--color-primary-soft)", ...fillBorderInline }}>
             <input
               ref={fillRef}
               type="text"

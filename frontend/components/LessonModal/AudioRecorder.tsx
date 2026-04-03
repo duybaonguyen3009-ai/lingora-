@@ -104,7 +104,7 @@ export default function AudioRecorder({
         onClick={state === "recording" ? stopRecording : startRecording}
         disabled={disabled || state === "requesting" || state === "stopped"}
         className={cn(
-          "relative flex items-center justify-center rounded-full transition-all duration-normal",
+          "relative flex items-center justify-center rounded-full transition duration-normal",
           state === "recording"
             ? "w-16 h-16 border-2 border-red-400"
             : "w-16 h-16 border-2"

@@ -81,7 +81,7 @@ export default function DragToken({
       {...(disabled ? {} : attributes)}
       className={cn(
         "px-3.5 py-2.5 rounded-xl border text-sm font-semibold select-none",
-        "transition-all duration-normal ease-out",
+        "transition duration-normal ease-out",
         !disabled && "cursor-grab active:cursor-grabbing hover:scale-[1.04] hover:-translate-y-0.5",
         disabled && "cursor-default opacity-50",
         isDragging && "opacity-20 scale-90"

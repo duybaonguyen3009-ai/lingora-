@@ -170,7 +170,7 @@ export default function LoginPage() {
           className={cn(
             "flex items-center justify-center h-11 rounded-md",
             "text-sm font-medium",
-            "border transition-all duration-normal",
+            "border transition duration-normal",
           )}
           style={{ color: "var(--color-text-secondary)", borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}
         >

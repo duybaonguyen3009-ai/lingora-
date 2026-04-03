@@ -223,7 +223,7 @@ function ProgressHero({
         </span>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-700 ease-out"
+            className="h-full rounded-full transition duration-700 ease-out"
             style={{
               width: `${lvlPct}%`,
               background: "linear-gradient(90deg, #8B5CF6, #6D28D9)",
@@ -264,7 +264,7 @@ function LessonNode({
       disabled={isLocked}
       onClick={isLocked ? undefined : onStart}
       className={cn(
-        "w-full rounded-xl px-4 py-3 text-left transition-all duration-normal border",
+        "w-full rounded-xl px-4 py-3 text-left transition duration-normal border",
         isLocked && "opacity-60 cursor-not-allowed",
         (isCurrent || isCompleted) && "cursor-pointer"
       )}
@@ -352,7 +352,7 @@ function ExamCard({
       disabled={!isUnlocked}
       onClick={isUnlocked ? onStart : undefined}
       className={cn(
-        "w-full rounded-xl px-4 py-3 text-left transition-all duration-normal border",
+        "w-full rounded-xl px-4 py-3 text-left transition duration-normal border",
         !isUnlocked && "opacity-60 cursor-not-allowed",
         isUnlocked && !isPassed && "cursor-pointer"
       )}
@@ -419,7 +419,7 @@ function UnitCard({
 
   return (
     <div
-      className={cn("rounded-lg overflow-hidden transition-all duration-normal", !unitUnlocked && "opacity-50")}
+      className={cn("rounded-lg overflow-hidden transition duration-normal", !unitUnlocked && "opacity-50")}
       style={{ border: `1px solid ${colors.border}`, background: "var(--color-bg-card)" }}
     >
       <button
@@ -457,7 +457,7 @@ function UnitCard({
       {unitUnlocked && (
         <div className="px-4 pb-1 pt-0" style={{ background: colors.bg }}>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
-            <div className="h-full rounded-full transition-all duration-slow" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})` }} />
+            <div className="h-full rounded-full transition duration-slow" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${colors.text}, ${colors.glow})` }} />
           </div>
         </div>
       )}
@@ -696,7 +696,7 @@ export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
         <div className="px-4 pb-2" style={{ background: progress.allTensesComplete ? "rgba(16,185,129,0.06)" : "rgba(139,92,246,0.04)" }}>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
+              className="h-full rounded-full transition duration-700 ease-out"
               style={{
                 width: `${tensesTotalLessons > 0 ? Math.round((tensesCompletedLessons / tensesTotalLessons) * 100) : 0}%`,
                 background: progress.allTensesComplete

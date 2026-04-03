@@ -31,7 +31,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ inputSize = "md", error = false, fullWidth = true, className = "", style, ...rest }, ref) => {
     const classes = [
       "rounded-md border outline-none",
-      "transition-all duration-normal",
+      "transition duration-normal",
       "[color-scheme:dark]",
       fullWidth ? "w-full" : "",
       sizeClasses[inputSize],
@@ -73,7 +73,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ error = false, fullWidth = true, className = "", style, ...rest }, ref) => {
     const classes = [
       "rounded-md border outline-none",
-      "transition-all duration-normal",
+      "transition duration-normal",
       "px-4 py-3 text-sm resize-none",
       "[color-scheme:dark]",
       fullWidth ? "w-full" : "",

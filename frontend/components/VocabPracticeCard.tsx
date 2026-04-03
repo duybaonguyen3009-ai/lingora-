@@ -131,7 +131,7 @@ export default function VocabPracticeCard() {
             <button
               onClick={loadVocab}
               disabled={mode === "loading"}
-              className="mt-3 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-normal disabled:opacity-60"
+              className="mt-3 px-5 py-2 rounded-xl text-sm font-semibold transition duration-normal disabled:opacity-60"
               style={{
                 background: "var(--color-success)",
                 color: "var(--color-bg)",

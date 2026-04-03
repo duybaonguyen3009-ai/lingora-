@@ -78,7 +78,7 @@ export default function DailyGoalBar({ goal, streak }: DailyGoalBarProps) {
       {/* Progress bar */}
       <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
+          className="h-full rounded-full transition duration-700 ease-out"
           style={{
             width: `${animatedPct}%`,
             background: goal.goalMet

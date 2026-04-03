@@ -10,7 +10,7 @@ export function LevelFilter({ active, onChange }: { active: string; onChange: (v
         <button
           key={lv}
           onClick={() => onChange(lv)}
-          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-normal border border-transparent"
+          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition duration-normal border border-transparent"
           style={
             active === lv
               ? { backgroundColor: "rgba(46,211,198,0.15)", color: "var(--color-success)", borderColor: "rgba(46,211,198,0.25)" }

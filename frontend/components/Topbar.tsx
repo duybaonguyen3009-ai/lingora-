@@ -21,8 +21,6 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
       style={{
         backgroundColor: "var(--color-bg-card)",
         borderBottom: "1px solid var(--color-border)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
       }}
     >
       {/* Left — Streak badge */}

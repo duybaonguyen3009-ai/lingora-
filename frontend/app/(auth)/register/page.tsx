@@ -26,7 +26,7 @@ import Input from "@/components/ui/Input";
 const selectCls = cn(
   "w-full h-11 px-4 rounded-md text-sm",
   "border outline-none",
-  "transition-all duration-normal",
+  "transition duration-normal",
   "[color-scheme:dark]",
 );
 

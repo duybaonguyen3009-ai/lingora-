@@ -165,7 +165,7 @@ function StudyCalendar() {
         {mockHeatmap.map((day, i) => (
           <div
             key={i}
-            className="aspect-square rounded-sm cursor-pointer transition-all duration-normal hover:opacity-80 hover:scale-110"
+            className="aspect-square rounded-sm cursor-pointer transition duration-normal hover:opacity-80 hover:scale-110"
             style={{
               backgroundColor: HEATMAP_BG[day.level],
               outline: day.isToday ? "1.5px solid #2ED3C6" : undefined,

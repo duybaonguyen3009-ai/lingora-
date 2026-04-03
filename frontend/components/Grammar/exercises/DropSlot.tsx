@@ -97,7 +97,7 @@ export default function DropSlot({
         ref={setNodeRef}
         className={cn(
           "rounded-xl border-2 px-3 py-2 min-h-[42px] min-w-[80px] flex items-center justify-center",
-          "transition-all duration-normal ease-out",
+          "transition duration-normal ease-out",
           isEmpty && variant === "empty" && "border-dashed",
           !isEmpty && "border-solid",
           isOver && "scale-[1.05]",

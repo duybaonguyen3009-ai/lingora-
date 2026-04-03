@@ -238,7 +238,7 @@ const Onboarding: React.FC = () => {
         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
           <div
             key={i}
-            className="rounded-full transition-all duration-300"
+            className="rounded-full transition duration-300"
             style={{
               width: i === step ? 24 : 8,
               height: 8,

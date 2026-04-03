@@ -36,7 +36,7 @@ type Phase = "loading" | "conversation" | "ending" | "summary" | "error";
 
 // ── AI Partner Avatar ────────────────────────────────────────────────────────
 
-function PartnerAvatar({ speaking = false }: { speaking?: boolean }) {
+const PartnerAvatar = React.memo(function PartnerAvatar({ speaking = false }: { speaking?: boolean }) {
   return (
     <div
       className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${speaking ? "animate-examiner-pulse" : ""}`}
@@ -49,7 +49,7 @@ function PartnerAvatar({ speaking = false }: { speaking?: boolean }) {
       </svg>
     </div>
   );
-}
+});
 
 export default function ScenarioConversation({
   scenario,
@@ -383,7 +383,7 @@ export default function ScenarioConversation({
                     onClick={voice.isRecording ? voice.stopRecording : voice.startRecording}
                     disabled={sending}
                     title={voice.isRecording ? "Stop recording" : "Speak"}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all disabled:opacity-40"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition disabled:opacity-40"
                     style={{
                       background: voice.isRecording ? "linear-gradient(135deg, #ef4444, #dc2626)" : "var(--color-primary-soft)",
                       color: voice.isRecording ? "#fff" : "var(--color-primary)",
@@ -418,7 +418,7 @@ export default function ScenarioConversation({
               <button
                 onClick={handleSend}
                 disabled={!inputText.trim() || sending}
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-normal disabled:opacity-30"
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition duration-normal disabled:opacity-30"
                 style={{
                   background: inputText.trim() && !sending ? "var(--color-primary)" : "var(--color-border)",
                   color: inputText.trim() && !sending ? "#fff" : "var(--color-text-secondary)",

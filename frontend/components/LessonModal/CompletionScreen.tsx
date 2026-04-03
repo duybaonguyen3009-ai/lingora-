@@ -156,7 +156,7 @@ export default function CompletionScreen({
 
   return (
     <div
-      className="relative flex flex-col items-center gap-4 py-4 transition-all duration-slow"
+      className="relative flex flex-col items-center gap-4 py-4 transition duration-slow"
       style={{ opacity: show ? 1 : 0, transform: show ? "translateY(0)" : "translateY(12px)" }}
     >
       {/* Confetti */}
@@ -192,7 +192,7 @@ export default function CompletionScreen({
       {/* ── XP Earned — hero stat with counting animation ── */}
       {xpEarned > 0 && (
         <div
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full transition-all duration-slow"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full transition duration-slow"
           style={{
             background: xpAnimated
               ? "linear-gradient(135deg, rgba(46,211,198,0.15), rgba(45,168,255,0.1))"
@@ -285,7 +285,7 @@ export default function CompletionScreen({
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
               <div
-                className="h-full rounded-full transition-all duration-700 ease-out"
+                className="h-full rounded-full transition duration-700 ease-out"
                 style={{
                   width: `${dailyPct}%`,
                   background: dailyGoalMet

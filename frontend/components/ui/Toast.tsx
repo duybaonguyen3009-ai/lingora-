@@ -64,7 +64,7 @@ const Toast: React.FC<ToastProps> = ({ variant = "success", message, duration = 
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-md backdrop-blur-md shadow-lg transition-all duration-normal"
+      className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-md backdrop-blur-md shadow-lg transition duration-normal"
       style={{
         background: config.bg,
         border: `1px solid ${config.border}`,

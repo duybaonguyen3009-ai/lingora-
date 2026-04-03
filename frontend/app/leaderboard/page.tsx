@@ -42,7 +42,7 @@ export default function LeaderboardPage() {
             key={tab.id}
             onClick={() => setScope(tab.id)}
             className={cn(
-              "px-5 py-2 rounded-sm text-sm font-medium transition-all duration-normal",
+              "px-5 py-2 rounded-sm text-sm font-medium transition duration-normal",
               scope !== tab.id && "hover:opacity-80"
             )}
             style={scope === tab.id
@@ -106,7 +106,7 @@ export default function LeaderboardPage() {
                   <div
                     key={entry.userId}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-3 rounded-md border transition-all duration-normal",
+                      "flex items-center gap-4 px-4 py-3 rounded-md border transition duration-normal",
                     )}
                     style={isMe
                       ? { borderColor: "color-mix(in srgb, var(--color-success) 30%, transparent)", backgroundColor: "color-mix(in srgb, var(--color-success) 6%, transparent)" }

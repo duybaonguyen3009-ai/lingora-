@@ -268,7 +268,7 @@ export default function PassiveSentenceBuilder({
           </div>
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white transition hover:opacity-90"
             style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
           >
             Continue
@@ -296,7 +296,7 @@ export default function PassiveSentenceBuilder({
         </button>
         <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-slow ease-out"
+            className="h-full rounded-full transition duration-slow ease-out"
             style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--color-success), var(--color-accent))" }}
           />
         </div>
@@ -439,7 +439,7 @@ export default function PassiveSentenceBuilder({
               {placed.some((w) => w !== null) && (
                 <button
                   onClick={handleReset}
-                  className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all"
+                  className="flex-1 py-3 rounded-xl font-semibold text-sm transition"
                   style={{ border: "1px solid var(--color-border)", background: "var(--color-primary-soft)", color: "var(--color-text-secondary)" }}
                 >
                   Reset
@@ -449,7 +449,7 @@ export default function PassiveSentenceBuilder({
                 onClick={handleSubmit}
                 disabled={!allSlotsFilled}
                 className={cn(
-                  "flex-1 py-3 rounded-xl font-semibold text-sm transition-all",
+                  "flex-1 py-3 rounded-xl font-semibold text-sm transition",
                   allSlotsFilled ? "text-white cursor-pointer hover:opacity-90" : "cursor-not-allowed"
                 )}
                 style={{
@@ -467,7 +467,7 @@ export default function PassiveSentenceBuilder({
           {phase === "feedback" && (
             <button
               onClick={handleNext}
-              className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
+              className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition hover:opacity-90"
               style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))" }}
             >
               {isLast ? "See Results" : "Next Exercise →"}

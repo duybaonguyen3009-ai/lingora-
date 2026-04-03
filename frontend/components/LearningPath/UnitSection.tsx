@@ -42,7 +42,7 @@ export function UnitSection({ unit, onOpen }: { unit: UnitData; onOpen: (id: str
 
       <div className="mx-auto max-w-[200px] mb-6">
         <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-border)" }}>
-          <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${pct}%`, background: pct === 100 ? "#10B981" : "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
+          <div className="h-full rounded-full transition duration-700 ease-out" style={{ width: `${pct}%`, background: pct === 100 ? "#10B981" : "linear-gradient(90deg, var(--color-success), var(--color-accent))" }} />
         </div>
       </div>
 

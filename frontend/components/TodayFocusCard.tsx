@@ -49,7 +49,7 @@ function RecommendationRow({
 
       <button
         onClick={() => onAction(rec)}
-        className="shrink-0 flex items-center gap-1 text-sm font-semibold rounded-xl px-4 py-2 transition-all active:scale-95"
+        className="shrink-0 flex items-center gap-1 text-sm font-semibold rounded-xl px-4 py-2 transition active:scale-95"
         style={{
           background: "var(--color-primary)",
           color:      "#fff",

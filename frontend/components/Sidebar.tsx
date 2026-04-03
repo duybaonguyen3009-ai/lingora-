@@ -58,7 +58,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
           "w-6 h-6 rounded-full flex items-center justify-center",
           "border border-white/10",
           "shadow-md",
-          "transition-all duration-normal",
+          "transition duration-normal",
           "hover:bg-emerald-400 hover:border-emerald-400 hover:text-gray-900"
         )}
         style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-muted)" }}
@@ -75,7 +75,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
         </div>
         <div
           className={cn(
-            "overflow-hidden transition-all duration-normal",
+            "overflow-hidden transition duration-normal",
             collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
           )}
         >
@@ -121,7 +121,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
                 className={cn(
                   "relative w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md mb-0.5",
                   "text-left whitespace-nowrap overflow-hidden",
-                  "transition-all duration-normal group",
+                  "transition duration-normal group",
                   activeNav !== item.id && "hover:bg-white/5"
                 )}
                 style={activeNav === item.id
@@ -169,7 +169,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
 
       {/* Footer */}
       <div className="px-2.5 py-4 border-t border-white/[0.07] flex-shrink-0">
-        <button className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md mb-2.5 hover:bg-white/5 transition-all duration-normal whitespace-nowrap overflow-hidden" style={{ color: "var(--color-text-muted)" }}>
+        <button className="w-full flex items-center gap-3 px-2.5 py-2.5 rounded-md mb-2.5 hover:bg-white/5 transition duration-normal whitespace-nowrap overflow-hidden" style={{ color: "var(--color-text-muted)" }}>
           <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
             <IconSettings />
           </span>
@@ -178,7 +178,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
           </span>
         </button>
 
-        <button className="w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-md hover:bg-white/5 transition-all duration-normal overflow-hidden whitespace-nowrap">
+        <button className="w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-md hover:bg-white/5 transition duration-normal overflow-hidden whitespace-nowrap">
           <div
             className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0 font-sora font-bold text-xs"
             style={{ color: "var(--color-text)", background: "linear-gradient(135deg, var(--color-teal), var(--color-accent))", boxShadow: "0 0 0 2px rgba(46,211,198,0.3)" }}

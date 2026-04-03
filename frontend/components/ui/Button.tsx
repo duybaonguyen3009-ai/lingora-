@@ -121,7 +121,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseClasses = [
       "inline-flex items-center justify-center",
       "font-semibold rounded-md",
-      "transition-all duration-normal",
+      "transition duration-normal",
       "cursor-pointer",
       "select-none",
       isDisabled ? "opacity-40 cursor-not-allowed pointer-events-none" : "",

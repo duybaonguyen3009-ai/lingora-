@@ -1352,7 +1352,7 @@ export default function IeltsConversationV2({
               {[1, 2, 3].map((p) => (
                 <div
                   key={p}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-500 ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition duration-500 ${
                     p === currentPart ? "ielts-part-active" :
                     p < currentPart ? "ielts-part-done" :
                     "ielts-part-future"

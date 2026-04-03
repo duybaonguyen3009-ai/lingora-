@@ -33,6 +33,53 @@ function difficultyBadgeVariant(d: string): "success" | "warning" | "error" | "m
   }
 }
 
+const ScenarioCard = React.memo(function ScenarioCard({
+  scenario,
+  onSelect,
+}: {
+  scenario: Scenario;
+  onSelect: (s: Scenario) => void;
+}) {
+  return (
+    <button
+      onClick={() => onSelect(scenario)}
+      className="flex items-center gap-4 p-4 rounded-lg text-left transition duration-normal card-hover"
+      style={{
+        background: "var(--color-bg-card)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+        style={{ background: "var(--color-primary-soft)" }}
+      >
+        {scenario.emoji}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-base truncate" style={{ color: "var(--color-text)" }}>
+          {scenario.title}
+        </div>
+        <div className="text-sm mt-0.5 line-clamp-1" style={{ color: "var(--color-text-secondary)" }}>
+          {scenario.description}
+        </div>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <Badge variant={difficultyBadgeVariant(scenario.difficulty)} size="sm">
+            {scenario.difficulty}
+          </Badge>
+          <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+            ~{scenario.expected_turns} turns
+          </span>
+        </div>
+      </div>
+
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-secondary)" }} className="shrink-0">
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+    </button>
+  );
+});
+
 export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProps) {
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   const { scenarios: rawScenarios, loading, error } = useScenarios(activeCategory);
@@ -65,7 +112,7 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
                 color: isActive ? "#fff" : "var(--color-text-secondary)",
                 border: isActive ? "none" : "1px solid var(--color-border)",
               }}
-              className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap shrink-0 transition-all duration-normal"
+              className="px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap shrink-0 transition duration-normal"
             >
               {cat.label}
             </button>
@@ -96,47 +143,9 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
             </div>
           )}
 
-          {scenarios.map((scenario) => {
-            return (
-              <button
-                key={scenario.id}
-                onClick={() => onSelect(scenario)}
-                className="flex items-center gap-4 p-4 rounded-lg text-left transition-all duration-normal card-hover"
-                style={{
-                  background: "var(--color-bg-card)",
-                  border: "1px solid var(--color-border)",
-                }}
-              >
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-                  style={{ background: "var(--color-primary-soft)" }}
-                >
-                  {scenario.emoji}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-base truncate" style={{ color: "var(--color-text)" }}>
-                    {scenario.title}
-                  </div>
-                  <div className="text-sm mt-0.5 line-clamp-1" style={{ color: "var(--color-text-secondary)" }}>
-                    {scenario.description}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <Badge variant={difficultyBadgeVariant(scenario.difficulty)} size="sm">
-                      {scenario.difficulty}
-                    </Badge>
-                    <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                      ~{scenario.expected_turns} turns
-                    </span>
-                  </div>
-                </div>
-
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-secondary)" }} className="shrink-0">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-            );
-          })}
+          {scenarios.map((scenario) => (
+            <ScenarioCard key={scenario.id} scenario={scenario} onSelect={onSelect} />
+          ))}
         </div>
       )}
     </div>

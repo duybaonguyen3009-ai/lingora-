@@ -120,7 +120,7 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
       {authReady && !isAuthenticated && (
         <button
           onClick={() => router.push("/login")}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-normal hover:scale-[1.01]"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition duration-normal hover:scale-[1.01]"
           style={{
             background: "var(--color-examiner)12",
             border: "1px solid var(--color-examiner)30",
@@ -151,7 +151,7 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
               if (ieltsScenario) handleStartExam(ieltsScenario);
             }}
             disabled={isLoading || (mod.id === "speaking" && !ieltsScenario)}
-            className="relative overflow-hidden rounded-lg p-5 text-left transition-all duration-normal card-hover disabled:cursor-default disabled:hover:transform-none"
+            className="relative overflow-hidden rounded-lg p-5 text-left transition duration-normal card-hover disabled:cursor-default disabled:hover:transform-none"
             style={{
               background: `linear-gradient(135deg, ${mod.accentColor}15 0%, var(--color-bg-card) 100%)`,
               border: `1px solid ${mod.accentColor}30`,

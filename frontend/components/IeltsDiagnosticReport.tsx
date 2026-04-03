@@ -453,7 +453,7 @@ export default function IeltsDiagnosticReport({
                 <button
                   key={opt.value}
                   onClick={() => handleAccuracy(opt.value)}
-                  className="px-4 py-2 rounded-xl text-[12px] font-medium transition-all duration-200 hover:scale-[1.02]"
+                  className="px-4 py-2 rounded-xl text-[12px] font-medium transition duration-200 hover:scale-[1.02]"
                   style={{
                     background: "var(--color-primary-soft)",
                     color: "var(--color-text)",
@@ -487,7 +487,7 @@ export default function IeltsDiagnosticReport({
           <div className="flex gap-3">
             <button
               onClick={onNewTopic}
-              className="flex-1 py-3 rounded-xl font-medium text-[13px] transition-all duration-200 hover:scale-[1.01]"
+              className="flex-1 py-3 rounded-xl font-medium text-[13px] transition duration-200 hover:scale-[1.01]"
               style={{
                 background: "var(--color-bg-card)",
                 color: "var(--color-text)",
@@ -498,7 +498,7 @@ export default function IeltsDiagnosticReport({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl font-medium text-[13px] transition-all duration-200 hover:scale-[1.01]"
+              className="flex-1 py-3 rounded-xl font-medium text-[13px] transition duration-200 hover:scale-[1.01]"
               style={{
                 background: "var(--color-bg-card)",
                 color: "var(--color-text-secondary)",
@@ -559,7 +559,7 @@ function CriterionCard({
       <div className="relative mb-2">
         <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
           <div
-            className="h-full rounded-full transition-all duration-700"
+            className="h-full rounded-full transition duration-700"
             style={{ width: `${animatedBandPercent}%`, background: color }}
           />
         </div>

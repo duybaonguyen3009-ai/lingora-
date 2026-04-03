@@ -17,7 +17,7 @@ export function StreakMilestones({ streak }: { streak: number }) {
           return (
             <div key={m} className="flex-1 flex flex-col items-center gap-1.5">
               <div
-                className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all", achieved && "bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/20")}
+                className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition", achieved && "bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/20")}
                 style={
                   achieved
                     ? { color: "var(--color-bg)" }
