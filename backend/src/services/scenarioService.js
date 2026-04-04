@@ -14,6 +14,7 @@
 const { createAiProvider } = require("../providers/ai/aiProvider");
 const scenarioRepository = require("../repositories/scenarioRepository");
 const { analyzeSpeechFlow, aggregateSpeechFlow } = require("./speechAnalyzer");
+const { updateStreak } = require("./streakService");
 
 const ai = createAiProvider();
 
@@ -1209,6 +1210,16 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     wordCount,
     durationMs: durationMs || 0,
   });
+
+  // ── Gamification: Update streak on scenario completion ──
+  // updateStreak is idempotent for same-day calls (no double-counting).
+  // XP + learning events deferred until learning_events.lesson_id is nullable.
+  try {
+    await updateStreak(userId);
+  } catch (err) {
+    // Non-fatal: streak update failure should not break session scoring
+    console.error(`[scenario] streak update failed for user ${userId}:`, err.message);
+  }
 
   // ── Audio Intelligence: Build speech insights for frontend ──
   const speechInsights = {

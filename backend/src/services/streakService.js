@@ -81,15 +81,31 @@ async function updateStreak(userId) {
  *
  * Returns streak information for a user (safe to call with no prior activity).
  *
+ * Important: if the user's last activity was more than 1 day ago, the streak
+ * is broken and we return 0 — even though the DB still holds the old value.
+ * The DB value only resets on the NEXT activity (via updateStreak).
+ *
  * @param {string} userId
  * @returns {Promise<{ currentStreak: number, longestStreak: number, lastActivityAt: string|null }>}
  */
 async function getStreakSummary(userId) {
   const row = await getStreak(userId);
+  if (!row) {
+    return { currentStreak: 0, longestStreak: 0, lastActivityAt: null };
+  }
+
+  // Check if the streak is still alive.
+  // Streak is alive if last activity was today or yesterday (UTC).
+  const today  = new Date().toISOString().slice(0, 10);
+  const diffMs = new Date(today) - new Date(row.last_activity_at);
+  const diffDays = Math.round(diffMs / 86_400_000);
+
+  const streakAlive = diffDays <= 1; // 0 = today, 1 = yesterday
+
   return {
-    currentStreak:  row?.current_streak  ?? 0,
-    longestStreak:  row?.longest_streak  ?? 0,
-    lastActivityAt: row?.last_activity_at ?? null,
+    currentStreak:  streakAlive ? row.current_streak : 0,
+    longestStreak:  row.longest_streak,
+    lastActivityAt: row.last_activity_at,
   };
 }
 

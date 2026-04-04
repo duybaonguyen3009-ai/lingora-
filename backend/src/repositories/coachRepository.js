@@ -46,7 +46,7 @@ async function getWeakestPronunciationPrompt(userId) {
        sp.prompt_text  AS prompt_text,
        AVG(pa.overall_score)::numeric(5,1) AS avg_score
      FROM pronunciation_attempts pa
-     JOIN speaking_prompts sp ON pa.prompt_id = sp.id
+     JOIN speaking_prompts sp ON pa.speaking_prompt_id = sp.id
      WHERE pa.user_id = $1
      GROUP BY sp.id, sp.lesson_id, sp.prompt_text
      ORDER BY avg_score ASC
