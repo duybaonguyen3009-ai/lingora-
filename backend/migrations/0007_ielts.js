@@ -58,7 +58,7 @@ exports.up = (pgm) => {
       opening_message,
       emoji,
       tags,
-      expected_turns,
+      estimated_turns,
       exam_type
     ) VALUES (
       gen_random_uuid(),

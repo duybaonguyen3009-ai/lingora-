@@ -7,10 +7,13 @@
  * Designed to feel connected to the rest of Lingona — not a dead-end.
  */
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import SpeakingMetrics from "./SpeakingMetrics";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { logoutUser } from "@/lib/api";
 import type { SpeakingMetricsData, GamificationData } from "@/lib/types";
 
 interface ProfileScreenProps {
@@ -124,6 +127,14 @@ function BadgeGrid({ badges }: { badges: Array<{ slug: string; name: string; awa
 export default function ProfileScreen({ userId, metrics, metricsLoading, gamification }: ProfileScreenProps) {
   const user = useAuthStore((s) => s.user);
   const isGuest = !user;
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await logoutUser();
+    router.push("/login");
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -196,6 +207,22 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
             Your scores, streaks, and badges will persist across devices
           </p>
         </Card>
+      )}
+
+      {/* Logout */}
+      {!isGuest && (
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-colors duration-150"
+          style={{
+            background: "var(--color-error-soft)",
+            color: "var(--color-error)",
+            opacity: loggingOut ? 0.6 : 1,
+          }}
+        >
+          {loggingOut ? "Logging out..." : "Log out"}
+        </button>
       )}
     </div>
   );

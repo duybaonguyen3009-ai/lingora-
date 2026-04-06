@@ -12,7 +12,8 @@
     "migrate:down": "dotenv -e .env -- node-pg-migrate down --migrations-dir migrations",
     "migrate:down:all": "dotenv -e .env -- node-pg-migrate down --migrations-dir migrations --count 999",
     "migrate:create": "node-pg-migrate create --migrations-dir migrations",
-    "migrate:redo": "dotenv -e .env -- node-pg-migrate redo --migrations-dir migrations"
+    "migrate:redo": "dotenv -e .env -- node-pg-migrate redo --migrations-dir migrations",
+    "test": "jest --forceExit --detectOpenHandles"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1024.0",
@@ -34,7 +35,9 @@
   "devDependencies": {
     "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.0",
-    "nodemon": "^3.1.4"
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
