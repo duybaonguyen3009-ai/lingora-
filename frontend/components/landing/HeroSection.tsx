@@ -75,28 +75,11 @@ export default function HeroSection() {
 
             <motion.div
               variants={fadeUp}
-              className="mt-8 flex items-center gap-3 justify-center lg:justify-start"
+              className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-gray-500"
             >
-              {/* Avatar stack */}
-              <div className="flex -space-x-2">
-                {[
-                  "bg-gradient-to-br from-teal-400 to-emerald-500",
-                  "bg-gradient-to-br from-blue-400 to-indigo-500",
-                  "bg-gradient-to-br from-purple-400 to-pink-500",
-                  "bg-gradient-to-br from-orange-400 to-red-500",
-                ].map((bg, i) => (
-                  <div
-                    key={i}
-                    className={`w-8 h-8 rounded-full ${bg} border-2 border-[#0A0F1E] flex items-center justify-center text-[10px] font-bold text-white`}
-                  >
-                    {["N", "T", "H", "L"][i]}
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-gray-400">
-                <span className="text-white font-semibold">10,000+</span> học viên
-                đang luyện IELTS
-              </p>
+              <span>Mi&#7877;n ph&iacute; ho&agrave;n to&agrave;n</span>
+              <span>&bull;</span>
+              <span>Kh&ocirc;ng c&#7847;n th&#7867; t&iacute;n d&#7909;ng</span>
             </motion.div>
           </motion.div>
 
@@ -110,11 +93,11 @@ export default function HeroSection() {
             <div className="relative">
               {/* Floating Lintopus */}
               <motion.div
-                animate={{ y: [-8, 8, -8] }}
+                animate={{ y: [-5, 5, -5] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-16 -right-8 z-20"
+                className="absolute -bottom-5 -right-5 z-30"
               >
-                <Image src="/mascot.svg" alt="Lintopus mascot" width={300} height={300} priority />
+                <Image src="/mascot.svg" alt="Lintopus mascot" width={160} height={160} priority />
               </motion.div>
 
               {/* Mock app screenshot */}
