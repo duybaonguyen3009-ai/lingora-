@@ -67,9 +67,9 @@ export default function DropSlot({
     shadow = "0 2px 8px rgba(0,0,0,0.06)";
   } else {
     // Empty — violet-tinted with gentle pulse
-    borderColor = "rgba(139,92,246,0.25)";
-    bgColor = "rgba(139,92,246,0.04)";
-    shadow = "inset 0 0 12px rgba(139,92,246,0.06)";
+    borderColor = "rgba(0,168,150,0.25)";
+    bgColor = "rgba(0,168,150,0.04)";
+    shadow = "inset 0 0 12px rgba(0,168,150,0.06)";
   }
 
   return (
@@ -89,8 +89,8 @@ export default function DropSlot({
           80% { transform: translateX(2px); }
         }
         @keyframes grammar-slot-breathe {
-          0%, 100% { border-color: rgba(139,92,246,0.2); }
-          50% { border-color: rgba(139,92,246,0.35); }
+          0%, 100% { border-color: rgba(0,168,150,0.2); }
+          50% { border-color: rgba(0,168,150,0.35); }
         }
       `}</style>
       <div
@@ -125,7 +125,7 @@ export default function DropSlot({
               "text-xs font-medium",
               isOver ? "opacity-0" : "opacity-60"
             )}
-            style={{ color: "rgba(139,92,246,0.6)" }}
+            style={{ color: "rgba(0,168,150,0.6)" }}
           >
             {placeholder}
           </span>

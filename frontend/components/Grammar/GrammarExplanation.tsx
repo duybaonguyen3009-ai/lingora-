@@ -78,8 +78,8 @@ export default function GrammarExplanation({
         <div
           className="rounded-xl px-3.5 py-2.5"
           style={{
-            background: "rgba(139,92,246,0.08)",
-            border: "1px solid rgba(139,92,246,0.15)",
+            background: "rgba(0,168,150,0.08)",
+            border: "1px solid rgba(0,168,150,0.15)",
           }}
         >
           <span className="text-xs font-bold uppercase tracking-wider text-violet-400">

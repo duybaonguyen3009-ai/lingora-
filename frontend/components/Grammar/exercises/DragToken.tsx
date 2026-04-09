@@ -93,7 +93,7 @@ export default function DragToken({
       onMouseEnter={(e) => {
         if (!disabled) {
           (e.currentTarget as HTMLElement).style.boxShadow =
-            "0 6px 16px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.1), 0 0 12px rgba(139,92,246,0.08)";
+            "0 6px 16px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.1), 0 0 12px rgba(0,168,150,0.08)";
         }
       }}
       onMouseLeave={(e) => {

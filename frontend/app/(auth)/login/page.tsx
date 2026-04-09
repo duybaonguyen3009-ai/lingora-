@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * app/(auth)/login/page.tsx  →  URL: /login
- *
- * Email + password login form.
- * On success: callss loginUser() which updates the Zustand store,
- * then redirects to the dashboard at /.
- */
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,8 +9,7 @@ import { getGuestUserId, clearGuestUserId } from "@/lib/guestUser";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-// ─── Page ──────────────────────────────────────────────────────────────────────
+import Mascot from "@/components/ui/Mascot";
 
 export default function LoginPage() {
   const router     = useRouter();
@@ -31,7 +22,6 @@ export default function LoginPage() {
   const [error,        setError]        = useState<string | null>(null);
   const [submitting,   setSubmitting]   = useState(false);
 
-  // Already authenticated → send to dashboard
   useEffect(() => {
     if (authReady && user) router.replace("/");
   }, [authReady, user, router]);
@@ -47,8 +37,6 @@ export default function LoginPage() {
     try {
       await loginUser({ email: email.trim().toLowerCase(), password });
 
-      // Migrate any progress accumulated as a guest into the real account.
-      // Non-critical: swallow errors so a migration hiccup never blocks login.
       const guestId = getGuestUserId();
       if (guestId) {
         await migrateGuestProgress(guestId).catch(() => {});
@@ -66,29 +54,24 @@ export default function LoginPage() {
   return (
     <div className="max-w-[420px] mx-auto animate-fadeSlideUp">
 
-      {/* ── Logo + heading ── */}
+      {/* Logo + heading */}
       <div className="text-center mb-8">
-        <div
-          className="inline-flex items-center justify-center w-12 h-12 rounded-md mb-4"
-          style={{ background: "linear-gradient(135deg, var(--color-success), var(--color-accent))" }}
-        >
-          <span className="font-sora font-black text-lg" style={{ color: "var(--color-bg)" }}>L</span>
+        <div className="inline-flex items-center justify-center mb-4">
+          <Mascot size={64} />
         </div>
-        <h1 className="font-sora font-black text-xl tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
+        <h1 className="font-display font-bold text-2xl tracking-[-0.5px]" style={{ color: "var(--color-text)" }}>
           Welcome back
         </h1>
         <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>Sign in to continue your learning</p>
       </div>
 
-      {/* ── Card ── */}
+      {/* Card — clean white, shadow-lg */}
       <div
-        className="rounded-lg p-7 border"
+        className="rounded-xl p-7"
         style={{
-          borderColor:           "var(--color-border)",
-          background:            "rgba(11,34,57,0.75)",
-          backdropFilter:        "blur(20px)",
-          WebkitBackdropFilter:  "blur(20px)",
-          boxShadow:             "0 8px 48px rgba(0,0,0,0.45)",
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         }}
       >
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -120,7 +103,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 className="pr-11"
               />
               <button
@@ -137,8 +120,17 @@ export default function LoginPage() {
 
           {/* Error banner */}
           {error && (
-            <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-sm bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              <span className="mt-px flex-shrink-0">⚠</span>
+            <div
+              className="flex items-start gap-2 px-3.5 py-2.5 rounded-md text-sm"
+              style={{
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.15)",
+                color: "#EF4444",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 shrink-0">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
               <span>{error}</span>
             </div>
           )}
@@ -152,15 +144,18 @@ export default function LoginPage() {
             loading={submitting}
             disabled={submitting}
             className="mt-1"
+            style={{
+              boxShadow: "0 4px 16px rgba(0,168,150,0.25)",
+            }}
           >
-            {submitting ? "Signing in…" : "Sign In"}
+            {submitting ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
-          <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-secondary)" }}>or</span>
+          <span className="text-xs uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>or</span>
           <div className="flex-1 h-px" style={{ backgroundColor: "var(--color-border)" }} />
         </div>
 
@@ -168,11 +163,11 @@ export default function LoginPage() {
         <Link
           href="/"
           className={cn(
-            "flex items-center justify-center h-11 rounded-md",
+            "flex items-center justify-center h-11 rounded-full",
             "text-sm font-medium",
-            "border transition duration-normal",
+            "border transition duration-normal hover:shadow-sm",
           )}
-          style={{ color: "var(--color-text-secondary)", borderColor: "var(--color-border)", backgroundColor: "var(--color-primary-soft)" }}
+          style={{ color: "var(--color-text-secondary)", borderColor: "var(--color-border)", backgroundColor: "var(--color-bg)" }}
         >
           Continue as guest
         </Link>
@@ -183,8 +178,8 @@ export default function LoginPage() {
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="font-medium transition-colors"
-          style={{ color: "var(--color-success)" }}
+          className="font-semibold transition-colors"
+          style={{ color: "#00A896" }}
         >
           Sign up free
         </Link>
@@ -192,8 +187,6 @@ export default function LoginPage() {
     </div>
   );
 }
-
-// ─── Inline SVG icons (no external dep) ───────────────────────────────────────
 
 function IconEye() {
   return (

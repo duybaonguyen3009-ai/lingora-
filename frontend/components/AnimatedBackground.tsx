@@ -51,8 +51,8 @@ export default function AnimatedBackground({
             />
             <defs>
               <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(124,92,252,0)" />
-                <stop offset="30%" stopColor="rgba(124,92,252,0.15)" />
+                <stop offset="0%" stopColor="rgba(0,168,150,0)" />
+                <stop offset="30%" stopColor="rgba(0,168,150,0.15)" />
                 <stop offset="70%" stopColor="rgba(56,189,248,0.10)" />
                 <stop offset="100%" stopColor="rgba(56,189,248,0)" />
               </linearGradient>
@@ -76,8 +76,8 @@ export default function AnimatedBackground({
               <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="rgba(52,211,153,0)" />
                 <stop offset="40%" stopColor="rgba(52,211,153,0.08)" />
-                <stop offset="80%" stopColor="rgba(124,92,252,0.06)" />
-                <stop offset="100%" stopColor="rgba(124,92,252,0)" />
+                <stop offset="80%" stopColor="rgba(0,168,150,0.06)" />
+                <stop offset="100%" stopColor="rgba(0,168,150,0)" />
               </linearGradient>
             </defs>
           </svg>

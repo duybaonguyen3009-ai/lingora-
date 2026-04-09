@@ -207,7 +207,7 @@ export default function GrammarExam({
               {questions.length} questions &middot; {Math.floor(timeLimitSeconds / 60)} minute{timeLimitSeconds >= 120 ? "s" : ""} &middot; Pass: {passingScore}%
             </p>
           </div>
-          <div className="rounded-xl px-4 py-3 w-full" style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)" }}>
+          <div className="rounded-xl px-4 py-3 w-full" style={{ background: "rgba(0,168,150,0.08)", border: "1px solid rgba(0,168,150,0.15)" }}>
             <p className="text-xs text-center leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
               Drag the correct answer into each blank. The timer keeps running!
             </p>

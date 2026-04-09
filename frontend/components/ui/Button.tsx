@@ -3,11 +3,10 @@
 import React from "react";
 
 /* ══════════════════════════════════════════════════════════════════════
-   Button — Lingona Design System
+   Button — Lingona Design System (Navy + Teal)
    ══════════════════════════════════════════════════════════════════════
    Variants:  primary | secondary | ghost | soft | success | danger
    Sizes:     sm | md | lg | icon
-   Options:   fullWidth, loading, disabled, icon slots
    ══════════════════════════════════════════════════════════════════════ */
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "soft" | "success" | "danger";
@@ -27,14 +26,14 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const variantClasses: Record<ButtonVariant, string> = {
   primary: [
     "text-white border-none",
-    "shadow-[0_4px_20px_rgba(99,102,241,0.25)]",
-    "hover:shadow-[0_6px_24px_rgba(99,102,241,0.35)] hover:scale-[1.02]",
+    "shadow-colored",
+    "hover:shadow-[0_6px_20px_rgba(0,168,150,0.35)] hover:scale-[1.02]",
     "active:scale-[0.97]",
   ].join(" "),
 
   secondary: [
     "border",
-    "hover:opacity-90",
+    "hover:text-white",
     "active:scale-[0.97]",
   ].join(" "),
 
@@ -65,12 +64,12 @@ const variantClasses: Record<ButtonVariant, string> = {
 /* ── Inline styles for variants (CSS vars + gradients) ──────────────── */
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: "linear-gradient(135deg, var(--color-primary), var(--color-accent, #3B82F6))",
+    background: "linear-gradient(135deg, #00A896 0%, #00C4B0 100%)",
   },
   secondary: {
-    background: "var(--color-bg-card)",
-    borderColor: "var(--color-border)",
-    color: "var(--color-text)",
+    background: "transparent",
+    borderColor: "#1B2B4B",
+    color: "#1B2B4B",
   },
   ghost: {
     background: "transparent",
@@ -78,12 +77,12 @@ const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
     color: "var(--color-text-secondary)",
   },
   soft: {
-    background: "var(--color-primary-soft)",
+    background: "var(--color-accent-soft)",
     borderColor: "var(--color-border)",
     color: "var(--color-text)",
   },
   success: {
-    background: "var(--color-success)",
+    background: "#22C55E",
   },
   danger: {
     background: "#EF4444",
@@ -94,7 +93,7 @@ const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
 const sizeClasses: Record<ButtonSize, string> = {
   sm:   "px-4 py-2 text-sm gap-1.5",
   md:   "px-6 py-2.5 text-sm gap-2",
-  lg:   "px-8 py-3 text-sm gap-2",
+  lg:   "px-8 py-3 text-base gap-2",
   icon: "w-8 h-8 p-0 text-base justify-center",
 };
 
@@ -112,6 +111,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       className = "",
       style,
+      onMouseEnter,
+      onMouseLeave,
       ...rest
     },
     ref
@@ -120,8 +121,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const baseClasses = [
       "inline-flex items-center justify-center",
-      "font-semibold rounded-md",
-      "transition duration-normal",
+      "font-semibold rounded-full",
+      "transition-all duration-normal",
       "cursor-pointer",
       "select-none",
       isDisabled ? "opacity-40 cursor-not-allowed pointer-events-none" : "",
@@ -138,12 +139,31 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ...style,
     };
 
+    // Secondary hover: fill with navy
+    const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (variant === "secondary" && !isDisabled) {
+        e.currentTarget.style.background = "#1B2B4B";
+        e.currentTarget.style.borderColor = "#1B2B4B";
+      }
+      onMouseEnter?.(e);
+    };
+    const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (variant === "secondary" && !isDisabled) {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.borderColor = "#1B2B4B";
+        e.currentTarget.style.color = "#1B2B4B";
+      }
+      onMouseLeave?.(e);
+    };
+
     return (
       <button
         ref={ref}
         className={baseClasses}
         style={mergedStyle}
         disabled={isDisabled}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         {...rest}
       >
         {loading ? (

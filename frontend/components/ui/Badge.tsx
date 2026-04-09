@@ -3,12 +3,7 @@
 import React from "react";
 
 /* ══════════════════════════════════════════════════════════════════════
-   Badge — Lingona Design System
-   ══════════════════════════════════════════════════════════════════════
-   Small colored pill for labels, tags, statuses.
-
-   Variants:  primary | success | warning | error | info | muted
-   Sizes:     sm | md
+   Badge — Lingona Design System (Navy + Teal)
    ══════════════════════════════════════════════════════════════════════ */
 
 export type BadgeVariant = "primary" | "success" | "warning" | "error" | "info" | "muted";
@@ -24,8 +19,8 @@ export interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, { bg: string; color: string; border: string }> = {
   primary: {
-    bg: "var(--color-primary-soft)",
-    color: "var(--color-primary)",
+    bg: "rgba(0, 168, 150, 0.10)",
+    color: "#00A896",
     border: "transparent",
   },
   success: {
@@ -44,8 +39,8 @@ const variantStyles: Record<BadgeVariant, { bg: string; color: string; border: s
     border: "transparent",
   },
   info: {
-    bg: "var(--color-accent-soft)",
-    color: "var(--color-accent)",
+    bg: "rgba(27, 43, 75, 0.08)",
+    color: "#1B2B4B",
     border: "transparent",
   },
   muted: {

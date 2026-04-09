@@ -25,28 +25,29 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
     >
       {/* Left — Streak badge */}
       <div
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
         style={{
-          backgroundColor: "var(--color-warning-soft)",
-          border: "1px solid color-mix(in srgb, var(--color-warning) 18%, transparent)",
-          color: "var(--color-warning)",
-          ...(streak > 0 ? { boxShadow: "0 0 10px rgba(251,191,36,0.3), 0 0 20px rgba(251,191,36,0.1)" } : {}),
+          background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))",
+          border: "1px solid rgba(245,158,11,0.2)",
+          color: "#F59E0B",
+          ...(streak > 0 ? { boxShadow: "0 0 10px rgba(245,158,11,0.2)" } : {}),
         }}
       >
         <span
           className="inline-flex"
           style={streak > 0 ? { animation: "streakPulse 2s ease-in-out infinite" } : undefined}
         >
-          <IconFire className="text-amber-400" />
+          <IconFire className="text-amber-500" />
         </span>
-        {streak} Day{streak !== 1 ? "s" : ""}
+        <span className="text-base font-bold">{streak}</span>
+        <span className="text-xs font-medium opacity-80">Day{streak !== 1 ? "s" : ""}</span>
       </div>
 
       {/* Center — Brand with mascot logomark */}
       <div className="flex items-center gap-2">
         <Mascot size={28} />
         <span
-          className="font-sora font-bold text-lg tracking-[-0.3px]"
+          className="font-display font-bold text-lg tracking-[-0.3px]"
           style={{ color: "var(--color-text)" }}
         >
           Lingona
@@ -57,9 +58,10 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
       <div className="flex items-center gap-2.5">
         <ThemeToggle />
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center font-sora font-bold text-xs text-white"
+          className="w-9 h-9 rounded-full flex items-center justify-center font-sans font-bold text-xs text-white"
           style={{
-            background: "linear-gradient(135deg, var(--color-primary), var(--color-accent))",
+            background: "linear-gradient(135deg, #1B2B4B, #2D4A7A)",
+            border: "2px solid rgba(0, 168, 150, 0.3)",
           }}
         >
           {initials}

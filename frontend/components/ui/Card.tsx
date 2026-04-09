@@ -3,10 +3,10 @@
 import React from "react";
 
 /* ══════════════════════════════════════════════════════════════════════
-   Card — Lingona Design System
+   Card — Lingona Design System (Navy + Teal)
    ══════════════════════════════════════════════════════════════════════
-   Variants:  default | elevated | ghost | interactive
-   Padding:   none | sm | md | lg
+   White bg, 1px gray-100 border, shadow-sm, hover: shadow-md
+   Border radius: lg (16px), padding: 20px
    ══════════════════════════════════════════════════════════════════════ */
 
 export type CardVariant = "default" | "elevated" | "ghost" | "interactive";
@@ -21,7 +21,7 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const paddingClasses: Record<CardPadding, string> = {
   none: "",
   sm: "p-3",
-  md: "p-4",
+  md: "p-5",
   lg: "p-6",
 };
 
@@ -42,9 +42,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         : {
             background: "var(--color-bg-card)",
             border: "1px solid var(--color-border)",
-            ...(variant === "elevated"
-              ? { boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }
-              : {}),
+            boxShadow: variant === "elevated"
+              ? "0 4px 12px rgba(0,0,0,0.10)"
+              : "0 1px 3px rgba(0,0,0,0.08)",
           };
 
     return (

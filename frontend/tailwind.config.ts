@@ -9,28 +9,57 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      /* ── Typography Scale (DS-1) ──────────────────────────────────── */
-      /* 6 sizes only. Use these instead of arbitrary text-[Npx].       */
-      /* Mapping: xs=12, sm=14, base=16, lg=20, xl=24, 2xl=32          */
+      /* ── Typography Scale ───────────────────────────────────────── */
       fontSize: {
-        xs:   ["0.75rem",  { lineHeight: "1rem" }],      // 12px / 16px
-        sm:   ["0.875rem", { lineHeight: "1.25rem" }],    // 14px / 20px
-        base: ["1rem",     { lineHeight: "1.5rem" }],     // 16px / 24px
-        lg:   ["1.25rem",  { lineHeight: "1.75rem" }],    // 20px / 28px
-        xl:   ["1.5rem",   { lineHeight: "2rem" }],       // 24px / 32px
-        "2xl":["2rem",     { lineHeight: "2.5rem" }],     // 32px / 40px
+        xs:      ["0.75rem",  { lineHeight: "1rem" }],       // 12px — caption
+        sm:      ["0.875rem", { lineHeight: "1.25rem" }],     // 14px — small
+        base:    ["1rem",     { lineHeight: "1.6" }],         // 16px — body
+        lg:      ["1.25rem",  { lineHeight: "1.75rem" }],     // 20px — H3
+        xl:      ["1.5rem",   { lineHeight: "1.3" }],         // 24px — H2
+        "2xl":   ["2rem",     { lineHeight: "1.2" }],         // 32px — H1
+        "3xl":   ["2.5rem",   { lineHeight: "1.2" }],         // 40px — Display
       },
 
-      /* ── Spacing Scale (DS-2) ─────────────────────────────────────── */
-      /* 4px base grid. Use these instead of arbitrary [Npx] spacing.   */
-      /* Tailwind default 1=4px, 2=8px, 3=12px, 4=16px, 6=24px,        */
-      /* 8=32px, 12=48px, 16=64px — all already on the 4px grid.       */
-      /* We keep Tailwind defaults and add semantic aliases.             */
+      /* ── Spacing — 4px grid ─────────────────────────────────────── */
       spacing: {
-        "4.5": "1.125rem",  // 18px → snaps to nearest (use 4=16px or 5=20px instead, but keep for migration)
+        "4.5": "1.125rem",
       },
 
       colors: {
+        /* Brand */
+        navy: {
+          DEFAULT: "#1B2B4B",
+          light:   "#2D4A7A",
+          dark:    "#0F1E33",
+          50:      "#E8EDF5",
+          100:     "#D1DBE8",
+          200:     "#A3B7D1",
+          900:     "#0A1325",
+        },
+        teal: {
+          DEFAULT: "#00A896",
+          light:   "#00C4B0",
+          dark:    "#007A6E",
+          50:      "#E6F7F5",
+        },
+        /* Neutral */
+        gray: {
+          50:  "#F9FAFB",
+          100: "#F3F4F6",
+          200: "#E5E7EB",
+          300: "#D1D5DB",
+          400: "#9CA3AF",
+          500: "#6B7280",
+          600: "#4B5563",
+          700: "#374151",
+          800: "#1F2937",
+          900: "#111827",
+        },
+        /* Semantic */
+        success: "#22C55E",
+        warning: "#F59E0B",
+        error:   "#EF4444",
+        /* Legacy compat */
         bg: {
           DEFAULT: "#0B0F1E",
           2: "#111631",
@@ -45,37 +74,33 @@ const config: Config = {
       },
 
       fontFamily: {
-        sora: ["Sora", "sans-serif"],
-        sans: ["DM Sans", "sans-serif"],
+        display: ["Playfair Display", "Georgia", "serif"],
+        sora:    ["Playfair Display", "Georgia", "serif"],
+        sans:    ["DM Sans", "system-ui", "sans-serif"],
       },
 
       borderColor: {
         DEFAULT: "rgba(255,255,255,0.06)",
       },
 
-      /* ── Border Radius Scale (DS-3) ──────────────────────────────── */
-      /* 3 values + full. Use these instead of arbitrary rounded-[Npx]. */
       borderRadius: {
-        sm:   "6px",     // buttons, inputs, small pills
-        md:   "12px",    // cards, modals, larger interactive
-        lg:   "16px",    // featured cards, hero sections
-        full: "9999px",  // avatars, circular badges
+        sm:   "8px",
+        md:   "12px",
+        lg:   "16px",
+        xl:   "24px",
+        full: "9999px",
       },
 
-      /* ── Shadow Scale (DS-8) ──────────────────────────────────────── */
-      /* 4 elevations + 2 glows. No inline boxShadow allowed.           */
       boxShadow: {
-        sm:        "0 1px 2px rgba(0,0,0,0.05)",
-        md:        "0 4px 12px rgba(0,0,0,0.08)",
+        sm:        "0 1px 3px rgba(0,0,0,0.08)",
+        md:        "0 4px 12px rgba(0,0,0,0.10)",
         lg:        "0 8px 24px rgba(0,0,0,0.12)",
         xl:        "0 16px 48px rgba(0,0,0,0.16)",
-        "glow-primary": "0 0 20px rgba(124,92,252,0.2)",
-        "glow-accent":  "0 0 20px rgba(56,189,248,0.2)",
+        colored:   "0 4px 16px rgba(0,168,150,0.25)",
+        "glow-primary": "0 0 20px rgba(0,168,150,0.2)",
+        "glow-accent":  "0 0 20px rgba(0,168,150,0.15)",
       },
 
-      /* ── Motion (DS-9) ────────────────────────────────────────────── */
-      /* 3 durations: fast=150ms, normal=250ms, slow=400ms              */
-      /* Easing defined as CSS variables in globals.css                  */
       transitionDuration: {
         fast:   "150ms",
         normal: "250ms",
@@ -84,12 +109,12 @@ const config: Config = {
 
       keyframes: {
         fadeSlideUp: {
-          "0%":   { opacity: "0", transform: "translateY(18px)" },
+          "0%":   { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         pulseGlow: {
-          "0%, 100%": { boxShadow: "0 0 6px rgba(124,92,252,0.4)" },
-          "50%":      { boxShadow: "0 0 14px rgba(124,92,252,0.7)" },
+          "0%, 100%": { boxShadow: "0 0 6px rgba(0,168,150,0.4)" },
+          "50%":      { boxShadow: "0 0 14px rgba(0,168,150,0.7)" },
         },
         progressFill: {
           "0%":   { width: "0%" },
@@ -99,12 +124,21 @@ const config: Config = {
           "0%":   { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        subtlePulse: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%":      { transform: "scale(1.05)" },
+        },
+        slideIndicator: {
+          "0%":   { transform: "translateX(var(--indicator-from))" },
+          "100%": { transform: "translateX(var(--indicator-to))" },
+        },
       },
 
       animation: {
-        fadeSlideUp: "fadeSlideUp 0.45s ease both",
-        pulseGlow:   "pulseGlow 2s ease-in-out infinite",
-        countUp:     "countUp 0.5s ease both",
+        fadeSlideUp:  "fadeSlideUp 0.3s ease-out both",
+        pulseGlow:    "pulseGlow 2s ease-in-out infinite",
+        countUp:      "countUp 0.5s ease both",
+        subtlePulse:  "subtlePulse 2s ease-in-out infinite",
       },
     },
   },

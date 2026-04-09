@@ -4,10 +4,10 @@ import Card from "@/components/ui/Card";
 import type { FocusRecommendation, FocusType } from "@/lib/types";
 
 const LABEL_STYLES: Record<FocusType, { bg: string; color: string }> = {
-  first_lesson:  { bg: "rgba(74,222,128,0.12)",    color: "var(--color-success)"   },
-  pronunciation: { bg: "rgba(245,158,11,0.12)",     color: "var(--color-warning)"   },
-  scenario:      { bg: "rgba(124,92,252,0.12)",     color: "var(--color-primary)" },
-  ielts:         { bg: "rgba(167,139,250,0.12)",    color: "var(--color-examiner)"   },
+  first_lesson:  { bg: "rgba(34,197,94,0.10)",      color: "#22C55E"   },
+  pronunciation: { bg: "rgba(245,158,11,0.10)",      color: "#F59E0B"   },
+  scenario:      { bg: "rgba(0,168,150,0.10)",       color: "#00A896"   },
+  ielts:         { bg: "rgba(27,43,75,0.08)",        color: "#1B2B4B"   },
 };
 
 function LabelPill({ type, label }: { type: FocusType; label: string }) {
@@ -49,10 +49,11 @@ function RecommendationRow({
 
       <button
         onClick={() => onAction(rec)}
-        className="shrink-0 flex items-center gap-1 text-sm font-semibold rounded-xl px-4 py-2 transition active:scale-95"
+        className="shrink-0 flex items-center gap-1 text-sm font-semibold rounded-full px-4 py-2 transition-all active:scale-95"
         style={{
-          background: "var(--color-primary)",
+          background: "linear-gradient(135deg, #00A896, #00C4B0)",
           color:      "#fff",
+          boxShadow:  "0 2px 8px rgba(0,168,150,0.25)",
         }}
       >
         {rec.actionLabel}
@@ -78,11 +79,24 @@ export default function TodayFocusCard({
   if (loading) return null;
 
   return (
-    <Card padding="lg" className="flex flex-col gap-4">
+    <Card
+      padding="lg"
+      className="flex flex-col gap-4"
+      style={{
+        borderLeft: "4px solid #00A896",
+      }}
+    >
       <div className="flex items-center gap-2">
-        <span aria-hidden="true" className="text-lg leading-none">🎯</span>
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: "rgba(0,168,150,0.10)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A896" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+        </div>
         <h2
-          className="text-base font-semibold font-sora"
+          className="text-base font-semibold font-display"
           style={{ color: "var(--color-text)" }}
         >
           Today&apos;s Focus

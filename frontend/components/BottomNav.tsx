@@ -34,25 +34,25 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
           <button
             key={id}
             onClick={() => { play("click", 0.2); onChange(id); }}
-            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition duration-normal active:scale-95"
-            style={{
-              color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
-            }}
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-normal active:scale-95"
           >
             <div
-              className="flex items-center justify-center rounded-xl transition duration-normal"
+              className="flex items-center justify-center rounded-xl transition-all duration-normal"
               style={{
-                width: 36,
-                height: 36,
-                backgroundColor: isActive ? "var(--color-primary-soft)" : "transparent",
+                width: 40,
+                height: 40,
+                backgroundColor: isActive ? "rgba(0, 168, 150, 0.10)" : "transparent",
+                transform: isActive ? "scale(1.1)" : "scale(1)",
+                color: isActive ? "#00A896" : "var(--color-text-tertiary)",
               }}
             >
-              <Icon size={20} />
+              <Icon size={24} />
             </div>
             <span
-              className="text-xs font-semibold transition-colors duration-normal"
+              className="text-xs transition-colors duration-normal"
               style={{
-                color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
+                color: isActive ? "#00A896" : "var(--color-text-tertiary)",
+                fontWeight: isActive ? 700 : 500,
               }}
             >
               {label}

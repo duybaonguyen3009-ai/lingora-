@@ -3,21 +3,16 @@
 import React from "react";
 
 /* ══════════════════════════════════════════════════════════════════════
-   Input — Lingona Design System
+   Input — Lingona Design System (Navy + Teal)
    ══════════════════════════════════════════════════════════════════════
-   Consistent text input with theme-aware colors and focus ring.
-
-   Sizes:  sm | md | lg
+   Focus: teal border + teal ring. Gray-200 border default.
    ══════════════════════════════════════════════════════════════════════ */
 
 export type InputSize = "sm" | "md" | "lg";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Input size */
   inputSize?: InputSize;
-  /** Error state */
   error?: boolean;
-  /** Full width */
   fullWidth?: boolean;
 }
 
@@ -32,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const classes = [
       "rounded-md border outline-none",
       "transition duration-normal",
-      "[color-scheme:dark]",
+      "focus:ring-2 focus:ring-[#00A896]/20 focus:border-[#00A896]",
       fullWidth ? "w-full" : "",
       sizeClasses[inputSize],
       className,
@@ -41,7 +36,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       .join(" ");
 
     const inputStyle: React.CSSProperties = {
-      background: "var(--color-bg-secondary)",
+      background: "var(--color-bg-card)",
       borderColor: error ? "var(--color-error)" : "var(--color-border)",
       color: "var(--color-text)",
       ...style,
@@ -75,7 +70,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       "rounded-md border outline-none",
       "transition duration-normal",
       "px-4 py-3 text-sm resize-none",
-      "[color-scheme:dark]",
+      "focus:ring-2 focus:ring-[#00A896]/20 focus:border-[#00A896]",
       fullWidth ? "w-full" : "",
       className,
     ]
@@ -83,7 +78,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       .join(" ");
 
     const textareaStyle: React.CSSProperties = {
-      background: "var(--color-bg-secondary)",
+      background: "var(--color-bg-card)",
       borderColor: error ? "var(--color-error)" : "var(--color-border)",
       color: "var(--color-text)",
       ...style,

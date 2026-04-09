@@ -61,10 +61,10 @@ const UNIT_COLORS: Record<string, { bg: string; border: string; text: string; gl
     glow: "rgba(59,130,246,0.3)",
   },
   violet: {
-    bg: "rgba(139,92,246,0.08)",
-    border: "rgba(139,92,246,0.2)",
-    text: "#8B5CF6",
-    glow: "rgba(139,92,246,0.3)",
+    bg: "rgba(0,168,150,0.08)",
+    border: "rgba(0,168,150,0.2)",
+    text: "#00A896",
+    glow: "rgba(0,168,150,0.3)",
   },
   amber: {
     bg: "rgba(245,158,11,0.08)",
@@ -140,8 +140,8 @@ function LevelUpToast({ level, onDone }: { level: number; onDone: () => void }) 
         style={{
           background: "color-mix(in srgb, var(--color-bg) 95%, transparent)",
           backdropFilter: "blur(12px)",
-          border: "1px solid rgba(139,92,246,0.3)",
-          boxShadow: "0 0 40px rgba(139,92,246,0.2), 0 20px 40px rgba(0,0,0,0.3)",
+          border: "1px solid rgba(0,168,150,0.3)",
+          boxShadow: "0 0 40px rgba(0,168,150,0.2), 0 20px 40px rgba(0,0,0,0.3)",
         }}
       >
         <div className="text-4xl">🎉</div>
@@ -180,8 +180,8 @@ function ProgressHero({
     <div
       className="rounded-lg p-5 mb-5"
       style={{
-        background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(46,211,198,0.06))",
-        border: "1px solid rgba(139,92,246,0.15)",
+        background: "linear-gradient(135deg, rgba(0,168,150,0.08), rgba(46,211,198,0.06))",
+        border: "1px solid rgba(0,168,150,0.15)",
       }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -190,9 +190,9 @@ function ProgressHero({
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-bold"
             style={{
-              background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
+              background: "linear-gradient(135deg, #00A896, #007A6E)",
               color: "white",
-              boxShadow: "0 2px 10px rgba(139,92,246,0.3)",
+              boxShadow: "0 2px 10px rgba(0,168,150,0.3)",
             }}
           >
             {level}
@@ -218,7 +218,7 @@ function ProgressHero({
 
       {/* Level progress bar */}
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+        <span className="text-xs font-bold" style={{ color: "rgba(0,168,150,0.6)" }}>
           LV{level}
         </span>
         <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
@@ -226,12 +226,12 @@ function ProgressHero({
             className="h-full rounded-full transition duration-700 ease-out"
             style={{
               width: `${lvlPct}%`,
-              background: "linear-gradient(90deg, #8B5CF6, #6D28D9)",
-              boxShadow: lvlPct > 0 ? "0 0 8px rgba(139,92,246,0.4)" : "none",
+              background: "linear-gradient(90deg, #00A896, #007A6E)",
+              boxShadow: lvlPct > 0 ? "0 0 8px rgba(0,168,150,0.4)" : "none",
             }}
           />
         </div>
-        <span className="text-xs font-bold" style={{ color: "rgba(139,92,246,0.6)" }}>
+        <span className="text-xs font-bold" style={{ color: "rgba(0,168,150,0.6)" }}>
           LV{level + 1}
         </span>
       </div>
@@ -654,7 +654,7 @@ export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
         style={{
           border: progress.allTensesComplete
             ? "1px solid rgba(16,185,129,0.2)"
-            : "1px solid rgba(139,92,246,0.15)",
+            : "1px solid rgba(0,168,150,0.15)",
           background: "var(--color-bg-card)",
         }}
       >
@@ -665,7 +665,7 @@ export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
           style={{
             background: progress.allTensesComplete
               ? "rgba(16,185,129,0.06)"
-              : "rgba(139,92,246,0.04)",
+              : "rgba(0,168,150,0.04)",
           }}
         >
           <span className="text-xl">📖</span>
@@ -693,7 +693,7 @@ export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
         </button>
 
         {/* Tenses progress bar */}
-        <div className="px-4 pb-2" style={{ background: progress.allTensesComplete ? "rgba(16,185,129,0.06)" : "rgba(139,92,246,0.04)" }}>
+        <div className="px-4 pb-2" style={{ background: progress.allTensesComplete ? "rgba(16,185,129,0.06)" : "rgba(0,168,150,0.04)" }}>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-border)" }}>
             <div
               className="h-full rounded-full transition duration-700 ease-out"
@@ -701,7 +701,7 @@ export default function GrammarTab({ onOverlayChange }: GrammarTabProps) {
                 width: `${tensesTotalLessons > 0 ? Math.round((tensesCompletedLessons / tensesTotalLessons) * 100) : 0}%`,
                 background: progress.allTensesComplete
                   ? "linear-gradient(90deg, var(--color-success), var(--color-accent))"
-                  : "linear-gradient(90deg, #8B5CF6, #6D28D9)",
+                  : "linear-gradient(90deg, #00A896, #007A6E)",
               }}
             />
           </div>

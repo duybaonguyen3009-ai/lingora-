@@ -70,7 +70,7 @@ export function GrammarAmbientGlow() {
           width: "30%",
           height: "30%",
           borderRadius: "50%",
-          background: "radial-gradient(ellipse at center, rgba(139,92,246,0.07) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse at center, rgba(0,168,150,0.07) 0%, transparent 70%)",
           filter: "blur(50px)",
           animation: "grammar-drift-3 18s ease-in-out infinite",
         }}
@@ -84,8 +84,8 @@ export function GrammarAmbientGlow() {
  * Deepened shadow and border for better contrast against background.
  */
 export const GRAMMAR_CARD_STYLE: React.CSSProperties = {
-  border: "1px solid rgba(139,92,246,0.18)",
-  background: "color-mix(in srgb, var(--color-bg-card) 92%, rgba(139,92,246,0.06))",
+  border: "1px solid rgba(0,168,150,0.18)",
+  background: "color-mix(in srgb, var(--color-bg-card) 92%, rgba(0,168,150,0.06))",
   boxShadow:
     "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.05)",
   backdropFilter: "blur(8px)",

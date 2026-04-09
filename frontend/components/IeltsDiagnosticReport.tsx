@@ -29,7 +29,7 @@ import type {
 
 function bandColor(score100: number): string {
   if (score100 >= 75) return "#34D399"; // green
-  if (score100 >= 55) return "#7C5CFC"; // purple-blue
+  if (score100 >= 55) return "#00A896"; // purple-blue
   if (score100 >= 40) return "#fbbf24"; // amber
   return "#f87171"; // red
 }
@@ -362,7 +362,7 @@ export default function IeltsDiagnosticReport({
           >
             <div
               className="text-[11px] font-bold uppercase tracking-[0.12em] mb-4"
-              style={{ color: "#7C5CFC" }}
+              style={{ color: "#00A896" }}
             >
               Attempt Comparison
             </div>
