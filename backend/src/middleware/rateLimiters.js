@@ -119,4 +119,16 @@ const pronLimiters = createLimiterPair({
     "Daily pronunciation assessment limit reached. Please try again tomorrow.",
 });
 
-module.exports = { aiLimiters, ttsLimiters, pronLimiters };
+/** IELTS Writing essay submission (auth-only, lower limits — each call is expensive) */
+const writingLimiters = createLimiterPair({
+  shortAuthMax: 10,
+  shortGuestMax: 0,
+  dailyAuthMax: 20,
+  dailyGuestMax: 0,
+  shortMessage:
+    "Too many writing submissions. Please try again in a few minutes.",
+  dailyMessage:
+    "Daily writing submission limit reached. Please try again tomorrow.",
+});
+
+module.exports = { aiLimiters, ttsLimiters, pronLimiters, writingLimiters };

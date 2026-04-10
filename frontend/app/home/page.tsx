@@ -16,6 +16,7 @@ const ScenarioList = dynamic(() => import("@/components/ScenarioList"), { ssr: f
 const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversation"), { ssr: false });
 const IeltsConversationV2 = dynamic(() => import("@/components/IeltsConversationV2"), { ssr: false });
 const ExamScreen = dynamic(() => import("@/components/ExamScreen"), { ssr: false });
+const WritingTab = dynamic(() => import("@/components/Writing/WritingTab"), { ssr: false });
 const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr: false });
 const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
@@ -63,6 +64,7 @@ function AppHomeContent() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
   const [ieltsScenario, setIeltsScenario] = useState<Scenario | null>(null);
+  const [writingActive, setWritingActive] = useState(false);
   const [grammarOverlayOpen, setGrammarOverlayOpen] = useState(false);
 
   const userId = useCurrentUserId();
@@ -102,6 +104,10 @@ function AppHomeContent() {
   };
 
   if (authLoading || !user) return null;
+
+  if (writingActive) {
+    return <WritingTab onClose={() => setWritingActive(false)} />;
+  }
 
   if (ieltsScenario) {
     return (
@@ -158,7 +164,7 @@ function AppHomeContent() {
           {activeTab === "practice" && <GrammarTab onOverlayChange={setGrammarOverlayOpen} />}
           {activeTab === "exam" && (
             <div className="animate-fadeSlideUp">
-              <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} />
+              <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} />
             </div>
           )}
           {activeTab === "profile" && (

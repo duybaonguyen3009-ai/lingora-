@@ -759,3 +759,33 @@ export async function logoutUser(): Promise<void> {
   }
   useAuthStore.getState().clearAuth();
 }
+
+// ---------------------------------------------------------------------------
+// IELTS Writing
+// ---------------------------------------------------------------------------
+
+import type { WritingSubmission, WritingSubmissionSummary, WritingTaskType } from "./types";
+
+/** POST /writing/submit — submit an essay for AI scoring */
+export async function submitWritingEssay(body: {
+  taskType: WritingTaskType;
+  questionText: string;
+  essayText: string;
+}): Promise<{ submissionId: string; status: string }> {
+  return apiPostAuth<{ submissionId: string; status: string }>("/writing/submit", body);
+}
+
+/** GET /writing/result/:submissionId — get submission with scores */
+export async function getWritingResult(submissionId: string): Promise<WritingSubmission> {
+  return apiFetchAuth<WritingSubmission>(`/writing/result/${submissionId}`);
+}
+
+/** GET /writing/history — paginated submission history */
+export async function getWritingHistory(
+  page = 1,
+  limit = 10
+): Promise<{ submissions: WritingSubmissionSummary[]; page: number; limit: number }> {
+  return apiFetchAuth<{ submissions: WritingSubmissionSummary[]; page: number; limit: number }>(
+    `/writing/history?page=${page}&limit=${limit}`
+  );
+}

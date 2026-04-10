@@ -351,6 +351,69 @@ export interface IeltsDiagnosticData {
 /** Accuracy check response */
 export type FeedbackAccuracy = 'too_generous' | 'about_right' | 'too_harsh';
 
+// ---------------------------------------------------------------------------
+// IELTS Writing types
+// ---------------------------------------------------------------------------
+
+export type WritingTaskType = 'task1' | 'task2';
+export type WritingStatus = 'pending' | 'completed' | 'failed';
+
+export interface WritingCriteria {
+  score: number;
+  feedback: string;
+}
+
+export interface SentenceCorrection {
+  original: string;
+  corrected: string;
+  explanation: string;
+}
+
+export interface WritingFeedback {
+  overall_band: number;
+  language_detected: string;
+  criteria: {
+    task: WritingCriteria;
+    coherence: WritingCriteria;
+    lexical: WritingCriteria;
+    grammar: WritingCriteria;
+  };
+  strengths: string[];
+  weaknesses: string[];
+  improvements: string[];
+  sentence_corrections: SentenceCorrection[];
+  sample_essay: string;
+}
+
+export interface WritingSubmission {
+  id: string;
+  user_id: string;
+  task_type: WritingTaskType;
+  question_text: string;
+  essay_text: string;
+  word_count: number;
+  language_detected: string | null;
+  overall_band: number | null;
+  task_score: number | null;
+  coherence_score: number | null;
+  lexical_score: number | null;
+  grammar_score: number | null;
+  feedback_json: WritingFeedback | null;
+  status: WritingStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WritingSubmissionSummary {
+  id: string;
+  task_type: WritingTaskType;
+  question_text: string;
+  word_count: number;
+  overall_band: number | null;
+  status: WritingStatus;
+  created_at: string;
+}
+
 /** Extended EndSessionResult with V2 diagnostic data */
 export interface EndSessionResultV2 extends EndSessionResult {
   diagnostic?: IeltsDiagnosticData | null;

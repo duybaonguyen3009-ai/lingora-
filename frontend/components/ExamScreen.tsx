@@ -14,6 +14,7 @@ import type { Scenario } from "@/lib/types";
 
 interface ExamScreenProps {
   onStartIelts: (scenario: Scenario) => void;
+  onStartWriting: () => void;
 }
 
 interface ExamModule {
@@ -57,15 +58,15 @@ const EXAM_MODULES: ExamModule[] = [
   {
     id: "writing",
     title: "IELTS Writing",
-    subtitle: "Task 1 & Task 2 essay practice with scoring",
+    subtitle: "Task 1 & Task 2 essay practice with AI scoring",
     Icon: IconPen,
-    available: false,
+    available: true,
     accentColor: "#F59E0B",
     duration: "60 min",
   },
 ];
 
-export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
+export default function ExamScreen({ onStartIelts, onStartWriting }: ExamScreenProps) {
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => !!s.user);
   const authReady = !useAuthStore((s) => s.isLoading);
@@ -142,13 +143,15 @@ export default function ExamScreen({ onStartIelts }: ExamScreenProps) {
         </button>
       )}
 
-      {/* IELTS Speaking — featured card */}
+      {/* Available exam modules */}
       {EXAM_MODULES.filter(m => m.available).map((mod) => {
         const isLoading = mod.id === "speaking" && loading;
         return (
           <button
             key={mod.id}
             onClick={() => {
+              if (!isAuthenticated) { router.push("/login"); return; }
+              if (mod.id === "writing") { onStartWriting(); return; }
               if (ieltsScenario) handleStartExam(ieltsScenario);
             }}
             disabled={isLoading || (mod.id === "speaking" && !ieltsScenario)}
