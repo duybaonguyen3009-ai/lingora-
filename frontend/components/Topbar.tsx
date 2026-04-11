@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { IconFire } from "./Icons";
 import ThemeToggle from "./ThemeToggle";
 import Mascot from "@/components/ui/Mascot";
@@ -10,6 +11,7 @@ interface TopbarProps {
 }
 
 export default function Topbar({ streak = 0 }: TopbarProps) {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const initials = user?.name
     ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
@@ -54,8 +56,21 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
         </span>
       </div>
 
-      {/* Right — Avatar + Theme */}
+      {/* Right — Leaderboard + Theme + Avatar */}
       <div className="flex items-center gap-2.5">
+        {user && (
+          <button
+            onClick={() => router.push("/leaderboard")}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-95"
+            style={{
+              background: "rgba(245,158,11,0.10)",
+              border: "1px solid rgba(245,158,11,0.15)",
+            }}
+            title="Leaderboard"
+          >
+            <span className="text-base">🏆</span>
+          </button>
+        )}
         <ThemeToggle />
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center font-sans font-bold text-xs text-white"

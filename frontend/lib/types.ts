@@ -418,3 +418,20 @@ export interface WritingSubmissionSummary {
 export interface EndSessionResultV2 extends EndSessionResult {
   diagnostic?: IeltsDiagnosticData | null;
 }
+
+// ---------------------------------------------------------------------------
+// User Feedback types
+// ---------------------------------------------------------------------------
+
+export type FeedbackActivityType = 'speaking' | 'writing' | 'lesson';
+export type FeedbackRating = 1 | 2 | 3;
+
+export interface UserFeedback {
+  id: string;
+  activity_type: FeedbackActivityType;
+  activity_id: string | null;
+  rating: FeedbackRating;
+  comment: string | null;
+  tags: string[];
+  created_at: string;
+}

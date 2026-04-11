@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
+import FeedbackSheet from "@/components/FeedbackSheet";
 import type { EndSessionResult, CriteriaFeedback } from "@/lib/types";
 
 interface ScenarioSummaryProps {
@@ -24,6 +25,13 @@ function formatDuration(ms: number): string {
 
 export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProps) {
   const [animatedScore, setAnimatedScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  // Show feedback sheet after 1s delay
+  useEffect(() => {
+    const t = setTimeout(() => setShowFeedback(true), 1000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const target = result.overallScore;
@@ -345,6 +353,12 @@ export default function ScenarioSummary({ result, onClose }: ScenarioSummaryProp
           Done
         </Button>
       </div>
+
+      <FeedbackSheet
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        activityType="speaking"
+      />
     </div>
   );
 }

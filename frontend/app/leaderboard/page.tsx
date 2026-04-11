@@ -14,7 +14,7 @@ const TABS: { id: Scope; label: string }[] = [
 ];
 
 export default function LeaderboardPage() {
-  const [scope, setScope] = useState<Scope>("all-time");
+  const [scope, setScope] = useState<Scope>("weekly");
   const { data, loading, error } = useLeaderboard(scope);
   const userId = useCurrentUserId();
 
@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href="/"
+          href="/home"
           className="inline-flex items-center gap-1 text-sm mb-4 transition-colors"
           style={{ color: "var(--color-text-secondary)" }}
         >

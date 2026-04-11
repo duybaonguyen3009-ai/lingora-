@@ -764,7 +764,7 @@ export async function logoutUser(): Promise<void> {
 // IELTS Writing
 // ---------------------------------------------------------------------------
 
-import type { WritingSubmission, WritingSubmissionSummary, WritingTaskType } from "./types";
+import type { WritingSubmission, WritingSubmissionSummary, WritingTaskType, UserFeedback, FeedbackActivityType, FeedbackRating } from "./types";
 
 /** POST /writing/submit — submit an essay for AI scoring */
 export async function submitWritingEssay(body: {
@@ -788,4 +788,24 @@ export async function getWritingHistory(
   return apiFetchAuth<{ submissions: WritingSubmissionSummary[]; page: number; limit: number }>(
     `/writing/history?page=${page}&limit=${limit}`
   );
+}
+
+// ---------------------------------------------------------------------------
+// User Feedback
+// ---------------------------------------------------------------------------
+
+/** POST /feedback — submit feedback after an activity */
+export async function submitFeedback(body: {
+  activityType: FeedbackActivityType;
+  activityId?: string;
+  rating: FeedbackRating;
+  comment?: string;
+  tags?: string[];
+}): Promise<UserFeedback> {
+  return apiPostAuth<UserFeedback>("/feedback", body);
+}
+
+/** GET /feedback/me — get user's feedback history */
+export async function getFeedbackHistory(limit = 20): Promise<{ feedback: UserFeedback[] }> {
+  return apiFetchAuth<{ feedback: UserFeedback[] }>(`/feedback/me?limit=${limit}`);
 }

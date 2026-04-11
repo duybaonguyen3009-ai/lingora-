@@ -7,7 +7,8 @@
  * sentence corrections, and collapsible sample essay.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import FeedbackSheet from "@/components/FeedbackSheet";
 import type { WritingSubmission, WritingFeedback } from "@/lib/types";
 
 interface WritingResultProps {
@@ -69,7 +70,18 @@ function CriteriaCard({
 
 export default function WritingResult({ submission, onBack }: WritingResultProps) {
   const [showSample, setShowSample] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const feedbackShown = useRef(false);
   const feedback = submission.feedback_json as WritingFeedback | null;
+
+  // Show feedback sheet once when completed result first renders
+  useEffect(() => {
+    if (submission.status === "completed" && feedback && !feedbackShown.current) {
+      feedbackShown.current = true;
+      const t = setTimeout(() => setShowFeedback(true), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [submission.status, feedback]);
 
   if (!feedback) {
     return (
@@ -276,6 +288,13 @@ export default function WritingResult({ submission, onBack }: WritingResultProps
           )}
         </div>
       )}
+
+      <FeedbackSheet
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        activityType="writing"
+        activityId={submission.id}
+      />
     </div>
   );
 }

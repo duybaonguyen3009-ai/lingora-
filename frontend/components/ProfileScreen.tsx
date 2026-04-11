@@ -4,13 +4,13 @@
  * ProfileScreen.tsx — Navy/teal design with avatar ring, stats cards, badges
  */
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import SpeakingMetrics from "./SpeakingMetrics";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { logoutUser } from "@/lib/api";
+import { logoutUser, getLeaderboard } from "@/lib/api";
 import type { SpeakingMetricsData, GamificationData } from "@/lib/types";
 
 interface ProfileScreenProps {
@@ -149,6 +149,24 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
   const isGuest = !user;
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [weeklyRank, setWeeklyRank] = useState<number | null>(null);
+  const [allTimeRank, setAllTimeRank] = useState<number | null>(null);
+
+  const loadRanks = useCallback(async () => {
+    if (!user) return;
+    try {
+      const [weekly, allTime] = await Promise.all([
+        getLeaderboard("weekly"),
+        getLeaderboard("all-time"),
+      ]);
+      setWeeklyRank(weekly.myEntry?.rank ?? null);
+      setAllTimeRank(allTime.myEntry?.rank ?? null);
+    } catch {
+      // silently fail — ranks are cosmetic
+    }
+  }, [user]);
+
+  useEffect(() => { loadRanks(); }, [loadRanks]);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -198,6 +216,40 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
       {/* Badges */}
       {gamification && (
         <BadgeGrid badges={gamification.badges} />
+      )}
+
+      {/* Leaderboard Card */}
+      {!isGuest && (
+        <button
+          onClick={() => router.push("/leaderboard")}
+          className="w-full text-left rounded-lg p-4 transition-all active:scale-[0.98]"
+          style={{
+            background: "var(--color-bg-card)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-lg flex items-center justify-center text-xl"
+              style={{ background: "rgba(245,158,11,0.10)" }}
+            >
+              🏆
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                Leaderboard
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                {weeklyRank
+                  ? `#${weeklyRank} this week · #${allTimeRank ?? "—"} all time`
+                  : "See where you rank"}
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-tertiary)" }}>
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </button>
       )}
 
       {/* Speaking Metrics */}
