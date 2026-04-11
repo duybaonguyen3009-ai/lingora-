@@ -17,10 +17,12 @@ const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversa
 const IeltsConversationV2 = dynamic(() => import("@/components/IeltsConversationV2"), { ssr: false });
 const ExamScreen = dynamic(() => import("@/components/ExamScreen"), { ssr: false });
 const WritingTab = dynamic(() => import("@/components/Writing/WritingTab"), { ssr: false });
+const ReadingTab = dynamic(() => import("@/components/Reading/ReadingTab"), { ssr: false });
 const BattleTab = dynamic(() => import("@/components/Battle/BattleTab"), { ssr: false });
 const FriendsTab = dynamic(() => import("@/components/Social/FriendsTab"), { ssr: false });
 const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr: false });
 const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
+const BandProgressCard = dynamic(() => import("@/components/Dashboard/BandProgressCard"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
@@ -67,6 +69,7 @@ function AppHomeContent() {
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null);
   const [ieltsScenario, setIeltsScenario] = useState<Scenario | null>(null);
   const [writingActive, setWritingActive] = useState(false);
+  const [readingActive, setReadingActive] = useState(false);
   const [grammarOverlayOpen, setGrammarOverlayOpen] = useState(false);
 
   const userId = useCurrentUserId();
@@ -106,6 +109,10 @@ function AppHomeContent() {
   };
 
   if (authLoading || !user) return null;
+
+  if (readingActive) {
+    return <ReadingTab onClose={() => setReadingActive(false)} />;
+  }
 
   if (writingActive) {
     return <WritingTab onClose={() => setWritingActive(false)} />;
@@ -153,6 +160,7 @@ function AppHomeContent() {
           {activeTab === "home" && (
             <div className="flex flex-col gap-8 animate-fadeSlideUp">
               <StartSpeakingCard onStart={handleStartSpeaking} />
+              <BandProgressCard userId={userId} />
               <TodayFocusCard recommendations={focusRecs} loading={focusLoading} onAction={handleFocusAction} />
               <PracticeScenarios onSelect={(id) => handleScenarioSelect(id)} />
               <CoachTipCard />
@@ -166,7 +174,7 @@ function AppHomeContent() {
           {activeTab === "practice" && <GrammarTab onOverlayChange={setGrammarOverlayOpen} />}
           {activeTab === "exam" && (
             <div className="animate-fadeSlideUp">
-              <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} />
+              <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} onStartReading={() => setReadingActive(true)} />
             </div>
           )}
           {activeTab === "battle" && (

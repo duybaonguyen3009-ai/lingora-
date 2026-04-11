@@ -94,6 +94,9 @@ function createApp() {
   // IELTS Writing: essay submission + AI scoring
   app.use("/api/v1/writing", require("./routes/writingRoutes"));
 
+  // IELTS Reading: practice + full test
+  app.use("/api/v1/reading", require("./routes/readingRoutes"));
+
   // User feedback: post-activity rating + comments
   app.use("/api/v1/feedback", require("./routes/feedbackRoutes"));
 

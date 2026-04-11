@@ -484,6 +484,44 @@ export async function getSpeakingMetrics(userId: string): Promise<SpeakingMetric
 }
 
 /**
+ * GET /api/v1/users/:userId/band-progress
+ * Returns band history, estimated band, weekly delta, per-skill averages.
+ */
+export async function getBandProgress(userId: string): Promise<import("./types").BandProgressData> {
+  return apiFetchAuth<import("./types").BandProgressData>(`/users/${userId}/band-progress`);
+}
+
+// ---------------------------------------------------------------------------
+// Reading
+// ---------------------------------------------------------------------------
+
+import type { ReadingPassageSummary, ReadingPassageFull, ReadingPracticeResult, ReadingFullTestData, ReadingFullTestResult } from "./types";
+
+export async function getReadingPassages(filters?: { difficulty?: string; topic?: string; limit?: number }): Promise<{ passages: ReadingPassageSummary[] }> {
+  const params = new URLSearchParams();
+  if (filters?.difficulty) params.set("difficulty", filters.difficulty);
+  if (filters?.topic) params.set("topic", filters.topic);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  return apiFetchAuth<{ passages: ReadingPassageSummary[] }>(`/reading/passages?${params}`);
+}
+
+export async function getReadingPassage(passageId: string): Promise<ReadingPassageFull> {
+  return apiFetchAuth<ReadingPassageFull>(`/reading/passages/${passageId}`);
+}
+
+export async function submitReadingPractice(body: { passage_id: string; answers: Array<{ question_id?: string; order_index?: number; answer: string }>; time_seconds: number }): Promise<ReadingPracticeResult> {
+  return apiPostAuth<ReadingPracticeResult>("/reading/submit", body);
+}
+
+export async function startReadingFullTest(): Promise<ReadingFullTestData> {
+  return apiPostAuth<ReadingFullTestData>("/reading/full-test/start", {});
+}
+
+export async function submitReadingFullTest(body: { passage_results: Array<{ passage_id: string; answers: Array<{ question_id?: string; order_index?: number; answer: string }> }>; time_seconds: number }): Promise<ReadingFullTestResult> {
+  return apiPostAuth<ReadingFullTestResult>("/reading/full-test/submit", body);
+}
+
+/**
  * GET /api/v1/users/:userId/coach/focus
  * Returns 0–2 prioritised focus recommendations for the homepage coach card.
  * Never throws — returns { recommendations: [] } on any error.

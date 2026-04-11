@@ -553,6 +553,93 @@ export interface ShareCardStats {
 }
 
 // ---------------------------------------------------------------------------
+// Band Progress types
+// ---------------------------------------------------------------------------
+
+export interface BandHistoryEntry {
+  band: number;
+  skill: 'speaking' | 'writing';
+  session_id: string;
+  scored_at: string;
+}
+
+export interface BandProgressData {
+  estimated_band: number | null;
+  target_band: number;
+  band_history: BandHistoryEntry[];
+  week_delta: number;
+  speaking_avg: number | null;
+  writing_avg: number | null;
+}
+
+// ---------------------------------------------------------------------------
+// Reading types
+// ---------------------------------------------------------------------------
+
+export interface ReadingPassageSummary {
+  id: string;
+  topic: string;
+  difficulty: string;
+  estimated_minutes: number;
+  passage_title: string;
+}
+
+export interface ReadingPassageFull {
+  passage: {
+    id: string;
+    topic: string;
+    difficulty: string;
+    estimated_minutes: number;
+    passage_title: string;
+    passage_text: string;
+  };
+  questions: Array<{
+    id: string;
+    order_index: number;
+    type: 'mcq' | 'tfng' | 'matching';
+    question_text: string;
+    options: Record<string, string> | null;
+    correct_answer: string;
+  }>;
+}
+
+export interface ReadingQuestionResult {
+  question_id: string;
+  order_index: number;
+  type: string;
+  user_answer: string | null;
+  correct_answer: string;
+  is_correct: boolean;
+  explanation: string | null;
+}
+
+export interface ReadingPracticeResult {
+  score: number;
+  total: number;
+  band_estimate: number;
+  time_seconds: number;
+  per_question_results: ReadingQuestionResult[];
+}
+
+export interface ReadingFullTestData {
+  passages: ReadingPassageFull[];
+  time_limit: number;
+}
+
+export interface ReadingFullTestResult {
+  total_score: number;
+  total_questions: number;
+  band_estimate: number;
+  time_seconds: number;
+  passage_breakdowns: Array<{
+    passage_id: string;
+    score: number;
+    total: number;
+    per_question_results: ReadingQuestionResult[];
+  }>;
+}
+
+// ---------------------------------------------------------------------------
 // Battle types
 // ---------------------------------------------------------------------------
 
