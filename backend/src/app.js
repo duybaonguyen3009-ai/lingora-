@@ -97,6 +97,9 @@ function createApp() {
   // User feedback: post-activity rating + comments
   app.use("/api/v1/feedback", require("./routes/feedbackRoutes"));
 
+  // Social: friends, pings, notifications, profile
+  app.use("/api/v1/social", require("./routes/socialRoutes"));
+
   // ── Mock storage route (development only) ──
   // When using the mock storage provider, the frontend PUTs audio blobs to
   // /mock-storage/:key.  This route accepts the binary body and stores it

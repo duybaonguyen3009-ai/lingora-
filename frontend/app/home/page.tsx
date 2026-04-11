@@ -17,6 +17,7 @@ const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversa
 const IeltsConversationV2 = dynamic(() => import("@/components/IeltsConversationV2"), { ssr: false });
 const ExamScreen = dynamic(() => import("@/components/ExamScreen"), { ssr: false });
 const WritingTab = dynamic(() => import("@/components/Writing/WritingTab"), { ssr: false });
+const FriendsTab = dynamic(() => import("@/components/Social/FriendsTab"), { ssr: false });
 const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr: false });
 const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
@@ -165,6 +166,11 @@ function AppHomeContent() {
           {activeTab === "exam" && (
             <div className="animate-fadeSlideUp">
               <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} />
+            </div>
+          )}
+          {activeTab === "social" && (
+            <div className="animate-fadeSlideUp">
+              <FriendsTab />
             </div>
           )}
           {activeTab === "profile" && (

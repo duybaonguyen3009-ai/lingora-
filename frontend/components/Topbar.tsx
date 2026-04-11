@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { IconFire } from "./Icons";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./Social/NotificationBell";
 import Mascot from "@/components/ui/Mascot";
 import { useAuthStore } from "@/lib/stores/authStore";
 
@@ -71,6 +72,7 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
             <span className="text-base">🏆</span>
           </button>
         )}
+        <NotificationBell />
         <ThemeToggle />
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center font-sans font-bold text-xs text-white"

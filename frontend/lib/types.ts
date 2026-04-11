@@ -435,3 +435,40 @@ export interface UserFeedback {
   tags: string[];
   created_at: string;
 }
+
+// ---------------------------------------------------------------------------
+// Social types
+// ---------------------------------------------------------------------------
+
+export interface FriendRequest {
+  id: string;
+  sender_user_id: string;
+  receiver_user_id: string;
+  sender_name?: string;
+  receiver_name?: string;
+  sender_username?: string;
+  receiver_username?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
+  created_at: string;
+}
+
+export interface Friend {
+  id: string;
+  name: string;
+  username: string | null;
+  practiced_today: boolean;
+}
+
+export interface SocialNotification {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface SocialProfile {
+  username: string | null;
+  qrToken: string | null;
+  friendCount: number;
+}

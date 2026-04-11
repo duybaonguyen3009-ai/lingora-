@@ -199,6 +199,42 @@ async function apiPostAuth<T>(path: string, body: unknown): Promise<T> {
   return (json as { data: T }).data;
 }
 
+/**
+ * Authenticated DELETE.
+ * Attaches the current access token, retries once after a silent refresh on 401.
+ */
+async function apiDeleteAuth<T = unknown>(path: string): Promise<T> {
+  const makeReq = (token: string | null) =>
+    fetch(`${BASE_URL}${path}`, {
+      method:      "DELETE",
+      headers:     authHeaders(token),
+      credentials: "include",
+      cache:       "no-store",
+    });
+
+  const initialToken = useAuthStore.getState().accessToken;
+  let res = await makeReq(initialToken);
+
+  if (res.status === 401) {
+    const ok = await tryRefresh();
+    if (!ok) {
+      useAuthStore.getState().clearAuth();
+      throw new Error(
+        initialToken
+          ? "Your session timed out — let's pick up where you left off"
+          : "Please sign in to continue."
+      );
+    }
+    res = await makeReq(useAuthStore.getState().accessToken);
+  }
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error((json as { message?: string }).message ?? `We couldn't complete that request. Give it another try?`);
+  }
+  return (json as { data: T }).data;
+}
+
 // ---------------------------------------------------------------------------
 // Response shape types
 // ---------------------------------------------------------------------------
@@ -808,4 +844,90 @@ export async function submitFeedback(body: {
 /** GET /feedback/me — get user's feedback history */
 export async function getFeedbackHistory(limit = 20): Promise<{ feedback: UserFeedback[] }> {
   return apiFetchAuth<{ feedback: UserFeedback[] }>(`/feedback/me?limit=${limit}`);
+}
+
+// ---------------------------------------------------------------------------
+// Social
+// ---------------------------------------------------------------------------
+
+import type { FriendRequest, Friend, SocialNotification, SocialProfile } from "./types";
+
+/** POST /social/friends/request */
+export async function sendFriendRequest(body: { targetUserId?: string; username?: string; qrToken?: string }): Promise<FriendRequest> {
+  return apiPostAuth<FriendRequest>("/social/friends/request", body);
+}
+
+/** POST /social/friends/request/:id/accept */
+export async function acceptFriendRequest(requestId: string): Promise<unknown> {
+  return apiPostAuth<unknown>(`/social/friends/request/${requestId}/accept`, {});
+}
+
+/** POST /social/friends/request/:id/reject */
+export async function rejectFriendRequest(requestId: string): Promise<unknown> {
+  return apiPostAuth<unknown>(`/social/friends/request/${requestId}/reject`, {});
+}
+
+/** DELETE /social/friends/request/:id */
+export async function cancelFriendRequest(requestId: string): Promise<unknown> {
+  return apiDeleteAuth(`/social/friends/request/${requestId}`);
+}
+
+/** GET /social/friends */
+export async function getFriends(): Promise<{ friends: Friend[] }> {
+  return apiFetchAuth<{ friends: Friend[] }>("/social/friends");
+}
+
+/** DELETE /social/friends/:friendUserId */
+export async function removeFriend(friendUserId: string): Promise<unknown> {
+  return apiDeleteAuth(`/social/friends/${friendUserId}`);
+}
+
+/** GET /social/friends/requests/incoming */
+export async function getIncomingRequests(): Promise<{ requests: FriendRequest[] }> {
+  return apiFetchAuth<{ requests: FriendRequest[] }>("/social/friends/requests/incoming");
+}
+
+/** GET /social/friends/requests/outgoing */
+export async function getOutgoingRequests(): Promise<{ requests: FriendRequest[] }> {
+  return apiFetchAuth<{ requests: FriendRequest[] }>("/social/friends/requests/outgoing");
+}
+
+/** GET /social/profile/me */
+export async function getSocialProfile(): Promise<SocialProfile> {
+  return apiFetchAuth<SocialProfile>("/social/profile/me");
+}
+
+/** POST /social/profile/username */
+export async function setSocialUsername(username: string): Promise<unknown> {
+  return apiPostAuth<unknown>("/social/profile/username", { username });
+}
+
+/** GET /social/profile/qr */
+export async function getQrToken(): Promise<{ qrToken: string }> {
+  return apiFetchAuth<{ qrToken: string }>("/social/profile/qr");
+}
+
+/** POST /social/pings */
+export async function sendPing(body: { receiverUserId: string; messageTemplateKey: string }): Promise<unknown> {
+  return apiPostAuth<unknown>("/social/pings", body);
+}
+
+/** GET /social/pings/inbox */
+export async function getPingsReceived(): Promise<{ pings: unknown[] }> {
+  return apiFetchAuth<{ pings: unknown[] }>("/social/pings/inbox");
+}
+
+/** GET /social/notifications */
+export async function getSocialNotifications(): Promise<{ notifications: SocialNotification[]; unreadCount: number }> {
+  return apiFetchAuth<{ notifications: SocialNotification[]; unreadCount: number }>("/social/notifications");
+}
+
+/** POST /social/notifications/:id/read */
+export async function markNotificationRead(id: string): Promise<unknown> {
+  return apiPostAuth<unknown>(`/social/notifications/${id}/read`, {});
+}
+
+/** POST /social/notifications/read-all */
+export async function markAllNotificationsRead(): Promise<unknown> {
+  return apiPostAuth<unknown>("/social/notifications/read-all", {});
 }
