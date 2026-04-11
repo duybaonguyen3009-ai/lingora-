@@ -5,7 +5,7 @@
  */
 
 const { Router }              = require('express');
-const { getUserGamification } = require('../controllers/gamificationController');
+const { getUserGamification, getBandProgress } = require('../controllers/gamificationController');
 const { getMetrics }          = require('../controllers/pronunciationController');
 const { verifyToken, logOwnership } = require('../middleware/auth');
 
@@ -16,5 +16,8 @@ router.get('/:userId/gamification', verifyToken, logOwnership, getUserGamificati
 
 // GET /api/v1/users/:userId/pronunciation/metrics
 router.get('/:userId/pronunciation/metrics', verifyToken, logOwnership, getMetrics);
+
+// GET /api/v1/users/:userId/band-progress
+router.get('/:userId/band-progress', verifyToken, logOwnership, getBandProgress);
 
 module.exports = router;
