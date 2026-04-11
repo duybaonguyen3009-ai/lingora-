@@ -22,6 +22,7 @@ const BattleTab = dynamic(() => import("@/components/Battle/BattleTab"), { ssr: 
 const FriendsTab = dynamic(() => import("@/components/Social/FriendsTab"), { ssr: false });
 const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr: false });
 const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
+const OnboardingFlow = dynamic(() => import("@/components/Onboarding/OnboardingFlow"), { ssr: false });
 const BandProgressCard = dynamic(() => import("@/components/Dashboard/BandProgressCard"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
@@ -31,7 +32,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSpeakingMetrics } from "@/hooks/useSpeakingMetrics";
 import { useTodayFocus } from "@/hooks/useTodayFocus";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { getScenarios } from "@/lib/api";
+import { getScenarios, getOnboardingStatus } from "@/lib/api";
 import type { Scenario, FocusRecommendation } from "@/lib/types";
 
 export default function AppHomePage() {
@@ -71,6 +72,8 @@ function AppHomeContent() {
   const [writingActive, setWritingActive] = useState(false);
   const [readingActive, setReadingActive] = useState(false);
   const [grammarOverlayOpen, setGrammarOverlayOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   const userId = useCurrentUserId();
   const { progress } = useProgress(userId);
@@ -81,6 +84,17 @@ function AppHomeContent() {
   const { recommendations: focusRecs, loading: focusLoading } = useTodayFocus(userId);
 
   const displayStreak = gamification?.streak.currentStreak ?? stats.streak;
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    if (!user || onboardingChecked) return;
+    getOnboardingStatus()
+      .then((status) => {
+        if (!status.has_completed_onboarding) setShowOnboarding(true);
+      })
+      .catch(() => {})
+      .finally(() => setOnboardingChecked(true));
+  }, [user, onboardingChecked]);
 
   const handleStartSpeaking = () => setActiveTab("speak");
 
@@ -109,6 +123,10 @@ function AppHomeContent() {
   };
 
   if (authLoading || !user) return null;
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
+  }
 
   if (readingActive) {
     return <ReadingTab onClose={() => setReadingActive(false)} />;

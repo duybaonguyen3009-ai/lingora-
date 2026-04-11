@@ -573,6 +573,34 @@ export interface BandProgressData {
 }
 
 // ---------------------------------------------------------------------------
+// Pro / Subscription types
+// ---------------------------------------------------------------------------
+
+export interface DailyLimits {
+  speaking_used: number;
+  speaking_limit: number | null;
+  writing_used: number;
+  writing_limit: number | null;
+}
+
+export interface ProStatus {
+  is_pro: boolean;
+  is_trial: boolean;
+  trial_expires_at: string | null;
+  daily_limits: DailyLimits;
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding types
+// ---------------------------------------------------------------------------
+
+export interface OnboardingStatus {
+  has_completed_onboarding: boolean;
+  target_band: number | null;
+  onboarding_skipped: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Reading types
 // ---------------------------------------------------------------------------
 

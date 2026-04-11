@@ -492,6 +492,42 @@ export async function getBandProgress(userId: string): Promise<import("./types")
 }
 
 // ---------------------------------------------------------------------------
+// Pro / Subscription
+// ---------------------------------------------------------------------------
+
+import type { ProStatus } from "./types";
+
+export async function getProStatus(): Promise<ProStatus> {
+  return apiFetchAuth<ProStatus>("/users/pro-status");
+}
+
+export async function startProTrial(): Promise<{ trial_expires_at: string; is_pro: boolean; is_trial: boolean }> {
+  return apiPostAuth<{ trial_expires_at: string; is_pro: boolean; is_trial: boolean }>("/users/start-trial", {});
+}
+
+export async function upgradeToPro(): Promise<{ is_pro: boolean }> {
+  return apiPostAuth<{ is_pro: boolean }>("/users/upgrade", {});
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+import type { OnboardingStatus } from "./types";
+
+export async function getOnboardingStatus(): Promise<OnboardingStatus> {
+  return apiFetchAuth<OnboardingStatus>("/users/onboarding/status");
+}
+
+export async function completeOnboarding(targetBand: number | null): Promise<unknown> {
+  return apiPostAuth<unknown>("/users/onboarding/complete", { target_band: targetBand });
+}
+
+export async function skipOnboarding(): Promise<unknown> {
+  return apiPostAuth<unknown>("/users/onboarding/skip", {});
+}
+
+// ---------------------------------------------------------------------------
 // Reading
 // ---------------------------------------------------------------------------
 
