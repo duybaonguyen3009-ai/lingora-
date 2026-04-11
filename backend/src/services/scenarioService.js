@@ -1232,6 +1232,14 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     avgSpeakingRatio: speechFlow.avgSpeakingRatio,
   };
 
+  // Fire-and-forget: update user's estimated band (if band score exists)
+  if (bandScore != null && bandScore > 0) {
+    try {
+      const { updateUserBand } = require("../repositories/userRepository");
+      updateUserBand(userId, bandScore, "speaking", sessionId).catch(() => {});
+    } catch { /* module load safety */ }
+  }
+
   // Fire-and-forget: update study room activity tracking
   try {
     const { onUserCompletedActivity } = require("./studyRoomService");

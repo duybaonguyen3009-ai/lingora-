@@ -109,6 +109,22 @@ async function getUserSubmissions(userId, limit = 10, offset = 0) {
   return result.rows;
 }
 
+/**
+ * Find an existing non-failed submission for this user + task type today.
+ * Used for idempotency — prevents duplicate submissions on double-click.
+ */
+async function findTodaySubmission(userId, taskType) {
+  const result = await query(
+    `SELECT id, status FROM writing_submissions
+      WHERE user_id = $1 AND task_type = $2
+        AND created_at::date = CURRENT_DATE
+        AND status != 'failed'
+      ORDER BY created_at DESC LIMIT 1`,
+    [userId, taskType]
+  );
+  return result.rows[0] || null;
+}
+
 // ---------------------------------------------------------------------------
 // writing_usage — daily submission counts
 // ---------------------------------------------------------------------------
@@ -149,6 +165,7 @@ module.exports = {
   updateSubmissionResult,
   getSubmissionById,
   getUserSubmissions,
+  findTodaySubmission,
   getTodayUsageCount,
   incrementUsageCount,
 };

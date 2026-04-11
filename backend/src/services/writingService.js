@@ -70,7 +70,13 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
     }
   }
 
-  // 3. Create submission + increment usage
+  // 3. Check for existing submission today (idempotency guard)
+  const existing = await writingRepository.findTodaySubmission(userId, taskType);
+  if (existing) {
+    return { submissionId: existing.id, status: existing.status };
+  }
+
+  // 4. Create submission + increment usage
   const submission = await writingRepository.createSubmission(
     userId, taskType, questionText, essayText, wordCount
   );
@@ -94,6 +100,12 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
       });
 
       console.log(`[writing] Submission ${submissionId} scored — band ${result.overall_band}`);
+
+      // Fire-and-forget: update user's estimated band
+      try {
+        const { updateUserBand } = require("../repositories/userRepository");
+        updateUserBand(userId, result.overall_band, "writing", submissionId).catch(() => {});
+      } catch { /* module load safety */ }
 
       // Fire-and-forget: update study room activity tracking
       try {

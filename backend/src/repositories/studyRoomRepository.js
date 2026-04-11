@@ -36,8 +36,11 @@ async function getUserRooms(userId) {
 }
 
 async function updateRoomStreak(roomId, increment = true) {
-  const op = increment ? "room_streak + 1" : "0";
-  await query(`UPDATE study_rooms SET room_streak = ${op}, updated_at = now() WHERE id = $1`, [roomId]);
+  if (increment) {
+    await query(`UPDATE study_rooms SET room_streak = room_streak + 1, updated_at = now() WHERE id = $1`, [roomId]);
+  } else {
+    await query(`UPDATE study_rooms SET room_streak = 0, updated_at = now() WHERE id = $1`, [roomId]);
+  }
 }
 
 // ---------------------------------------------------------------------------
