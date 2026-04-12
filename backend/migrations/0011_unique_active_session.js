@@ -8,10 +8,26 @@
  */
 
 exports.up = (pgm) => {
+  // Clean up any duplicate active sessions before creating the unique index.
+  // Without this, the index creation fails if duplicates exist in prod data.
+  pgm.sql(`
+    UPDATE scenario_sessions
+    SET status = 'abandoned'
+    WHERE id IN (
+      SELECT id FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn
+        FROM scenario_sessions
+        WHERE status = 'active'
+      ) ranked
+      WHERE rn > 1
+    )
+  `);
+
   pgm.createIndex("scenario_sessions", ["user_id"], {
     name: "idx_scenario_sessions_one_active_per_user",
     unique: true,
     where: "status = 'active'",
+    ifNotExists: true,
   });
 };
 
