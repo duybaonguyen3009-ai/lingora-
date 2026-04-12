@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import AppShell from "@/components/AppShell";
 import Topbar from "@/components/Topbar";
-import BottomNav from "@/components/BottomNav";
 import StartSpeakingCard from "@/components/StartSpeakingCard";
 import PracticeScenarios from "@/components/PracticeScenarios";
 import CoachTipCard from "@/components/CoachTipCard";
@@ -32,8 +32,8 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSpeakingMetrics } from "@/hooks/useSpeakingMetrics";
 import { useTodayFocus } from "@/hooks/useTodayFocus";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { getScenarios, getOnboardingStatus } from "@/lib/api";
-import type { Scenario, FocusRecommendation } from "@/lib/types";
+import { getScenarios, getOnboardingStatus, getBattleHome } from "@/lib/api";
+import type { Scenario, FocusRecommendation, BattleRankTier } from "@/lib/types";
 
 export default function AppHomePage() {
   return (
@@ -41,6 +41,29 @@ export default function AppHomePage() {
       <AppHomeContent />
     </Suspense>
   );
+}
+
+/**
+ * Map sidebar "learn-*" sub-skill IDs to the tab content they should display.
+ * "learn-speaking" and "exam" both route to ExamScreen.
+ */
+function resolveContentTab(activeTab: string): string {
+  switch (activeTab) {
+    case "learn":
+    case "learn-speaking":
+    case "exam":
+      return "exam";
+    case "learn-grammar":
+      return "grammar";
+    case "learn-reading":
+      return "reading";
+    case "learn-writing":
+      return "writing";
+    case "learn-listening":
+      return "listening";
+    default:
+      return activeTab;
+  }
 }
 
 function AppHomeContent() {
@@ -74,6 +97,7 @@ function AppHomeContent() {
   const [grammarOverlayOpen, setGrammarOverlayOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [rankTier, setRankTier] = useState<BattleRankTier>("iron");
 
   const userId = useCurrentUserId();
   const { progress } = useProgress(userId);
@@ -84,6 +108,18 @@ function AppHomeContent() {
   const { recommendations: focusRecs, loading: focusLoading } = useTodayFocus(userId);
 
   const displayStreak = gamification?.streak.currentStreak ?? stats.streak;
+
+  // Fetch battle rank tier for sidebar display
+  useEffect(() => {
+    if (!user) return;
+    getBattleHome()
+      .then((home) => {
+        if (home?.profile?.current_rank_tier) {
+          setRankTier(home.profile.current_rank_tier);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -122,20 +158,44 @@ function AppHomeContent() {
     setActiveTab(rec.actionTarget);
   };
 
+  /**
+   * Handle tab changes from both sidebar and bottom nav.
+   * Sidebar sends "learn-speaking", "learn-grammar" etc.
+   * BottomNav sends "home", "exam", "battle", "social", "profile".
+   */
+  const handleTabChange = useCallback((id: string) => {
+    // If sidebar sends "learn-writing", activate the writing overlay
+    if (id === "learn-writing") {
+      setWritingActive(true);
+      setReadingActive(false);
+      setActiveTab(id);
+      return;
+    }
+    if (id === "learn-reading") {
+      setReadingActive(true);
+      setWritingActive(false);
+      setActiveTab(id);
+      return;
+    }
+    // Close writing/reading overlays when navigating away
+    setWritingActive(false);
+    setReadingActive(false);
+    setActiveTab(id);
+  }, []);
+
   if (authLoading || !user) return null;
 
   if (showOnboarding) {
     return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
   }
 
+  // Full-screen overlays — render outside AppShell
   if (readingActive) {
-    return <ReadingTab onClose={() => setReadingActive(false)} />;
+    return <ReadingTab onClose={() => { setReadingActive(false); setActiveTab("home"); }} />;
   }
-
   if (writingActive) {
-    return <WritingTab onClose={() => setWritingActive(false)} />;
+    return <WritingTab onClose={() => { setWritingActive(false); setActiveTab("home"); }} />;
   }
-
   if (ieltsScenario) {
     return (
       <IeltsConversationV2
@@ -145,7 +205,6 @@ function AppHomeContent() {
       />
     );
   }
-
   if (activeScenario) {
     return (
       <ScenarioConversation
@@ -156,26 +215,39 @@ function AppHomeContent() {
     );
   }
 
+  const contentTab = resolveContentTab(activeTab);
+
   const bgClass =
-    activeTab === "home" ? "bg-home" :
-    activeTab === "speak" ? "bg-speak" :
-    activeTab === "exam" ? "bg-exam" :
-    activeTab === "practice" ? "bg-practice" : "";
+    contentTab === "home" ? "bg-home" :
+    contentTab === "exam" ? "bg-exam" :
+    contentTab === "battle" ? "" :
+    "";
 
   const blobVariant: "expressive" | "subtle" | "minimal" | "none" =
-    activeTab === "home" ? "expressive" :
-    activeTab === "speak" ? "subtle" :
-    activeTab === "exam" ? "minimal" :
-    activeTab === "practice" ? "subtle" : "none";
+    contentTab === "home" ? "expressive" :
+    contentTab === "exam" ? "minimal" :
+    contentTab === "battle" ? "none" :
+    "subtle";
 
   return (
-    <div className={`flex flex-col min-h-dvh ${bgClass} relative`} style={{ backgroundColor: "var(--color-bg)" }}>
-      <AnimatedBackground variant={blobVariant} centerGlow={activeTab === "home" || activeTab === "speak"} />
-      {!grammarOverlayOpen && <Topbar streak={displayStreak} />}
+    <AppShell
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      gamification={gamification}
+      rankTier={rankTier}
+      userName={user.name}
+      hideNav={grammarOverlayOpen}
+    >
+      <div className={`min-h-dvh relative ${bgClass}`}>
+        <AnimatedBackground variant={blobVariant} centerGlow={contentTab === "home"} />
 
-      <main className="flex-1 overflow-y-auto pb-24">
-        <div className={`mx-auto px-5 py-6 ${activeTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-xl"}`}>
-          {activeTab === "home" && (
+        {/* Topbar — mobile only (sidebar replaces it on desktop) */}
+        <div className="lg:hidden">
+          {!grammarOverlayOpen && <Topbar streak={displayStreak} />}
+        </div>
+
+        <div className={`mx-auto px-5 py-6 ${contentTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-2xl lg:max-w-4xl"}`}>
+          {contentTab === "home" && (
             <div className="flex flex-col gap-8 animate-fadeSlideUp">
               <StartSpeakingCard onStart={handleStartSpeaking} />
               <BandProgressCard userId={userId} />
@@ -184,31 +256,48 @@ function AppHomeContent() {
               <CoachTipCard />
             </div>
           )}
-          {activeTab === "exam" && (
+          {contentTab === "exam" && (
             <div className="animate-fadeSlideUp">
               <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} onStartReading={() => setReadingActive(true)} />
             </div>
           )}
-          {activeTab === "battle" && (
+          {contentTab === "grammar" && (
+            <div className="animate-fadeSlideUp">
+              <GrammarTab onOverlayChange={setGrammarOverlayOpen} />
+            </div>
+          )}
+          {contentTab === "listening" && (
+            <div className="animate-fadeSlideUp">
+              <div className="text-center py-20">
+                <div className="text-4xl mb-4">🎧</div>
+                <h2 className="text-xl font-display font-bold mb-2" style={{ color: "var(--color-text)" }}>
+                  Listening Practice
+                </h2>
+                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+                  Coming soon — practice IELTS listening with AI-scored comprehension
+                </p>
+              </div>
+            </div>
+          )}
+          {contentTab === "battle" && (
             <div className="animate-fadeSlideUp">
               <BattleTab />
             </div>
           )}
-          {activeTab === "social" && (
+          {contentTab === "social" && (
             <div className="animate-fadeSlideUp">
               <FriendsTab />
             </div>
           )}
-          {activeTab === "profile" && (
+          {contentTab === "profile" && (
             <div className="animate-fadeSlideUp">
               <ProfileScreen userId={userId} metrics={metrics} metricsLoading={metricsLoading} gamification={gamification} />
             </div>
           )}
         </div>
-      </main>
+      </div>
 
-      {!grammarOverlayOpen && <BottomNav active={activeTab} onChange={setActiveTab} />}
       <Onboarding />
-    </div>
+    </AppShell>
   );
 }

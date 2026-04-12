@@ -866,3 +866,118 @@ body {
   50% { width: 80%; opacity: 1; }
   100% { width: 30%; opacity: 0.4; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SIDEBAR + APP SHELL — Desktop-First Layout System
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar tokens ── */
+:root {
+  --sidebar-width: 240px;
+  --sidebar-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-item-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-item-active-bg: rgba(0, 168, 150, 0.08);
+  --sidebar-active-indicator: #00A896;
+  --sidebar-xp-track: rgba(0, 0, 0, 0.06);
+  --sidebar-xp-fill: linear-gradient(90deg, #00A896, #00C4B0);
+}
+
+.dark {
+  --sidebar-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-item-active-bg: rgba(0, 196, 176, 0.10);
+  --sidebar-active-indicator: #00C4B0;
+  --sidebar-xp-track: rgba(255, 255, 255, 0.06);
+  --sidebar-xp-fill: linear-gradient(90deg, #00A896, #00C4B0);
+}
+
+/* ── Deep gradient background system ── */
+.bg-deep-gradient {
+  background: linear-gradient(180deg, #0c0f1a 0%, #0a0e1a 40%, #070a12 100%);
+}
+:root .bg-deep-gradient {
+  background: linear-gradient(180deg, #f0f2f5 0%, #e8eaef 40%, #f3f4f6 100%);
+}
+.dark .bg-deep-gradient {
+  background: linear-gradient(180deg, #0c0f1a 0%, #0a0e1a 40%, #070a12 100%);
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ── Sidebar nav item glow on active ── */
+.sidebar-nav-glow {
+  box-shadow: 0 0 12px rgba(0, 168, 150, 0.15);
+}
+.dark .sidebar-nav-glow {
+  box-shadow: 0 0 12px rgba(0, 196, 176, 0.2);
+}
+
+/* ── XP progress bar animation ── */
+@keyframes xpFill {
+  from { width: 0%; }
+}
+.animate-xp-fill {
+  animation: xpFill 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── Battle FIND MATCH pulse ── */
+@keyframes matchPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 168, 150, 0.3), 0 0 60px rgba(99, 102, 241, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 168, 150, 0.5), 0 0 80px rgba(99, 102, 241, 0.25);
+  }
+}
+.animate-match-pulse {
+  animation: matchPulse 2.5s ease-in-out infinite;
+}
+
+/* ── Battle glow ring ── */
+@keyframes glowRing {
+  0%   { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.animate-glow-ring {
+  animation: glowRing 2s ease-out infinite;
+}
+
+/* ── Learn sub-nav slide ── */
+@keyframes subNavSlide {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 300px; }
+}
+.animate-sub-nav {
+  animation: subNavSlide 0.25s ease-out forwards;
+  overflow: hidden;
+}
+
+/* ── Rank tier colors ── */
+.rank-iron       { color: #9CA3AF; }
+.rank-bronze     { color: #CD7F32; }
+.rank-silver     { color: #C0C0C0; }
+.rank-gold       { color: #FFD700; }
+.rank-platinum   { color: #00FFFF; }
+.rank-diamond    { color: #B9A0E8; }
+.rank-challenger { color: #FF6B35; }
+
+/* ── Fade slide up (generic reusable) ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeSlideUp {
+  animation: fadeSlideUp 0.35s ease-out both;
+}
