@@ -92,4 +92,20 @@ async function upgradePlaceholder(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getProStatus, startTrial, upgradePlaceholder };
+async function getDailyLimits(req, res, next) {
+  try {
+    const { getDailyLimits: fetchLimits } = require("../services/limitService");
+    const limits = await fetchLimits(req.user.id);
+    return sendSuccess(res, { data: limits, message: "Daily limits retrieved" });
+  } catch (err) { next(err); }
+}
+
+async function getAchievements(req, res, next) {
+  try {
+    const { getAchievementsData } = require("../services/badgeService");
+    const data = await getAchievementsData(req.user.id);
+    return sendSuccess(res, { data, message: "Achievements retrieved" });
+  } catch (err) { next(err); }
+}
+
+module.exports = { getProStatus, startTrial, upgradePlaceholder, getDailyLimits, getAchievements };

@@ -47,6 +47,12 @@ module.exports = {
     refreshTtlDays:  parseInt(process.env.JWT_REFRESH_TTL_DAYS, 10) || 30,
   },
 
+  // Free period: all users get unlimited access for launch period.
+  // Flip to false after 88 days to enforce daily limits.
+  freePeriod: process.env.FREE_PERIOD === "false" ? false : true,
+  speakingDailyLimit: parseInt(process.env.SPEAKING_DAILY_LIMIT, 10) || 3,
+  writingDailyLimit: parseInt(process.env.WRITING_DAILY_LIMIT, 10) || 1,
+
   cookie: {
     // httpOnly cookies are never accessible via JavaScript — safest for a kids app.
     // In production they also require HTTPS (secure: true).

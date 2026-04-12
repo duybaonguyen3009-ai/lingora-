@@ -809,6 +809,22 @@ async function startSession(scenarioId, userId, options = {}) {
     throw err;
   }
 
+  // Check daily speaking limit
+  try {
+    const { checkSpeakingLimit } = require("./limitService");
+    const limit = await checkSpeakingLimit(userId);
+    if (!limit.allowed) {
+      const err = new Error("Daily speaking limit reached. Upgrade to Pro for unlimited sessions.");
+      err.status = 403;
+      err.code = "SPEAKING_LIMIT_REACHED";
+      err.limitData = { used: limit.used, limit: limit.limit };
+      throw err;
+    }
+  } catch (e) {
+    if (e.code === "SPEAKING_LIMIT_REACHED") throw e;
+    // If limitService fails, don't block the session
+  }
+
   await scenarioRepository.abandonActiveSession(userId);
   const session = await scenarioRepository.createSession(scenarioId, userId);
 
@@ -1195,10 +1211,14 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
   // Band score conversion for IELTS
   const bandScore = isIelts ? toBandScore(adjustedOverall) : null;
 
-  // Notable vocabulary from AI scoring
+  // Notable vocabulary + enhanced feedback from AI scoring
   const notableVocabulary = aiScores.notableVocabulary || [];
   const improvementVocabulary = aiScores.improvementVocabulary || [];
   const criteriaFeedback = aiScores.criteriaFeedback || null;
+  const feedbackCards = aiScores.feedback_cards || [];
+  const sampleBand8Answer = aiScores.sample_band8_answer || null;
+  const sessionStrengths = aiScores.session_strengths || [];
+  const top3Priorities = aiScores.top_3_priorities || [];
 
   await scenarioRepository.completeSession(sessionId, {
     overallScore: adjustedOverall,
@@ -1246,6 +1266,15 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     onUserCompletedActivity(userId, "speaking_sessions", 1).catch(() => {});
   } catch { /* module load safety */ }
 
+  // Fire-and-forget: check speaking achievements
+  try {
+    const { checkSpeakingBadges } = require("./badgeService");
+    const countRow = await require("../config/db").query(
+      `SELECT COUNT(*)::int AS c FROM scenario_sessions WHERE user_id = $1 AND status = 'completed'`, [userId]
+    );
+    checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, bandScore).catch(() => {});
+  } catch { /* module load safety */ }
+
   return {
     overallScore: adjustedOverall,
     fluency: adjustedFluency,
@@ -1259,6 +1288,10 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     notableVocabulary,
     improvementVocabulary,
     speechInsights,
+    feedbackCards,
+    sampleBand8Answer,
+    sessionStrengths,
+    top3Priorities,
     turnCount,
     wordCount,
     durationMs: durationMs || 0,

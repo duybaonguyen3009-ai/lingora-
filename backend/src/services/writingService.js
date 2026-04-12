@@ -57,16 +57,28 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
     throw err;
   }
 
-  // 2. Free-tier usage limit (admin + pro bypass)
-  const bypassLimit = role === "admin" || isPro === true;
-  if (!bypassLimit) {
-    const todayCount = await writingRepository.getTodayUsageCount(userId);
-    if (todayCount >= FREE_DAILY_LIMIT) {
-      const err = new Error(
-        "Daily limit reached. Upgrade to Pro for unlimited submissions."
-      );
+  // 2. Daily writing limit (controlled by FREE_PERIOD flag)
+  try {
+    const { checkWritingLimit } = require("./limitService");
+    const limit = await checkWritingLimit(userId);
+    if (!limit.allowed) {
+      const err = new Error("Daily writing limit reached. Upgrade to Pro for unlimited submissions.");
       err.status = 403;
+      err.code = "WRITING_LIMIT_REACHED";
+      err.limitData = { used: limit.used, limit: limit.limit };
       throw err;
+    }
+  } catch (e) {
+    if (e.code === "WRITING_LIMIT_REACHED") throw e;
+    // Fallback: if limitService fails, use legacy check
+    const bypassLimit = role === "admin" || isPro === true;
+    if (!bypassLimit) {
+      const todayCount = await writingRepository.getTodayUsageCount(userId);
+      if (todayCount >= FREE_DAILY_LIMIT) {
+        const err = new Error("Daily limit reached. Upgrade to Pro for unlimited submissions.");
+        err.status = 403;
+        throw err;
+      }
     }
   }
 
@@ -111,6 +123,15 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
       try {
         const { onUserCompletedActivity } = require("./studyRoomService");
         onUserCompletedActivity(userId, "writing_tasks", 1).catch(() => {});
+      } catch { /* module load safety */ }
+
+      // Fire-and-forget: check writing achievements
+      try {
+        const { checkWritingBadges } = require("./badgeService");
+        const countRow = await require("../config/db").query(
+          `SELECT COUNT(*)::int AS c FROM writing_submissions WHERE user_id = $1 AND status = 'completed'`, [userId]
+        );
+        checkWritingBadges(userId, countRow.rows[0]?.c ?? 0, result.overall_band).catch(() => {});
       } catch { /* module load safety */ }
     } catch (err) {
       console.error(`[writing] Submission ${submissionId} failed:`, err.message);
