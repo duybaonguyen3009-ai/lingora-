@@ -43,14 +43,35 @@ export interface HeatmapDay {
 // Gamification types
 // ---------------------------------------------------------------------------
 
+export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type BadgeCategory = 'streak' | 'xp' | 'speaking' | 'writing' | 'reading' | 'battle' | 'social' | 'learning' | 'realworld';
+
 export interface Badge {
   id:          string;
   slug:        string;
   name:        string;
   description: string | null;
   icon_url:    string | null;
+  emoji?:      string;
+  category?:   BadgeCategory;
+  rarity?:     BadgeRarity;
   xp_reward:   number;
+  achievement_points?: number;
   awarded_at?: string;
+}
+
+export interface BadgeProgress {
+  current: number;
+  target: number;
+  percent: number;
+}
+
+export interface AchievementsData {
+  earned: Badge[];
+  all_badges: Array<{ slug: string; name: string; description: string; emoji: string; category: string; rarity: string; xp_reward: number; achievement_points: number }>;
+  progress: Record<string, BadgeProgress>;
+  achievement_score: number;
+  recent: Badge[];
 }
 
 export interface XpSummary {
@@ -215,6 +236,14 @@ export interface SpeechInsights {
   avgSpeakingRatio: number | null;
 }
 
+export interface FeedbackCard {
+  type: 'grammar_error' | 'vocab_repetition' | 'fluency_pause' | 'strength' | 'pronunciation';
+  title: string;
+  impact: string;
+  fix: string[];
+  example: string;
+}
+
 export interface EndSessionResult {
   overallScore: number;
   fluency: number;
@@ -228,6 +257,10 @@ export interface EndSessionResult {
   notableVocabulary?: string[];
   improvementVocabulary?: string[];
   speechInsights?: SpeechInsights | null;
+  feedbackCards?: FeedbackCard[];
+  sampleBand8Answer?: string | null;
+  sessionStrengths?: string[];
+  top3Priorities?: string[];
   turnCount: number;
   wordCount: number;
   durationMs: number;
@@ -369,6 +402,29 @@ export interface SentenceCorrection {
   explanation: string;
 }
 
+export interface WritingFeedbackCard {
+  type: 'grammar_error' | 'vocab_repetition' | 'coherence' | 'task_achievement' | 'strength';
+  title: string;
+  impact: string;
+  fix: string[];
+  example: string;
+}
+
+export interface ParagraphAnalysis {
+  paragraph_number: number;
+  type: 'introduction' | 'body' | 'conclusion';
+  score: 'strong' | 'adequate' | 'weak';
+  feedback: string;
+  highlight_phrase?: string;
+}
+
+export interface WordCountFeedback {
+  actual: number;
+  target: number;
+  status: 'good' | 'too_short' | 'too_long';
+  comment: string;
+}
+
 export interface WritingFeedback {
   overall_band: number;
   language_detected: string;
@@ -383,6 +439,10 @@ export interface WritingFeedback {
   improvements: string[];
   sentence_corrections: SentenceCorrection[];
   sample_essay: string;
+  feedback_cards?: WritingFeedbackCard[];
+  top_3_priorities?: string[];
+  word_count_feedback?: WordCountFeedback;
+  paragraph_analysis?: ParagraphAnalysis[];
 }
 
 export interface WritingSubmission {
@@ -465,6 +525,37 @@ export interface SocialNotification {
   data: Record<string, unknown>;
   read_at: string | null;
   created_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// Chat types
+// ---------------------------------------------------------------------------
+
+export interface ChatMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  type: 'text' | 'voice';
+  content: string | null;
+  audio_url: string | null;
+  audio_duration_seconds: number | null;
+  seen_at: string | null;
+  created_at: string;
+}
+
+export interface Conversation {
+  friend_id: string;
+  friend_name: string;
+  friend_username: string | null;
+  friend_avatar: string | null;
+  last_message_id: string | null;
+  last_sender_id: string | null;
+  last_type: string | null;
+  last_content: string | null;
+  last_audio_duration: number | null;
+  last_message_at: string | null;
+  last_seen_at: string | null;
+  unread_count: number;
 }
 
 export interface SocialProfile {
@@ -573,6 +664,67 @@ export interface BandProgressData {
 }
 
 // ---------------------------------------------------------------------------
+// Profile types
+// ---------------------------------------------------------------------------
+
+export interface ProfileStats {
+  user: {
+    name: string;
+    username: string | null;
+    bio: string | null;
+    location: string | null;
+    avatar_url: string | null;
+    target_band: number | null;
+    estimated_band: number | null;
+    band_history: BandHistoryEntry[];
+    is_pro: boolean;
+    joined_at: string;
+  };
+  gamification: {
+    totalXp: number;
+    level: number;
+    currentStreak: number;
+    longestStreak: number;
+    badges: Array<{ slug: string; name: string }>;
+  };
+  battle: {
+    rank_tier: string;
+    rank_points: number;
+    wins: number;
+    losses: number;
+  };
+  speaking: { totalSessions: number; avgScore: number };
+  writing: { totalSubmissions: number; avgBand: number | null };
+  social: { friendCount: number };
+  leaderboard: { percentile: number };
+}
+
+export interface PublicProfile {
+  name: string;
+  username: string;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+  target_band: number | null;
+  estimated_band: number | null;
+  is_pro: boolean;
+  joined_at: string;
+  totalXp: number;
+  level: number;
+  streak: number;
+  badges: Array<{ slug: string; name: string }>;
+  battle: { rank_tier: string; rank_points: number; wins: number };
+}
+
+export interface ProfileUpdateData {
+  name?: string;
+  bio?: string;
+  location?: string;
+  target_band?: number;
+  avatar_url?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Pro / Subscription types
 // ---------------------------------------------------------------------------
 
@@ -588,6 +740,13 @@ export interface ProStatus {
   is_trial: boolean;
   trial_expires_at: string | null;
   daily_limits: DailyLimits;
+}
+
+export interface DailyLimitsStatus {
+  free_period: boolean;
+  is_pro: boolean;
+  speaking: { used: number; limit: number | null; allowed: boolean };
+  writing: { used: number; limit: number | null; allowed: boolean };
 }
 
 // ---------------------------------------------------------------------------

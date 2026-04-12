@@ -509,6 +509,69 @@ export async function upgradeToPro(): Promise<{ is_pro: boolean }> {
   return apiPostAuth<{ is_pro: boolean }>("/users/upgrade", {});
 }
 
+/** GET /users/daily-limits — current usage vs limits */
+export async function getDailyLimits(): Promise<import("./types").DailyLimitsStatus> {
+  return apiFetchAuth<import("./types").DailyLimitsStatus>("/users/daily-limits");
+}
+
+/** GET /users/achievements — all badges, earned, progress */
+export async function getAchievements(): Promise<import("./types").AchievementsData> {
+  return apiFetchAuth<import("./types").AchievementsData>("/users/achievements");
+}
+
+// ---------------------------------------------------------------------------
+// Chat
+// ---------------------------------------------------------------------------
+
+import type { ChatMessage, Conversation } from "./types";
+
+export async function getChatConversations(): Promise<{ conversations: Conversation[] }> {
+  return apiFetchAuth<{ conversations: Conversation[] }>("/chat/conversations");
+}
+
+export async function getChatMessages(friendId: string, before?: string): Promise<{ messages: ChatMessage[]; hasMore: boolean }> {
+  const params = before ? `?before=${before}` : "";
+  return apiFetchAuth<{ messages: ChatMessage[]; hasMore: boolean }>(`/chat/messages/${friendId}${params}`);
+}
+
+export async function sendChatMessage(friendId: string, content: string): Promise<ChatMessage> {
+  return apiPostAuth<ChatMessage>(`/chat/messages/${friendId}`, { content });
+}
+
+export async function sendVoiceNote(friendId: string, audio: string, duration: number): Promise<ChatMessage> {
+  return apiPostAuth<ChatMessage>(`/chat/voice/${friendId}`, { audio, duration });
+}
+
+export async function markChatSeen(friendId: string): Promise<unknown> {
+  return apiPostAuth<unknown>(`/chat/messages/${friendId}/seen`, {});
+}
+
+export async function deleteChatMessage(messageId: string): Promise<unknown> {
+  return apiDeleteAuth(`/chat/messages/${messageId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Profile
+// ---------------------------------------------------------------------------
+
+import type { ProfileStats, PublicProfile, ProfileUpdateData } from "./types";
+
+export async function getProfileStats(): Promise<ProfileStats> {
+  return apiFetchAuth<ProfileStats>("/users/profile/stats");
+}
+
+export async function updateProfile(data: ProfileUpdateData): Promise<unknown> {
+  return apiPostAuth<unknown>("/users/profile", data);
+}
+
+export async function uploadAvatar(imageBase64: string): Promise<{ avatar_url: string }> {
+  return apiPostAuth<{ avatar_url: string }>("/users/avatar", { image: imageBase64 });
+}
+
+export async function getPublicProfile(username: string): Promise<PublicProfile> {
+  return apiFetch<PublicProfile>(`/profile/${username}`);
+}
+
 // ---------------------------------------------------------------------------
 // Onboarding
 // ---------------------------------------------------------------------------
