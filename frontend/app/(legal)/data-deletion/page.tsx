@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Xóa dữ liệu",
+  description: "Hướng dẫn yêu cầu xóa dữ liệu cá nhân trên Lingona.",
+};
+
 export default function DataDeletionPage() {
   return (
     <div className="min-h-screen px-6 py-16">

@@ -18,9 +18,36 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Lingona — Luyện IELTS với AI Coach",
+  metadataBase: new URL("https://lingona.app"),
+  title: {
+    default: "Lingona — Luyện IELTS Speaking & Writing AI",
+    template: "%s | Lingona",
+  },
   description:
-    "Lingona giúp bạn cải thiện Speaking, Grammar và Writing với phản hồi AI real-time. Không cần gia sư. Học mọi lúc, mọi nơi.",
+    "Luyện thi IELTS online với AI. Chấm Speaking, Writing theo chuẩn IELTS. Luyện tập mọi lúc, mọi nơi. Mục tiêu band 6.5, 7.0, 7.5+.",
+  keywords: [
+    "luyện IELTS", "IELTS speaking AI", "luyện thi IELTS online",
+    "IELTS writing AI", "luyện speaking IELTS", "band 6.5",
+    "học IELTS online", "luyện thi IELTS", "IELTS Vietnam",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    url: "https://lingona.app",
+    siteName: "Lingona",
+    title: "Lingona — Luyện IELTS Speaking & Writing AI",
+    description: "Luyện thi IELTS online với AI. Chấm Speaking, Writing theo chuẩn IELTS. Mục tiêu band 6.5+.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Lingona — Luyện IELTS AI" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lingona — Luyện IELTS Speaking & Writing AI",
+    description: "Luyện thi IELTS online với AI. Mục tiêu band 6.5+.",
+    images: ["/og-image.png"],
+  },
+  alternates: {
+    canonical: "https://lingona.app",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

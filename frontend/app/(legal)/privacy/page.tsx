@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Chính sách bảo mật",
+  description: "Chính sách bảo mật của Lingona — ứng dụng luyện IELTS AI.",
+};
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen px-6 py-16">
