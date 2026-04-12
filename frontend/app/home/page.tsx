@@ -96,11 +96,11 @@ function AppHomeContent() {
       .finally(() => setOnboardingChecked(true));
   }, [user, onboardingChecked]);
 
-  const handleStartSpeaking = () => setActiveTab("speak");
+  const handleStartSpeaking = () => setActiveTab("exam");
 
   const handleScenarioSelect = (scenarioOrId: Scenario | string) => {
     if (typeof scenarioOrId === "string") {
-      setActiveTab("speak");
+      setActiveTab("exam");
     } else if (scenarioOrId.exam_type === "ielts") {
       setIeltsScenario(scenarioOrId);
     } else {
@@ -184,12 +184,6 @@ function AppHomeContent() {
               <CoachTipCard />
             </div>
           )}
-          {activeTab === "speak" && (
-            <div className="animate-fadeSlideUp">
-              <ScenarioList onSelect={(scenario) => handleScenarioSelect(scenario)} excludeExam />
-            </div>
-          )}
-          {activeTab === "practice" && <GrammarTab onOverlayChange={setGrammarOverlayOpen} />}
           {activeTab === "exam" && (
             <div className="animate-fadeSlideUp">
               <ExamScreen onStartIelts={(scenario) => setIeltsScenario(scenario)} onStartWriting={() => setWritingActive(true)} onStartReading={() => setReadingActive(true)} />

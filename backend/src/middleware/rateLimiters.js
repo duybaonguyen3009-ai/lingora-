@@ -131,4 +131,28 @@ const writingLimiters = createLimiterPair({
     "Daily writing submission limit reached. Please try again tomorrow.",
 });
 
-module.exports = { aiLimiters, ttsLimiters, pronLimiters, writingLimiters };
+/** Battle actions (queue, submit, challenges — auth-only) */
+const battleLimiters = createLimiterPair({
+  shortAuthMax: 20,
+  shortGuestMax: 0,
+  dailyAuthMax: 100,
+  dailyGuestMax: 0,
+  shortMessage:
+    "Too many battle requests. Please try again in a few minutes.",
+  dailyMessage:
+    "Daily battle limit reached. Please try again tomorrow.",
+});
+
+/** Social actions (room creation, nudges, share cards — auth-only) */
+const socialLimiters = createLimiterPair({
+  shortAuthMax: 15,
+  shortGuestMax: 0,
+  dailyAuthMax: 60,
+  dailyGuestMax: 0,
+  shortMessage:
+    "Too many social requests. Please try again in a few minutes.",
+  dailyMessage:
+    "Daily social limit reached. Please try again tomorrow.",
+});
+
+module.exports = { aiLimiters, ttsLimiters, pronLimiters, writingLimiters, battleLimiters, socialLimiters };
