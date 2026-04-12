@@ -65,6 +65,7 @@ function createLimiterPair({
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: shortMessage },
+    validate: false,
   });
 
   const dailyLimiter = rateLimit({
@@ -74,6 +75,7 @@ function createLimiterPair({
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, message: dailyMessage },
+    validate: false,
   });
 
   return [shortLimiter, dailyLimiter];
