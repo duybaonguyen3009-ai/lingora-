@@ -114,11 +114,11 @@ export default function ProUpgradeModal({ isOpen, onClose, onUpgraded }: ProUpgr
           {/* Price */}
           <div className="text-center">
             <div className="text-3xl font-display font-bold" style={{ color: "#F8FAFC" }}>
-              {plan === "yearly" ? "999k/năm" : "149k/tháng"}
+              {plan === "yearly" ? "1.199k/năm" : "179k/tháng"}
             </div>
             {plan === "yearly" && (
               <div className="text-xs mt-1" style={{ color: "#64748B" }}>
-                ~83k/tháng • Tiết kiệm 44%
+                ~100k/tháng • Tiết kiệm 44%
               </div>
             )}
           </div>
