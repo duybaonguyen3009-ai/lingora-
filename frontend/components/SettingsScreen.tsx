@@ -53,7 +53,7 @@ export default function SettingsScreen() {
           Account
         </div>
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-xl"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}
         >
           {/* Display name */}
@@ -131,7 +131,7 @@ export default function SettingsScreen() {
           Preferences
         </div>
         <div
-          className="rounded-xl overflow-hidden"
+          className="rounded-xl"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}
         >
           {/* Theme */}
@@ -144,7 +144,7 @@ export default function SettingsScreen() {
             </div>
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="relative w-12 h-7 rounded-full transition-colors cursor-pointer"
+              className="relative w-12 h-7 rounded-full transition-colors cursor-pointer shrink-0"
               style={{
                 backgroundColor: theme === "dark" ? "#00A896" : "var(--color-border)",
               }}
@@ -171,7 +171,7 @@ export default function SettingsScreen() {
             </div>
             <button
               onClick={() => setNotifications(!notifications)}
-              className="relative w-12 h-7 rounded-full transition-colors cursor-pointer"
+              className="relative w-12 h-7 rounded-full transition-colors cursor-pointer shrink-0"
               style={{
                 backgroundColor: notifications ? "#00A896" : "var(--color-border)",
               }}
