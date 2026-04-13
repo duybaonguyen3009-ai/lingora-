@@ -5,14 +5,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import AppShell from "@/components/AppShell";
 import Topbar from "@/components/Topbar";
-import StartSpeakingCard from "@/components/StartSpeakingCard";
-import PracticeScenarios from "@/components/PracticeScenarios";
-import CoachTipCard from "@/components/CoachTipCard";
-import TodayFocusCard from "@/components/TodayFocusCard";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import HomeDashboard from "@/components/HomeDashboard";
 
 const GrammarTab = dynamic(() => import("@/components/Grammar").then(m => ({ default: m.GrammarTab })), { ssr: false });
-const ScenarioList = dynamic(() => import("@/components/ScenarioList"), { ssr: false });
 const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversation"), { ssr: false });
 const IeltsConversationV2 = dynamic(() => import("@/components/IeltsConversationV2"), { ssr: false });
 const ExamScreen = dynamic(() => import("@/components/ExamScreen"), { ssr: false });
@@ -24,7 +20,6 @@ const ProfileScreen = dynamic(() => import("@/components/ProfileScreen"), { ssr:
 const SettingsScreen = dynamic(() => import("@/components/SettingsScreen"), { ssr: false });
 const Onboarding = dynamic(() => import("@/components/Onboarding"), { ssr: false });
 const OnboardingFlow = dynamic(() => import("@/components/Onboarding/OnboardingFlow"), { ssr: false });
-const BandProgressCard = dynamic(() => import("@/components/Dashboard/BandProgressCard"), { ssr: false });
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useProgress } from "@/hooks/useProgress";
 import { useLessons } from "@/hooks/useLessons";
@@ -247,15 +242,17 @@ function AppHomeContent() {
           {!grammarOverlayOpen && <Topbar streak={displayStreak} />}
         </div>
 
-        <div className={`mx-auto px-5 py-6 ${contentTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-2xl lg:max-w-4xl"}`}>
+        <div className={`mx-auto px-5 py-6 ${contentTab === "home" ? "max-w-5xl" : contentTab === "practice" ? "max-w-xl lg:max-w-3xl xl:max-w-5xl" : "max-w-2xl lg:max-w-4xl"}`}>
           {contentTab === "home" && (
-            <div className="flex flex-col gap-8 animate-fadeSlideUp">
-              <StartSpeakingCard onStart={handleStartSpeaking} />
-              <BandProgressCard userId={userId} />
-              <TodayFocusCard recommendations={focusRecs} loading={focusLoading} onAction={handleFocusAction} />
-              <PracticeScenarios onSelect={(id) => handleScenarioSelect(id)} />
-              <CoachTipCard />
-            </div>
+            <HomeDashboard
+              userName={user.name}
+              gamification={gamification}
+              focusRecs={focusRecs}
+              focusLoading={focusLoading}
+              rankTier={rankTier}
+              onNavigate={handleTabChange}
+              onFocusAction={handleFocusAction}
+            />
           )}
           {contentTab === "exam" && (
             <div className="animate-fadeSlideUp">
