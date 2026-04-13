@@ -9,6 +9,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import HomeDashboard from "@/components/HomeDashboard";
 import { RewardProvider } from "@/contexts/RewardContext";
 import RewardOverlay from "@/components/Rewards/RewardOverlay";
+import StreakMilestoneHandler from "@/components/Rewards/StreakMilestoneHandler";
 
 const GrammarTab = dynamic(() => import("@/components/Grammar").then(m => ({ default: m.GrammarTab })), { ssr: false });
 const ScenarioConversation = dynamic(() => import("@/components/ScenarioConversation"), { ssr: false });
@@ -306,6 +307,7 @@ function AppHomeContent() {
       </div>
 
       <Onboarding />
+      <StreakMilestoneHandler streak={gamification?.streak} />
     </AppShell>
   );
 }

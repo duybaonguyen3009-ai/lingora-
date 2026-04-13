@@ -16,6 +16,7 @@ import { IconMic, IconPen, IconOpenBook, IconBook, IconSwords, IconFire } from "
 import Skeleton from "@/components/ui/Skeleton";
 import DailyMissionPanel from "@/components/DailyMissions/DailyMissionPanel";
 import StreakWarningBanner from "@/components/StreakWarningBanner";
+import { useReward } from "@/contexts/RewardContext";
 import { getBattleHome, getFriends } from "@/lib/api";
 import type {
   GamificationData,
@@ -61,6 +62,7 @@ export default function HomeDashboard({
   onNavigate,
   onFocusAction,
 }: HomeDashboardProps) {
+  const { shields } = useReward();
   const [battleData, setBattleData] = useState<BattleHome | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
@@ -185,7 +187,7 @@ export default function HomeDashboard({
             >
               <IconFire size={18} className="text-amber-400" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-lg font-bold text-amber-400 leading-none">
                 {streak?.currentStreak ?? 0}
               </div>
@@ -193,6 +195,15 @@ export default function HomeDashboard({
                 {streakUrgent ? "Streak at risk!" : "day streak"}
               </div>
             </div>
+            {shields > 0 && (
+              <span
+                className="text-[11px] font-bold shrink-0"
+                style={{ color: "#60A5FA" }}
+                title={`${shields} streak shield${shields > 1 ? "s" : ""}`}
+              >
+                🛡️ {shields}
+              </span>
+            )}
           </div>
 
           {/* Rank */}

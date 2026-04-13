@@ -6,6 +6,7 @@ import Mascot from "@/components/ui/Mascot";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./Social/NotificationBell";
 import useSound from "@/hooks/useSound";
+import { useReward } from "@/contexts/RewardContext";
 import type { GamificationData } from "@/lib/types";
 import type { BattleRankTier } from "@/lib/types";
 
@@ -47,6 +48,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ active, onChange, gamification, rankTier = "iron", userName }: AppSidebarProps) {
   const { play } = useSound();
+  const { shields } = useReward();
   const [learnOpen, setLearnOpen] = useState(
     active.startsWith("learn") || active === "exam"
   );
@@ -193,7 +195,7 @@ export default function AppSidebar({ active, onChange, gamification, rankTier = 
         className="flex-shrink-0 px-4 py-4 space-y-3"
         style={{ borderTop: "1px solid var(--sidebar-border)" }}
       >
-        {/* Streak */}
+        {/* Streak + Shields */}
         <div className="flex items-center gap-2.5">
           <span className="text-base" style={{ color: "#F59E0B" }}>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor">
@@ -206,6 +208,15 @@ export default function AppSidebar({ active, onChange, gamification, rankTier = 
           <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>
             day streak
           </span>
+          {shields > 0 && (
+            <span
+              className="text-[11px] font-bold flex items-center gap-0.5 ml-auto"
+              style={{ color: "#60A5FA" }}
+              title={`${shields} streak shield${shields > 1 ? "s" : ""}`}
+            >
+              🛡️ {shields}
+            </span>
+          )}
         </div>
 
         {/* Rank */}
