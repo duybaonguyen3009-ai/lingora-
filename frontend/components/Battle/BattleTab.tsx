@@ -158,7 +158,7 @@ export default function BattleTab() {
                     <div className="text-lg font-display font-bold" style={{ color: rankCfg.color }}>
                       {rankCfg.label}
                     </div>
-                    <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <div className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>
                       {profile.current_rank_points} pts {data?.rank ? `| #${data.rank}` : ""}
                     </div>
                   </div>
@@ -166,11 +166,11 @@ export default function BattleTab() {
 
                 {/* Rank progress bar */}
                 <div className="mb-4">
-                  <div className="flex justify-between text-xs mb-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  <div className="flex justify-between text-xs mb-1.5" style={{ color: "var(--color-text-tertiary)" }}>
                     <span>{rankCfg.label}</span>
                     <span>{tierIdx < TIER_ORDER.length - 1 ? RANK_CONFIG[TIER_ORDER[tierIdx + 1]].label : "Max"}</span>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--surface-skeleton)" }}>
                     <div
                       className="h-full rounded-full animate-xp-fill"
                       style={{
@@ -185,22 +185,22 @@ export default function BattleTab() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(34,197,94,0.08)" }}>
                     <div className="text-sm font-bold text-green-400">{profile.wins}</div>
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Wins</div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Wins</div>
                   </div>
                   <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(239,68,68,0.08)" }}>
                     <div className="text-sm font-bold text-red-400">{profile.losses}</div>
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Losses</div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>Losses</div>
                   </div>
-                  <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
-                    <div className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.8)" }}>{winRate}%</div>
-                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>WR</div>
+                  <div className="text-center p-2 rounded-lg" style={{ backgroundColor: "var(--surface-subtle)" }}>
+                    <div className="text-sm font-bold" style={{ color: "var(--color-text)" }}>{winRate}%</div>
+                    <div className="text-[10px] uppercase tracking-wider" style={{ color: "var(--color-text-tertiary)" }}>WR</div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="rounded-2xl p-5 text-center"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
               <div className="text-3xl mb-2">⚔️</div>
               <p className="text-sm font-medium mb-1" style={{ color: "var(--color-text)" }}>No rank yet</p>
               <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Play your first match to earn a rank</p>
@@ -213,8 +213,8 @@ export default function BattleTab() {
               <div
                 className="rounded-xl p-4 flex items-center gap-3"
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  backgroundColor: "var(--surface-primary)",
+                  border: "1px solid var(--surface-border)",
                 }}
               >
                 <div
@@ -309,7 +309,7 @@ export default function BattleTab() {
             onClick={() => setScreen("queue")}
             className="px-8 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] cursor-pointer"
             style={{
-              backgroundColor: "rgba(255,255,255,0.04)",
+              backgroundColor: "var(--surface-subtle)",
               color: "var(--color-text)",
               border: "1px solid var(--color-border)",
             }}
@@ -333,7 +333,7 @@ export default function BattleTab() {
                         key={m.id}
                         onClick={() => { setActiveMatchId(m.id); setScreen("result"); }}
                         className="flex items-center gap-3 p-3 rounded-lg text-left transition-all cursor-pointer"
-                        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                        style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}
                       >
                         <div
                           className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
@@ -369,16 +369,16 @@ export default function BattleTab() {
         <div className="flex flex-col gap-4 order-3">
           {/* Live leaderboard */}
           {loading ? (
-            <div className="rounded-2xl p-4" style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
               <Skeleton.List count={5} />
             </div>
           ) : data && data.leaderboardPreview.length > 0 ? (
             <div
               className="rounded-2xl p-4 relative overflow-hidden"
               style={{
-                backgroundColor: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                backdropFilter: "blur(12px)",
+                backgroundColor: "var(--surface-primary)",
+                border: "1px solid var(--surface-border)",
+                boxShadow: "var(--surface-shadow)",
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -401,7 +401,7 @@ export default function BattleTab() {
                       key={e.user_id}
                       className="flex items-center gap-3 p-2.5 rounded-lg"
                       style={{
-                        backgroundColor: i === 0 ? "rgba(255,215,0,0.04)" : "rgba(255,255,255,0.02)",
+                        backgroundColor: i === 0 ? "rgba(255,215,0,0.04)" : "var(--surface-secondary)",
                         borderLeft: i < 3 ? `2px solid ${entryRank.color}40` : "2px solid transparent",
                       }}
                     >
@@ -424,7 +424,7 @@ export default function BattleTab() {
             </div>
           ) : (
             <div className="rounded-2xl p-4 text-center"
-              style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ backgroundColor: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
               <div className="text-3xl mb-2">🏆</div>
               <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Play matches to see the leaderboard</p>
             </div>
@@ -434,8 +434,9 @@ export default function BattleTab() {
           <div
             className="rounded-2xl p-4 text-center"
             style={{
-              backgroundColor: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              backgroundColor: "var(--surface-primary)",
+              border: "1px solid var(--surface-border)",
+              boxShadow: "var(--surface-shadow)",
             }}
           >
             <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-tertiary)" }}>
@@ -465,7 +466,7 @@ export default function BattleTab() {
                         key={m.id}
                         onClick={() => { setActiveMatchId(m.id); setScreen("result"); }}
                         className="flex items-center gap-3 p-2.5 rounded-lg text-left transition-all cursor-pointer"
-                        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                        style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}
                       >
                         <div
                           className="w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold shrink-0"

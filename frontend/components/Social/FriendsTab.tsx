@@ -111,7 +111,7 @@ function ActivityFeed({ friends }: { friends: Friend[] }) {
                 <div className="flex flex-col gap-2">
                   {inactiveFriends.map(f => (
                     <div key={f.id} className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--color-border)" }}>
+                      style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
                       <Avatar name={f.name} size={36} />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>{f.name}</div>
@@ -157,7 +157,7 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
             <button key={t} onClick={() => onSubTabChange(t)}
               className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer"
               style={{
-                background: subTab === t ? "var(--color-accent)" : "rgba(255,255,255,0.04)",
+                background: subTab === t ? "var(--color-accent)" : "var(--surface-subtle)",
                 color: subTab === t ? "#fff" : "var(--color-text-secondary)",
                 border: subTab === t ? "none" : "1px solid var(--color-border)",
               }}>
@@ -287,7 +287,7 @@ function FriendsList() {
     <div className="flex flex-col gap-2">
       {friends.map((f) => (
         <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+          style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
           <div className="relative">
             <Avatar name={f.name} size={40} />
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
@@ -360,7 +360,7 @@ function RequestsList() {
           <div className="flex flex-col gap-2">
             {incoming.map((r) => (
               <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
                 <Avatar name={r.sender_name || "?"} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>{r.sender_name}</div>
@@ -384,7 +384,7 @@ function RequestsList() {
           <div className="flex flex-col gap-2">
             {outgoing.map((r) => (
               <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
                 <Avatar name={r.receiver_name || "?"} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>{r.receiver_name}</div>
@@ -454,7 +454,7 @@ function AddFriend() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+      <div className="rounded-lg p-4" style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
         <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-tertiary)" }}>Your Username</div>
         {editingUsername ? (
           <div className="flex gap-2">
@@ -473,7 +473,7 @@ function AddFriend() {
         )}
       </div>
 
-      <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+      <div className="rounded-lg p-4" style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
         <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-tertiary)" }}>Search by Username</div>
         <div className="flex gap-2">
           <input value={searchUsername} onChange={(e) => setSearchUsername(e.target.value)} placeholder="Enter username..."
@@ -485,7 +485,7 @@ function AddFriend() {
         </div>
       </div>
 
-      <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}>
+      <div className="rounded-lg p-4" style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
         <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--color-text-tertiary)" }}>Your QR Code</div>
         {qrDataUrl ? (
           <div className="flex justify-center mb-3">
@@ -589,7 +589,7 @@ export default function FriendsTab() {
 
   const desktopLayout = (
     <div className="hidden md:flex rounded-2xl overflow-hidden"
-      style={{ height: "calc(100vh - 140px)", minHeight: 500, background: "rgba(255,255,255,0.02)", border: "1px solid var(--color-border)" }}>
+      style={{ height: "calc(100vh - 140px)", minHeight: 500, background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
       {/* Left panel — 320px conversation sidebar */}
       <div className="w-[320px] shrink-0 flex flex-col" style={{ borderRight: "1px solid var(--color-border)" }}>
         <ConversationSidebar

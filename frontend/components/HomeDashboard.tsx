@@ -129,7 +129,7 @@ export default function HomeDashboard({
 
             {/* Primary CTA */}
             {focusLoading ? (
-              <div className="h-12 w-48 rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <div className="h-12 w-48 rounded-xl animate-pulse" style={{ background: "var(--surface-skeleton)" }} />
             ) : primaryRec ? (
               <button
                 onClick={() => onFocusAction(primaryRec)}
@@ -161,7 +161,7 @@ export default function HomeDashboard({
             )}
 
             {primaryRec && (
-              <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <p className="text-xs mt-3" style={{ color: "var(--color-text-tertiary)" }}>
                 {primaryRec.title}
               </p>
             )}
@@ -451,8 +451,8 @@ function FriendsActivity({
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
-              <div className="flex-1 h-3 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <div className="w-8 h-8 rounded-full animate-pulse" style={{ background: "var(--surface-skeleton)" }} />
+              <div className="flex-1 h-3 rounded animate-pulse" style={{ background: "var(--surface-skeleton)" }} />
             </div>
           ))}
         </div>
@@ -545,7 +545,7 @@ function WeeklyXpChart({ xp }: { xp: GamificationData["xp"] | undefined }) {
                   height: `${Math.max((value / maxVal) * 100, 6)}%`,
                   background: isToday
                     ? "linear-gradient(180deg, #00A896, #00A89680)"
-                    : "rgba(255,255,255,0.06)",
+                    : "var(--surface-skeleton)",
                   boxShadow: isToday ? "0 0 8px rgba(0,168,150,0.2)" : "none",
                 }}
               />
@@ -569,7 +569,7 @@ function WeeklyXpChart({ xp }: { xp: GamificationData["xp"] | undefined }) {
         </span>
       </div>
       {/* XP progress bar */}
-      <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+      <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--surface-skeleton)" }}>
         <div
           className="h-full rounded-full"
           style={{

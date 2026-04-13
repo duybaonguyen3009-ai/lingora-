@@ -132,8 +132,8 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--surface-primary)",
+        border: "1px solid var(--surface-border)",
       }}
     >
       {/* Header */}
@@ -148,7 +148,7 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
             style={{
-              background: allComplete ? "rgba(0,168,150,0.15)" : "rgba(255,255,255,0.06)",
+              background: allComplete ? "rgba(0,168,150,0.15)" : "var(--surface-skeleton)",
               color: allComplete ? "#00A896" : "var(--color-text-tertiary)",
             }}
           >
@@ -172,7 +172,7 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
       {/* Mission list */}
       <div
         className={`lg:block ${expanded ? "block" : "hidden"}`}
-        style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
+        style={{ borderTop: "1px solid var(--surface-border-subtle)" }}
       >
         {DAILY_MISSIONS.map((mission) => {
           const current = Math.min(progress[mission.id] ?? 0, mission.target);
@@ -185,7 +185,7 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
               key={mission.id}
               className="px-5 py-3.5 flex items-center gap-3 relative overflow-hidden"
               style={{
-                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                borderBottom: "1px solid var(--surface-border-subtle)",
                 opacity: done ? 0.7 : 1,
               }}
             >
@@ -201,8 +201,8 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
               <div
                 className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
                 style={{
-                  background: done ? `${color}20` : "rgba(255,255,255,0.04)",
-                  border: `1.5px solid ${done ? color : "rgba(255,255,255,0.1)"}`,
+                  background: done ? `${color}20` : "var(--surface-subtle)",
+                  border: `1.5px solid ${done ? color : "var(--surface-border)"}`,
                 }}
               >
                 {done && (
@@ -234,7 +234,7 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
                 </div>
                 {/* Progress bar */}
                 {!done && (
-                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--surface-skeleton)" }}>
                     <div
                       className="h-full rounded-full xp-bar-animated"
                       style={{ width: `${pct}%`, background: color }}
@@ -247,7 +247,7 @@ export default function DailyMissionPanel({ gamification }: DailyMissionPanelPro
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
                 style={{
-                  background: done ? `${color}15` : "rgba(255,255,255,0.04)",
+                  background: done ? `${color}15` : "var(--surface-subtle)",
                   color: done ? color : "var(--color-text-tertiary)",
                 }}
               >

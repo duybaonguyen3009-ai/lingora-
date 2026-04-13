@@ -57,6 +57,16 @@
   --color-examiner: #1A1A1A;
   --color-examiner-soft: rgba(26, 26, 26, 0.05);
 
+  /* ── Universal surface tokens (light) ── */
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F8F7F4;
+  --surface-subtle: rgba(0, 0, 0, 0.02);
+  --surface-border: #E8E8E4;
+  --surface-border-subtle: rgba(0, 0, 0, 0.06);
+  --surface-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+  --surface-hover: rgba(0, 0, 0, 0.03);
+  --surface-skeleton: rgba(0, 0, 0, 0.05);
+
   /* ── Dashboard card tokens (light) ── */
   --dash-card-bg: #FFFFFF;
   --dash-card-border: #E8E8E4;
@@ -139,6 +149,16 @@
   --color-text-muted: #6B7280;
   --color-examiner: #00C4B0;
   --color-examiner-soft: rgba(0, 196, 176, 0.10);
+
+  /* ── Universal surface tokens (dark) ── */
+  --surface-primary: rgba(255,255,255,0.03);
+  --surface-secondary: rgba(255,255,255,0.02);
+  --surface-subtle: rgba(255,255,255,0.04);
+  --surface-border: rgba(255,255,255,0.06);
+  --surface-border-subtle: rgba(255,255,255,0.04);
+  --surface-shadow: none;
+  --surface-hover: rgba(255,255,255,0.05);
+  --surface-skeleton: rgba(255,255,255,0.06);
 
   /* ── Dashboard card tokens (dark) ── */
   --dash-card-bg: rgba(255,255,255,0.03);

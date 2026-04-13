@@ -54,7 +54,7 @@ export default function SettingsScreen() {
         </div>
         <div
           className="rounded-xl"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}
+          style={{ background: "var(--surface-primary)", border: "1px solid var(--color-border)" }}
         >
           {/* Display name */}
           <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: "1px solid var(--color-border)" }}>
@@ -70,7 +70,7 @@ export default function SettingsScreen() {
               <div className="text-sm font-medium" style={{ color: "var(--color-text)" }}>Email</div>
               <div className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>{user?.email || "—"}</div>
             </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.04)", color: "var(--color-text-tertiary)" }}>
+            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--surface-subtle)", color: "var(--color-text-tertiary)" }}>
               Read-only
             </span>
           </div>
@@ -132,7 +132,7 @@ export default function SettingsScreen() {
         </div>
         <div
           className="rounded-xl"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--color-border)" }}
+          style={{ background: "var(--surface-primary)", border: "1px solid var(--color-border)" }}
         >
           {/* Theme */}
           <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: "1px solid var(--color-border)" }}>
