@@ -17,8 +17,17 @@ async function listPassages({ difficulty, topic, limit = 20 } = {}) {
   sql += ` ORDER BY RANDOM() LIMIT $${idx}`;
   params.push(limit);
 
-  const result = await query(sql, params);
-  return result.rows;
+  try {
+    const result = await query(sql, params);
+    return result.rows;
+  } catch (err) {
+    // Table may not exist if migrations haven't run yet
+    if (err.message?.includes("does not exist")) {
+      console.warn("[reading] reading_passages table not found — migrations pending");
+      return [];
+    }
+    throw err;
+  }
 }
 
 async function getPassageWithQuestions(passageId) {

@@ -268,98 +268,149 @@ export default function WritingTab({ onClose }: WritingTabProps) {
 
         {/* ── EDITOR PHASE ── */}
         {phase === "editor" && (
-          <div className="flex flex-col gap-4 max-w-2xl mx-auto">
-            {/* Task Type Toggle */}
-            <div
-              className="flex rounded-lg overflow-hidden"
-              style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)" }}
-            >
-              {(["task1", "task2"] as WritingTaskType[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => handleTaskSwitch(t)}
-                  className="flex-1 py-2.5 text-sm font-medium transition-all"
+          <div className="flex flex-col gap-5 max-w-2xl mx-auto">
+            {/* Task Type Toggle + Timer */}
+            <div className="flex items-center gap-3">
+              <div
+                className="flex rounded-xl overflow-hidden flex-1"
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+              >
+                {(["task1", "task2"] as WritingTaskType[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => handleTaskSwitch(t)}
+                    className="flex-1 py-2.5 text-sm font-medium transition-all cursor-pointer"
+                    style={{
+                      background: taskType === t ? "var(--color-accent)" : "transparent",
+                      color: taskType === t ? "#fff" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    {t === "task1" ? "Task 1 (20 min)" : "Task 2 (40 min)"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Prominent timer */}
+              {timerStarted && timeLeft !== null && (
+                <div
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl shrink-0"
                   style={{
-                    background: taskType === t ? "var(--color-accent)" : "transparent",
-                    color: taskType === t ? "#fff" : "var(--color-text-secondary)",
+                    background: timeLeft < 60 ? "rgba(239,68,68,0.08)" : timeLeft < 300 ? "rgba(245,158,11,0.08)" : "var(--surface-primary)",
+                    border: `1px solid ${timeLeft < 60 ? "rgba(239,68,68,0.2)" : timeLeft < 300 ? "rgba(245,158,11,0.2)" : "var(--surface-border)"}`,
+                    boxShadow: "var(--surface-shadow)",
                   }}
                 >
-                  {t === "task1" ? "Task 1" : "Task 2"}
-                </button>
-              ))}
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: timerColor }}>
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className={`text-sm font-mono ${timerBold ? "font-bold" : "font-medium"}`} style={{ color: timerColor }}>
+                    {formatTime(timeLeft)}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Question — textarea for both Task 1 and Task 2 */}
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: "var(--color-text-tertiary)" }}>
-                Question
+            {/* Question */}
+            <div
+              className="rounded-xl p-5"
+              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+            >
+              <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--color-text-tertiary)" }}>
+                Question / Prompt
               </label>
               <textarea
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
                 placeholder={
                   taskType === "task1"
-                    ? "Describe the chart/graph/diagram provided..."
-                    : "Enter the essay question here..."
+                    ? "Paste or type the Task 1 question here (e.g., describe the chart)..."
+                    : "Paste or type the Task 2 essay question here..."
                 }
                 rows={3}
-                className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
+                className="w-full rounded-lg px-4 py-3 text-sm resize-none transition-colors focus:outline-none"
                 style={{
-                  background: "var(--color-bg-card)",
+                  background: "var(--color-bg-secondary)",
                   border: "1px solid var(--color-border)",
                   color: "var(--color-text)",
                 }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#00A896"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }}
               />
             </div>
 
             {/* Essay Textarea */}
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: "var(--color-text-tertiary)" }}>
-                Your Essay
-              </label>
-              <textarea
-                value={essayText}
-                onChange={handleEssayChange}
-                placeholder={`Write your ${taskType === "task1" ? "Task 1" : "Task 2"} essay here (minimum ${minRequired} words)...`}
-                rows={14}
-                maxLength={5000}
-                className="w-full rounded-lg px-3 py-3 text-sm leading-relaxed resize-none"
-                style={{
-                  background: "var(--color-bg-card)",
-                  border: `1px solid ${wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.4)" : "var(--color-border)"}`,
-                  color: "var(--color-text)",
-                  minHeight: "280px",
-                  height: "auto",
-                }}
-              />
-              {/* Word count indicator */}
-              <div className="flex items-center justify-between mt-1.5">
+            <div
+              className="rounded-xl p-5"
+              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
+                  Your Essay
+                </label>
+                {/* Live word count badge */}
                 <span
-                  className="text-xs font-medium"
+                  className="text-xs font-bold px-2.5 py-0.5 rounded-full"
                   style={{
+                    background: wordCount >= minRequired
+                      ? "rgba(22,163,74,0.08)"
+                      : wordCount > 0
+                        ? "rgba(239,68,68,0.08)"
+                        : "var(--surface-subtle)",
                     color: wordCount >= minRequired
-                      ? "#22C55E"
+                      ? "#16A34A"
                       : wordCount > 0
                         ? "#EF4444"
                         : "var(--color-text-tertiary)",
                   }}
                 >
-                  {wordCount}/{minRequired} words
+                  {wordCount} / {minRequired} words
                 </span>
-                {wordCount >= minRequired && (
-                  <span className="text-xs" style={{ color: "#22C55E" }}>
-                    Minimum reached
-                  </span>
-                )}
+              </div>
+              <textarea
+                value={essayText}
+                onChange={handleEssayChange}
+                placeholder={`Start writing your ${taskType === "task1" ? "Task 1" : "Task 2"} response...\n\nMinimum ${minRequired} words required. Timer starts on first keystroke.`}
+                rows={16}
+                maxLength={5000}
+                className="w-full rounded-lg px-4 py-3 text-sm leading-[1.8] resize-none transition-colors focus:outline-none"
+                style={{
+                  background: "var(--color-bg-secondary)",
+                  border: `1px solid ${wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)"}`,
+                  color: "var(--color-text)",
+                  minHeight: "320px",
+                }}
+                onFocus={(e) => {
+                  if (!(wordCount > 0 && wordCount < minRequired)) {
+                    e.currentTarget.style.borderColor = "#00A896";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)";
+                  }
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+              {/* Word count progress bar */}
+              <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "var(--surface-skeleton)" }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min((wordCount / minRequired) * 100, 100)}%`,
+                    background: wordCount >= minRequired ? "#16A34A" : wordCount > minRequired * 0.5 ? "#F59E0B" : "#EF4444",
+                  }}
+                />
               </div>
             </div>
 
             {/* Submit Error */}
             {submitError && (
               <div
-                className="rounded-lg px-4 py-3 text-sm"
+                className="rounded-xl px-4 py-3 text-sm flex items-center gap-2"
                 style={{ background: "rgba(239,68,68,0.08)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}
               >
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
                 {submitError}
               </div>
             )}
@@ -368,13 +419,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
             <button
               onClick={handleSubmit}
               disabled={!isValid || submitting}
-              className="w-full py-3 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
               style={{
-                background: isValid ? "#00A896" : "var(--color-bg-secondary)",
+                background: isValid ? "linear-gradient(135deg, #00A896, #00C4B0)" : "var(--surface-primary)",
                 color: isValid ? "#fff" : "var(--color-text-tertiary)",
+                border: isValid ? "none" : "1px solid var(--surface-border)",
+                boxShadow: isValid ? "0 4px 16px rgba(0,168,150,0.25)" : "var(--surface-shadow)",
               }}
             >
-              {submitting ? "Submitting..." : "Submit for Scoring"}
+              {submitting ? "Submitting..." : `Submit for Scoring (${wordCount} words)`}
             </button>
           </div>
         )}
