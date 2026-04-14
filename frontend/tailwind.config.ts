@@ -84,6 +84,18 @@ const config: Config = {
         DEFAULT: "rgba(255,255,255,0.06)",
       },
 
+      /* ── Z-index scale ─────────────────────────────────────────── */
+      zIndex: {
+        base:     '0',
+        raised:   '10',
+        nav:      '30',
+        sticky:   '40',
+        modal:    '50',
+        sheet:    '60',
+        overlay:  '70',
+        splash:   '80',
+      },
+
       borderRadius: {
         sm:   "8px",
         md:   "12px",

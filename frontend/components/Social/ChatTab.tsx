@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Mascot from "@/components/ui/Mascot";
 import { getChatConversations, getChatMessages, sendChatMessage, sendVoiceNote, markChatSeen } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import Skeleton from "@/components/ui/Skeleton";
@@ -70,10 +71,10 @@ function ConversationList({ conversations, activeId, onSelect, loading }: {
       {/* List */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-2xl mb-2">💬</div>
+          <div className="text-center py-12 flex flex-col items-center gap-3">
+            <Mascot size={56} mood="thinking" />
             <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-              {search ? "No results" : "No chats yet. Add friends and start chatting!"}
+              {search ? "Không tìm thấy" : "Chưa có tin nhắn nào! Nhắn cho bạn bè nhé 🐙"}
             </p>
           </div>
         ) : (

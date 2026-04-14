@@ -97,7 +97,7 @@ function PassageSelect({ onSelect, onBack }: { onSelect: (id: string) => void; o
         </div>
       ) : passages.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>No passages found for this filter</p>
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Không tìm thấy bài đọc nào cho bộ lọc này</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">

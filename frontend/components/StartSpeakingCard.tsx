@@ -35,10 +35,10 @@ export default function StartSpeakingCard({ onStart }: StartSpeakingCardProps) {
       {/* Text */}
       <div className="relative z-10">
         <h2 className="font-display font-bold text-3xl text-white leading-tight">
-          Ready to speak?
+          Sẵn sàng nói chưa?
         </h2>
         <p className="text-white/60 text-base mt-1.5">
-          Practice English with your AI coach
+          Luyện nói cùng AI coach của bạn 🐙
         </p>
       </div>
 
@@ -55,7 +55,7 @@ export default function StartSpeakingCard({ onStart }: StartSpeakingCardProps) {
           boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
         }}
       >
-        Start Speaking
+        Bắt đầu nói
       </Button>
     </div>
   );

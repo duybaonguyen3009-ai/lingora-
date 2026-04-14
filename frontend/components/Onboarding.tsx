@@ -110,7 +110,7 @@ const Onboarding: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[9998] flex items-center justify-center"
+      className="fixed inset-0 z-overlay flex items-center justify-center"
       style={{
         background: `
           radial-gradient(ellipse at 50% 40%, var(--color-primary-soft, rgba(99,102,241,0.08)) 0%, transparent 70%),

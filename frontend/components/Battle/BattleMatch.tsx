@@ -164,7 +164,7 @@ export default function BattleMatch({ matchId, onComplete, onClose }: BattleMatc
           className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           style={{ background: allAnswered ? "#00A896" : "var(--color-bg-secondary)", color: allAnswered ? "#fff" : "var(--color-text-tertiary)" }}
         >
-          {submitting ? "Submitting..." : allAnswered ? "Submit Answers ⚔️" : `Answer all questions (${answeredCount}/${questions.length})`}
+          {submitting ? "Đang nộp..." : allAnswered ? "Nộp bài ⚔️" : `Trả lời tất cả câu hỏi (${answeredCount}/${questions.length})`}
         </button>
       </div>
     </div>

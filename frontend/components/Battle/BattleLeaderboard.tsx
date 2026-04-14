@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { getBattleLeaderboard } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import Skeleton from "@/components/ui/Skeleton";
+import Mascot from "@/components/ui/Mascot";
 import type { BattleLeaderboardEntry, BattleRankTier } from "@/lib/types";
 
 interface BattleLeaderboardProps {
@@ -62,9 +63,9 @@ export default function BattleLeaderboard({ onClose }: BattleLeaderboardProps) {
         {loading ? (
           <div className="max-w-2xl mx-auto"><Skeleton.Leaderboard /></div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-3xl mb-3">⚔️</div>
-            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>No battles yet. Be the first!</p>
+          <div className="text-center py-16 flex flex-col items-center gap-3">
+            <Mascot size={64} mood="thinking" />
+            <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Chưa có trận đấu nào! Thử sức nhé 🐙</p>
           </div>
         ) : (
           <div className="max-w-2xl mx-auto flex flex-col gap-2">

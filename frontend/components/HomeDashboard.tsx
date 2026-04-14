@@ -14,6 +14,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { IconMic, IconPen, IconOpenBook, IconBook, IconSwords, IconFire } from "./Icons";
 import Skeleton from "@/components/ui/Skeleton";
+import Mascot from "@/components/ui/Mascot";
 import DailyMissionPanel from "@/components/DailyMissions/DailyMissionPanel";
 import StreakWarningBanner from "@/components/StreakWarningBanner";
 import { useReward } from "@/contexts/RewardContext";
@@ -114,17 +115,20 @@ export default function HomeDashboard({
           />
 
           <div className="relative z-10">
-            <p className="text-sm mb-1" style={{ color: "var(--dash-hero-sub)" }}>
-              Welcome back
-            </p>
+            <div className="flex items-center gap-3 mb-1">
+              <Mascot size={36} mood="happy" />
+              <p className="text-sm" style={{ color: "var(--dash-hero-sub)" }}>
+                Chào bạn! Hôm nay luyện gì nhỉ? 🐙
+              </p>
+            </div>
             <h1 className="text-2xl lg:text-3xl font-display font-bold leading-tight" style={{ color: "var(--dash-hero-text)" }}>
               {firstName} 👋
             </h1>
 
             {/* Today's progress */}
             <p className="text-sm mt-2 mb-6" style={{ color: "var(--dash-hero-sub)" }}>
-              {xp ? `${xp.xpInLevel} XP toward Level ${xp.level + 1}` : "Start practicing to earn XP"}
-              {streak && streak.currentStreak > 0 && ` · ${streak.currentStreak} day streak`}
+              {xp ? `${xp.xpInLevel} XP để lên Level ${xp.level + 1}` : "Bắt đầu luyện để nhận XP"}
+              {streak && streak.currentStreak > 0 && ` · Streak ${streak.currentStreak} ngày 🔥`}
             </p>
 
             {/* Primary CTA */}
@@ -513,7 +517,7 @@ function WeeklyXpChart({ xp }: { xp: GamificationData["xp"] | undefined }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(d.getDate() - (6 - i));
-    const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" }).slice(0, 2);
+    const dayLabel = d.toLocaleDateString("vi-VN", { weekday: "short" }).slice(0, 2);
     // Pseudo-random based on date seed for visual consistency across renders
     const seed = d.getDate() * 7 + d.getMonth();
     const val = i === 6 ? (xp?.xpInLevel ?? 0) : Math.floor(((seed * 17 + 31) % 100) + 10);

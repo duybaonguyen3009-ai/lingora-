@@ -42,7 +42,7 @@ export default function HowItWorksSection() {
         >
           <h2 className="font-playfair text-3xl sm:text-4xl font-bold text-white">
             Bắt đầu chỉ trong{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A896] to-[#00C9B1]">
+            <span className="text-teal">
               3 bước
             </span>
           </h2>

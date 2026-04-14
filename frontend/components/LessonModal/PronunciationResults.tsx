@@ -197,7 +197,7 @@ export default function PronunciationResults({
           className="flex-1"
           onClick={onTryAgain}
         >
-          Try Again
+          Thử lại
         </Button>
         <Button
           variant="primary"

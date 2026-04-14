@@ -67,7 +67,7 @@ export default function ProtectedRoute({
 
 function AuthLoader() {
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: "var(--color-bg)" }}>
+    <div className="flex items-center justify-center min-h-dvh" style={{ backgroundColor: "var(--color-bg)" }}>
       <div className="flex flex-col items-center gap-4">
 
         {/* Spinning ring that matches the accent colour */}

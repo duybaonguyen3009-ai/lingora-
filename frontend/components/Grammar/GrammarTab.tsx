@@ -86,7 +86,7 @@ function XpGainPopup({ xp, onDone }: { xp: number; onDone: () => void }) {
 
   return (
     <div
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-sheet pointer-events-none"
       style={{ animation: "grammar-xp-float 1.8s ease-out forwards" }}
     >
       <style>{`
@@ -123,7 +123,7 @@ function LevelUpToast({ level, onDone }: { level: number; onDone: () => void }) 
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
+      className="fixed inset-0 z-overlay flex items-center justify-center pointer-events-none"
       style={{ animation: "grammar-levelup 3s ease-out forwards" }}
     >
       <style>{`

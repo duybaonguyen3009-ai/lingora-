@@ -31,7 +31,7 @@ export default function FinalCTA() {
 
           <h2 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-bold text-white max-w-2xl mx-auto leading-tight">
             Bắt đầu hành trình IELTS của bạn{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A896] to-[#00C9B1]">
+            <span className="text-teal">
               hôm nay
             </span>
           </h2>

@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;600;700&display=swap');
+/* ── Fonts loaded via next/font in layout.tsx — no CSS @import needed ── */
 
 /* ══════════════════════════════════════════════════════════════════════
    DESIGN TOKENS — Lingona Design System (Navy + Teal)
@@ -37,10 +36,10 @@
   --color-accent: #00A896;
   --color-accent-soft: rgba(0, 168, 150, 0.08);
 
-  /* ── Text tokens — high contrast ── */
+  /* ── Text tokens — high contrast (WCAG AA ≥4.5:1) ── */
   --color-text: #1A1A1A;             /* near-black primary */
-  --color-text-secondary: #666666;   /* medium gray */
-  --color-text-tertiary: #999999;    /* light gray */
+  --color-text-secondary: #555555;   /* medium gray — 7.4:1 on #F8F7F4 */
+  --color-text-tertiary: #767676;    /* muted gray — 4.6:1 on #F8F7F4 (WCAG AA) */
 
   /* ── Border — warm gray ── */
   --color-border: #E8E8E4;
@@ -213,6 +212,9 @@
   --ielts-placeholder-color: rgba(255,255,255,0.2);
   --ielts-score-track: rgba(255,255,255,0.05);
 }
+
+/* ── Safari tap highlight fix ── */
+* { -webkit-tap-highlight-color: transparent; }
 
 body {
   background-color: var(--color-bg);
@@ -1082,4 +1084,25 @@ body {
 }
 .animate-mission-sweep {
   animation: missionSweep 0.5s ease-out forwards;
+}
+
+/* ── Safe area inset tokens ── */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Safari dvh fallback ── */
+@supports not (min-height: 100dvh) {
+  .min-h-dvh { min-height: -webkit-fill-available; }
+}
+
+/* ── Accessibility: Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

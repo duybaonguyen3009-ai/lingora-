@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Mascot from "@/components/ui/Mascot";
 import { getSocialNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 import type { SocialNotification } from "@/lib/types";
@@ -143,8 +144,9 @@ export default function NotificationBell() {
 
           {/* List */}
           {notifications.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <p className="text-sm" style={{ color: "var(--color-text-tertiary)" }}>No notifications yet</p>
+            <div className="px-4 py-8 text-center flex flex-col items-center gap-2">
+              <Mascot size={40} />
+              <p className="text-sm" style={{ color: "var(--color-text-tertiary)" }}>Chưa có thông báo nào</p>
             </div>
           ) : (
             <div>

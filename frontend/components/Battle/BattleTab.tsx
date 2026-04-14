@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { getBattleHome } from "@/lib/api";
 import Skeleton from "@/components/ui/Skeleton";
+import Mascot from "@/components/ui/Mascot";
 import type { BattleHome, BattleRankTier } from "@/lib/types";
 
 const BattleQueue = dynamic(() => import("./BattleQueue"), { ssr: false });
@@ -201,9 +202,9 @@ export default function BattleTab() {
           ) : (
             <div className="rounded-2xl p-5 text-center"
               style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)" }}>
-              <div className="text-3xl mb-2">⚔️</div>
-              <p className="text-sm font-medium mb-1" style={{ color: "var(--color-text)" }}>No rank yet</p>
-              <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Play your first match to earn a rank</p>
+              <Mascot size={56} mood="thinking" />
+              <p className="text-sm font-medium mb-1 mt-2" style={{ color: "var(--color-text)" }}>Chưa có hạng nào</p>
+              <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Chơi trận đầu tiên để nhận hạng nhé 🐙</p>
             </div>
           )}
 

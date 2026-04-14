@@ -230,7 +230,7 @@ export default function SpeakingSection({
             size="sm"
             onClick={handleTryAgain}
           >
-            Try Again
+            Thử lại
           </Button>
         </div>
       )}

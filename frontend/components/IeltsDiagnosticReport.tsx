@@ -565,9 +565,9 @@ function CriterionCard({
         </div>
         {/* Scale markers: bands 3, 5, 7 */}
         <div className="flex justify-between mt-0.5 px-0.5">
-          <span className="text-[8px]" style={{ color: "var(--color-text-muted)" }}>1</span>
-          <span className="text-[8px]" style={{ color: "var(--color-text-muted)" }}>5</span>
-          <span className="text-[8px]" style={{ color: "var(--color-text-muted)" }}>9</span>
+          <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>1</span>
+          <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>5</span>
+          <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>9</span>
         </div>
       </div>
 

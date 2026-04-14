@@ -37,7 +37,7 @@ export default function XPToast({ event, onDone }: XPToastProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
-          className="fixed top-6 right-6 lg:top-6 lg:right-[calc(50%-560px)] z-[70] flex flex-col items-end gap-1 pointer-events-none"
+          className="fixed top-6 right-6 lg:top-6 lg:right-[calc(50%-560px)] z-overlay flex flex-col items-end gap-1 pointer-events-none"
         >
           {/* Main XP chip */}
           <div

@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Mascot from "@/components/ui/Mascot";
 import type { RewardEvent } from "@/contexts/RewardContext";
 import type { BattleRankTier } from "@/lib/types";
 
@@ -66,7 +67,7 @@ export default function RankPromotionOverlay({ event, onDone }: RankPromotionOve
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[70] flex items-center justify-center"
+          className="fixed inset-0 z-overlay flex items-center justify-center"
           onClick={handleDismiss}
           role="dialog"
           aria-modal="true"
@@ -125,7 +126,7 @@ export default function RankPromotionOverlay({ event, onDone }: RankPromotionOve
                   </div>
 
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    Rank threshold reached...
+                    Đang lên hạng...
                   </p>
                 </motion.div>
               )}
@@ -181,7 +182,7 @@ export default function RankPromotionOverlay({ event, onDone }: RankPromotionOve
                         className="text-[10px] font-bold uppercase tracking-[3px] mb-1.5"
                         style={{ color: `${newStyle.color}CC` }}
                       >
-                        Promoted
+                        Lên hạng!
                       </p>
                       <h2
                         className="text-2xl font-display font-bold mb-1"
@@ -189,9 +190,10 @@ export default function RankPromotionOverlay({ event, onDone }: RankPromotionOve
                       >
                         {newStyle.label}
                       </h2>
+                      <div className="my-2"><Mascot size={40} mood="happy" /></div>
                       {event.percentile != null && (
                         <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
-                          Top {event.percentile}% of players
+                          Top {event.percentile}% — Lintopus tự hào lắm! 🐙🎉
                         </p>
                       )}
 

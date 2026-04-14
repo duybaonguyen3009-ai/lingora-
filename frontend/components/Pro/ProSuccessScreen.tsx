@@ -25,7 +25,7 @@ export default function ProSuccessScreen({ isTrial, onContinue }: ProSuccessScre
   }, [onContinue]);
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "var(--color-bg)" }}>
+    <div className="fixed inset-0 z-splash flex items-center justify-center p-4" style={{ background: "var(--color-bg)" }}>
       <div className="text-center max-w-sm">
         {/* Confetti-like dots */}
         <div className="relative mb-6">

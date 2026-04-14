@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function DataDeletionPage() {
   return (
-    <div className="min-h-screen px-6 py-16">
+    <div className="min-h-dvh px-6 py-16">
       <article className="mx-auto max-w-3xl space-y-8">
         <header>
           <h1 className="text-3xl font-bold text-white">Data Deletion Request</h1>

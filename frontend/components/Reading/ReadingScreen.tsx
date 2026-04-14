@@ -223,18 +223,18 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   // ---------------------------------------------------------------------------
 
   const ConfirmModal = () => (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
+    <div className="fixed inset-0 z-sheet flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
       <div className="w-full max-w-sm rounded-xl p-5 text-center" style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
-        <div className="text-base font-semibold mb-2" style={{ color: "var(--color-text)" }}>Submit Answers?</div>
+        <div className="text-base font-semibold mb-2" style={{ color: "var(--color-text)" }}>Nộp bài?</div>
         <div className="text-sm mb-4" style={{ color: "var(--color-text-secondary)" }}>
-          You answered {answeredCount}/{questions.length} questions.
+          Bạn đã trả lời {answeredCount}/{questions.length} câu hỏi.
         </div>
         <div className="flex gap-3">
           <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)" }}>
-            Review
+            Xem lại
           </button>
           <button onClick={() => { setShowConfirm(false); handleSubmit(); }} disabled={submitting} className="flex-1 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50" style={{ background: "#00A896", color: "#fff" }}>
-            {submitting ? "Submitting..." : "Submit"}
+            {submitting ? "Đang nộp..." : "Nộp bài"}
           </button>
         </div>
       </div>
@@ -292,7 +292,7 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
         <button onClick={() => setShowConfirm(true)} disabled={submitting}
           className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           style={{ background: allAnswered ? "#00A896" : "var(--color-bg-secondary)", color: allAnswered ? "#fff" : "var(--color-text-tertiary)" }}>
-          {submitting ? "Submitting..." : allAnswered ? "Submit Answers" : `Answer all (${answeredCount}/${questions.length})`}
+          {submitting ? "Đang nộp..." : allAnswered ? "Nộp bài" : `Trả lời tất cả (${answeredCount}/${questions.length})`}
         </button>
       </div>
 

@@ -62,7 +62,7 @@ export default function Topbar({ streak = 0 }: TopbarProps) {
         {user && (
           <button
             onClick={() => router.push("/leaderboard")}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-95"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-95"
             style={{
               background: "rgba(245,158,11,0.10)",
               border: "1px solid rgba(245,158,11,0.15)",

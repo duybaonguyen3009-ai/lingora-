@@ -6,12 +6,13 @@ import { cn } from "@/lib/utils";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import Skeleton from "@/components/ui/Skeleton";
+import Mascot from "@/components/ui/Mascot";
 
 type Scope = "weekly" | "all-time";
 
 const TABS: { id: Scope; label: string }[] = [
-  { id: "weekly",   label: "This Week" },
-  { id: "all-time", label: "All Time"  },
+  { id: "weekly",   label: "Tuần này" },
+  { id: "all-time", label: "Tất cả"  },
 ];
 
 export default function LeaderboardClient() {
@@ -20,13 +21,13 @@ export default function LeaderboardClient() {
   const userId = useCurrentUserId();
 
   return (
-    <div className="min-h-screen px-4 sm:px-8 py-10 max-w-2xl mx-auto" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}>
+    <div className="min-h-dvh px-4 sm:px-8 py-10 max-w-2xl mx-auto" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}>
       <div className="mb-8">
         <Link href="/home" className="inline-flex items-center gap-1 text-sm mb-4 transition-colors" style={{ color: "var(--color-text-secondary)" }}>
-          <span aria-hidden>←</span> Back to home
+          <span aria-hidden>←</span> Về trang chính
         </Link>
-        <h1 className="text-xl font-sora font-bold tracking-tight">Leaderboard</h1>
-        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>Top learners ranked by XP earned</p>
+        <h1 className="text-xl font-sora font-bold tracking-tight">Bảng xếp hạng</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>Học viên hàng đầu theo XP</p>
       </div>
 
       <div className="flex items-center border rounded-md p-1 gap-1 mb-6 w-fit" style={{ backgroundColor: "var(--color-primary-soft)", borderColor: "var(--color-border)" }}>
@@ -44,7 +45,10 @@ export default function LeaderboardClient() {
       )}
 
       {error && !loading && (
-        <div className="py-20 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>{error}</div>
+        <div className="py-20 flex flex-col items-center gap-3 text-center">
+          <Mascot size={56} mood="sad" />
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Ối, tải không được! Thử lại nhé 🐙</p>
+        </div>
       )}
 
       {data && !loading && (

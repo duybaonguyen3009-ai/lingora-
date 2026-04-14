@@ -14,6 +14,7 @@
 import { useEffect, useState, useRef } from "react";
 import Button from "@/components/ui/Button";
 import Mascot from "@/components/ui/Mascot";
+import { analytics } from "@/lib/analytics";
 import useSound from "@/hooks/useSound";
 
 /* ── CSS-only confetti ── */
@@ -322,8 +323,22 @@ export default function CompletionScreen({
           fullWidth
           onClick={onClose}
         >
-          {onNextLesson ? "Back to Practice" : "Done"}
+          {onNextLesson ? "Quay lại luyện tập" : "Hoàn thành"}
         </Button>
+      </div>
+
+      {/* ── Session end teaser — open loop for D1 return ── */}
+      <div
+        className="flex items-start gap-3 mt-4 p-3 rounded-lg"
+        style={{
+          background: "var(--color-accent-soft)",
+          border: "1px solid var(--color-border)",
+        }}
+      >
+        <Mascot size={32} mood="happy" className="shrink-0 mt-0.5" />
+        <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
+          Tuyệt vời! Ngày mai tiếp tục luyện nhé — mỗi ngày một chút, tiến bộ sẽ rõ lắm! 🐙🔥
+        </p>
       </div>
     </div>
   );

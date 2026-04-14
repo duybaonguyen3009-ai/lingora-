@@ -21,10 +21,12 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around h-[68px] px-1"
+      className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around px-1"
       style={{
         backgroundColor: "var(--color-bg-card)",
         borderTop: "1px solid var(--color-border)",
+        height: "calc(68px + env(safe-area-inset-bottom, 0px))",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       {NAV_ITEMS.map(({ id, label, Icon }) => {
@@ -34,10 +36,10 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
           <button
             key={id}
             onClick={() => { play("click", 0.2); onChange(id); }}
-            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all duration-normal active:scale-95"
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-[transform,color] duration-normal active:scale-95"
           >
             <div
-              className="flex items-center justify-center rounded-xl transition-all duration-normal"
+              className="flex items-center justify-center rounded-xl transition-[transform,background-color,color] duration-normal"
               style={{
                 width: 40,
                 height: 40,

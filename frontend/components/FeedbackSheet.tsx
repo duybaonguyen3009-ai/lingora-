@@ -99,7 +99,7 @@ export default function FeedbackSheet({ isOpen, onClose, activityType, activityI
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center"
+      className="fixed inset-0 z-sheet flex items-end justify-center"
       style={{ background: "rgba(0,0,0,0.4)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -206,7 +206,7 @@ export default function FeedbackSheet({ isOpen, onClose, activityType, activityI
                   className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
                   style={{ background: "#00A896", color: "#fff" }}
                 >
-                  {submitting ? "Sending..." : "Submit Feedback"}
+                  {submitting ? "Đang gửi..." : "Gửi phản hồi"}
                 </button>
               </div>
             )}

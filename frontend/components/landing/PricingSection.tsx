@@ -26,8 +26,36 @@ const PRO_FEATURES = [
   "Priority support + early access",
 ];
 
+// ─── Pricing tiers (safe pricing) ───────────────────────────────────────────
+const MONTHLY_BASE = 179_000; // base monthly rate
+
+type PlanId = "m1" | "m3" | "m6" | "m12";
+
+interface Plan {
+  id: PlanId;
+  label: string;
+  months: number;
+  price: number;
+  perMonth: number;
+  savings: number;  // % off monthly base
+  tag?: string;
+}
+
+const PLANS: Plan[] = [
+  { id: "m1",  label: "1 tháng", months: 1,  price: 179_000,   perMonth: 179_000, savings: 0 },
+  { id: "m3",  label: "3 tháng", months: 3,  price: 499_000,   perMonth: 166_333, savings: 7 },
+  { id: "m6",  label: "6 tháng", months: 6,  price: 929_000,   perMonth: 154_833, savings: 14, tag: "Phổ biến" },
+  { id: "m12", label: "1 năm",   months: 12, price: 1_490_000, perMonth: 124_167, savings: 31, tag: "Tiết kiệm nhất" },
+];
+
+function formatVnd(n: number): string {
+  return n.toLocaleString("vi-VN").replace(/,/g, ".") + "đ";
+}
+
 export default function PricingSection() {
-  const [yearly, setYearly] = useState(true);
+  const [planId, setPlanId] = useState<PlanId>("m12"); // default: 1 năm
+  const plan = PLANS.find((p) => p.id === planId) ?? PLANS[3];
+  const originalPrice = MONTHLY_BASE * plan.months;
 
   return (
     <section id="pricing" className="relative py-24">
@@ -46,31 +74,27 @@ export default function PricingSection() {
             Bắt đầu miễn phí. Nâng cấp khi bạn sẵn sàng.
           </p>
 
-          {/* Toggle monthly / yearly */}
-          <div className="mt-8 inline-flex items-center gap-3 bg-white/[0.04] rounded-full p-1 border border-white/[0.06]">
-            <button
-              onClick={() => setYearly(false)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-                !yearly
-                  ? "bg-white/[0.1] text-white"
-                  : "text-gray-400 hover:text-gray-300"
-              }`}
-            >
-              Hàng tháng
-            </button>
-            <button
-              onClick={() => setYearly(true)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
-                yearly
-                  ? "bg-white/[0.1] text-white"
-                  : "text-gray-400 hover:text-gray-300"
-              }`}
-            >
-              Hàng năm
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-[#00A896] to-[#00C9B1] text-white">
-                -44%
-              </span>
-            </button>
+          {/* Plan selector — 4 tiers */}
+          <div className="mt-8 inline-flex flex-wrap items-center justify-center gap-2 bg-white/[0.04] rounded-full p-1 border border-white/[0.06]">
+            {PLANS.map((p) => {
+              const isActive = planId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPlanId(p.id)}
+                  className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-white/[0.1] text-white"
+                      : "text-gray-400 hover:text-gray-300"
+                  }`}
+                >
+                  {p.label}
+                  {p.savings > 0 && (
+                    <span className="ml-1.5 text-[10px] font-bold text-teal">-{p.savings}%</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -94,7 +118,7 @@ export default function PricingSection() {
             <ul className="space-y-3 mb-8">
               {FREE_FEATURES.map((feature) => (
                 <li key={feature} className="flex items-start gap-3 text-sm text-gray-300">
-                  <svg className="w-4 h-4 mt-0.5 text-[#00A896] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="w-4 h-4 mt-0.5 text-teal flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {feature}
@@ -116,35 +140,41 @@ export default function PricingSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5, delay: 0.12 }}
-            className="relative rounded-xl p-8 bg-gradient-to-b from-[#00A896]/[0.08] to-[#0F1429]/60 border-2 border-[#00A896]/30 shadow-[0_0_40px_rgba(0,168,150,0.08)]"
+            className="relative rounded-xl p-8 bg-gradient-to-b from-[#00A896]/[0.08] to-[#0F1429]/60 border-2 border-teal/30 shadow-[0_0_40px_rgba(0,168,150,0.08)]"
           >
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#00A896] to-[#00C9B1] text-white">
-              Phổ biến
-            </span>
+            {plan.tag && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#00A896] to-[#00C9B1] text-white whitespace-nowrap">
+                {plan.tag}
+              </span>
+            )}
 
-            <h3 className="text-lg font-semibold text-white">Pro</h3>
+            <h3 className="text-lg font-semibold text-white">Pro — {plan.label}</h3>
             <div className="mt-4 mb-1 flex items-baseline gap-2">
               <span className="text-3xl font-bold text-white font-playfair">
-                {yearly ? "999.000đ" : "149.000đ"}
+                {formatVnd(plan.price)}
               </span>
               <span className="text-sm text-gray-400">
-                {yearly ? "/năm" : "/tháng"}
+                /{plan.label}
               </span>
             </div>
-            {yearly && (
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-xs text-[#00A896] font-semibold px-2 py-0.5 rounded-full bg-[#00A896]/10 border border-[#00A896]/20">
-                  Tiết kiệm 44%
-                </span>
-                <span className="text-xs text-gray-500 line-through">1.788.000đ</span>
-              </div>
-            )}
-            {!yearly && <div className="mb-6" />}
+            <div className="flex flex-wrap items-center gap-2 mb-2 min-h-[24px]">
+              {plan.savings > 0 ? (
+                <>
+                  <span className="text-xs text-teal font-semibold px-2 py-0.5 rounded-full bg-teal/10 border border-teal/20">
+                    Tiết kiệm {plan.savings}%
+                  </span>
+                  <span className="text-xs text-gray-500 line-through">{formatVnd(originalPrice)}</span>
+                </>
+              ) : null}
+            </div>
+            <p className="text-xs text-gray-400 mb-6">
+              Chỉ {formatVnd(plan.perMonth)}/tháng
+            </p>
 
             <ul className="space-y-3 mb-8">
               {PRO_FEATURES.map((feature) => (
                 <li key={feature} className="flex items-start gap-3 text-sm text-gray-300">
-                  <svg className="w-4 h-4 mt-0.5 text-[#00A896] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="w-4 h-4 mt-0.5 text-teal flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {feature}
@@ -164,7 +194,7 @@ export default function PricingSection() {
         {/* Notes */}
         <div className="mt-8 text-center space-y-2">
           <p className="text-sm text-gray-400">
-            Sinh viên giảm 20% — nhập mã <span className="text-[#00A896] font-medium">.edu</span> khi thanh toán
+            Sinh viên giảm 20% — nhập mã <span className="text-teal font-medium">.edu</span> khi thanh toán
           </p>
           <p className="text-sm text-gray-500">
             Dùng thử 3 ngày miễn phí &bull; Không cần thẻ tín dụng

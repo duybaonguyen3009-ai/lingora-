@@ -216,10 +216,10 @@ export default function SpeakingMetrics({ data, loading }: SpeakingMetricsProps)
       >
         <Mascot size={64} className="opacity-70" />
         <p className="text-sm font-medium" style={{ color: "var(--color-text)" }}>
-          No speaking practice yet
+          Chưa có bài Speaking nào
         </p>
         <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-          Complete a lesson with speaking prompts to see your score trend here.
+          Hoàn thành bài luyện Speaking để xem xu hướng điểm tại đây 🐙
         </p>
       </div>
     );

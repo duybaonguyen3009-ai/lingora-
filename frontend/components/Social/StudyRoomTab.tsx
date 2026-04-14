@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import Mascot from "@/components/ui/Mascot";
 import {
   getMyStudyRooms, createStudyRoom, getStudyRoomDashboard,
   acceptRoomInvite, leaveStudyRoom, createRoomNote, sendRoomNudge,
@@ -183,7 +184,7 @@ function RoomDashboard({ roomId, onClose }: { roomId: string; onClose: () => voi
               </div>
             )}
             {pinnedNotes.length === 0 && !showNoteInput && (
-              <p className="text-sm py-2" style={{ color: "var(--color-text-secondary)" }}>No notes yet</p>
+              <p className="text-sm py-2" style={{ color: "var(--color-text-secondary)" }}>Chưa có ghi chú nào</p>
             )}
             {pinnedNotes.map((n) => (
               <div key={n.id} className="p-3 rounded-lg mb-2" style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
@@ -201,7 +202,7 @@ function RoomDashboard({ roomId, onClose }: { roomId: string; onClose: () => voi
           <div>
             <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--color-text-tertiary)" }}>Recent Activity</div>
             {recentFeed.length === 0 ? (
-              <p className="text-sm py-2" style={{ color: "var(--color-text-secondary)" }}>No activity yet</p>
+              <p className="text-sm py-2" style={{ color: "var(--color-text-secondary)" }}>Chưa có hoạt động nào</p>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {recentFeed.map((f, i) => (
@@ -245,7 +246,7 @@ function CreateRoomModal({ onClose, onCreated }: { onClose: () => void; onCreate
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-sheet flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md rounded-xl p-5 flex flex-col gap-4" style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
         <h3 className="text-base font-bold" style={{ color: "var(--color-text)" }}>Create Study Room</h3>
 
@@ -329,9 +330,9 @@ export default function StudyRoomTab() {
       {loading ? (
         <Skeleton.List count={3} />
       ) : rooms.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-3xl mb-3">📚</div>
-          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>No study rooms yet. Create one and invite friends!</p>
+        <div className="text-center py-12 flex flex-col items-center gap-3">
+          <Mascot size={56} mood="thinking" />
+          <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>Chưa có phòng học nào! Tạo phòng và mời bạn bè nhé 🐙</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">

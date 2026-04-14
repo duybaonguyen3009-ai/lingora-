@@ -42,7 +42,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
   return (
     <aside
       className={cn(
-        "flex flex-col flex-shrink-0 relative z-[100]",
+        "flex flex-col flex-shrink-0 relative z-modal",
         "border-r border-white/[0.07]",
         "sidebar-transition overflow-y-hidden overflow-x-visible",
         collapsed ? "w-[72px]" : "w-[240px]"
@@ -54,7 +54,7 @@ export default function Sidebar({ collapsed, onToggle, activeNav, onNavChange }:
         onClick={onToggle}
         aria-label="Toggle sidebar"
         className={cn(
-          "absolute top-5 -right-3 z-[999]",
+          "absolute top-5 -right-3 z-sheet",
           "w-6 h-6 rounded-full flex items-center justify-center",
           "border border-white/10",
           "shadow-md",

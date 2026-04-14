@@ -5,10 +5,10 @@ import { IconX } from "./Icons";
 import Mascot from "@/components/ui/Mascot";
 
 const TIPS = [
-  "Try speaking for 5 minutes each morning — consistency beats long sessions.",
-  "Don't worry about perfect grammar. Focus on being understood first.",
-  "Record yourself and listen back — you'll spot patterns you can't hear live.",
-  "Practice the sounds that don't exist in Vietnamese, like 'th' and 'r'.",
+  "Mỗi sáng luyện nói 5 phút — kiên trì quan trọng hơn luyện dài 🐙",
+  "Đừng lo ngữ pháp hoàn hảo. Tập trung nói cho người khác hiểu trước nhé!",
+  "Ghi âm lại rồi nghe — bạn sẽ phát hiện lỗi mà lúc nói không nghe ra đâu 🐙",
+  "Luyện những âm tiếng Việt không có, như 'th' và 'r' — mỗi ngày một chút!",
 ];
 
 export default function CoachTipCard() {

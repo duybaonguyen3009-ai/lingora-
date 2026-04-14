@@ -239,7 +239,7 @@ export default function GrammarExam({
           </div>
           {timeLeft === 0 && <p className="text-xs" style={{ color: "var(--color-warning)" }}>⏰ Time ran out!</p>}
           <Button variant={passed ? "primary" : "soft"} size="lg" fullWidth onClick={onClose} style={!passed ? { background: "linear-gradient(135deg, var(--color-warning), #D97706)", color: "white", borderColor: "transparent" } : undefined}>
-            {passed ? "Continue" : "Try Again Later"}
+            {passed ? "Tiếp tục" : "Thử lại sau"}
           </Button>
         </div>
       </div>

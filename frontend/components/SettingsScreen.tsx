@@ -84,7 +84,7 @@ export default function SettingsScreen() {
                 className="text-xs font-medium cursor-pointer"
                 style={{ color: "#00A896" }}
               >
-                {showPasswordForm ? "Cancel" : "Change"}
+                {showPasswordForm ? "Hủy" : "Đổi"}
               </button>
             </div>
 

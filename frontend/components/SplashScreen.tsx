@@ -32,7 +32,7 @@ export default function SplashScreen() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-splash flex flex-col items-center justify-center overflow-hidden"
       style={{
         backgroundColor: "var(--color-bg)",
         animation: phase === "exit" ? `splashCurtainExit ${FADE_OUT_DURATION}ms ease-in forwards` : undefined,

@@ -115,7 +115,7 @@ export default function ScenarioConversation({
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.message || "Hmm, something didn't work. Let's try again!");
+        setError(err.message || "Ối, có lỗi rồi! Thử lại nhé 🐙");
         setPhase("error");
       });
 

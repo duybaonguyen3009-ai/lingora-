@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Mascot from "@/components/ui/Mascot";
 import type { RewardEvent } from "@/contexts/RewardContext";
 
 interface LevelUpOverlayProps {
@@ -55,7 +56,7 @@ export default function LevelUpOverlay({ event, onDone }: LevelUpOverlayProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[70] flex items-center justify-center"
+          className="fixed inset-0 z-overlay flex items-center justify-center"
           onClick={handleDismiss}
           role="dialog"
           aria-modal="true"
@@ -138,13 +139,16 @@ export default function LevelUpOverlay({ event, onDone }: LevelUpOverlayProps) {
                 className="text-xs font-bold uppercase tracking-[3px] mb-2"
                 style={{ color: "rgba(139,92,246,0.8)" }}
               >
-                Level Up
+                Lên level!
               </p>
               <h2 className="text-2xl font-display font-bold text-white">
-                Level {event.newLevel} Unlocked
+                Level {event.newLevel} đã mở khóa!
               </h2>
+              <div className="flex items-center justify-center mt-2 mb-1">
+                <Mascot size={48} mood="happy" />
+              </div>
               <p className="text-sm mt-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Keep climbing — {event.totalXp.toLocaleString()} XP total
+                Lintopus tự hào lắm! {event.totalXp.toLocaleString()} XP 🐙🎉
               </p>
             </motion.div>
 

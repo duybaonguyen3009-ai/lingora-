@@ -187,7 +187,7 @@ function LearnPhase({
           }}
           style={isLast ? { background: "linear-gradient(to right, var(--color-success), var(--color-accent))" } : undefined}
         >
-          {isLast ? "Start Practice \u2192" : "Got it \u2192"}
+          {isLast ? "Bắt đầu luyện \u2192" : "Hiểu rồi \u2192"}
         </Button>
       )}
     </div>

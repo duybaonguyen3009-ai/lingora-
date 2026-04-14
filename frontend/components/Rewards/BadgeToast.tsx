@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Mascot from "@/components/ui/Mascot";
 import type { RewardEvent } from "@/contexts/RewardContext";
 
 interface BadgeToastProps {
@@ -59,7 +60,7 @@ export default function BadgeToast({ event, onDone }: BadgeToastProps) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 40 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed bottom-6 right-6 z-[70] pointer-events-auto badge-shimmer-border"
+          className="fixed bottom-6 right-6 z-overlay pointer-events-auto badge-shimmer-border"
           style={{
             ["--shimmer-color" as string]: style.border,
           }}
@@ -96,6 +97,8 @@ export default function BadgeToast({ event, onDone }: BadgeToastProps) {
                 {event.xpReward ? ` · +${event.xpReward} XP` : ""}
               </p>
             </div>
+
+            <Mascot size={32} mood="happy" className="shrink-0" />
           </div>
         </motion.div>
       )}

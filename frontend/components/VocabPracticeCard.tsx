@@ -60,7 +60,7 @@ export default function VocabPracticeCard() {
       }
 
       if (allVocab.length === 0) {
-        setError("No vocabulary items available yet.");
+        setError("Chưa có từ vựng nào! Hoàn thành bài học để mở khóa 🐙");
         setMode("card");
         return;
       }
@@ -143,7 +143,7 @@ export default function VocabPracticeCard() {
                   Loading…
                 </span>
               ) : (
-                "Start Practice"
+                "Bắt đầu luyện"
               )}
             </button>
           </div>

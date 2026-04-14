@@ -427,7 +427,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                 boxShadow: isValid ? "0 4px 16px rgba(0,168,150,0.25)" : "var(--surface-shadow)",
               }}
             >
-              {submitting ? "Submitting..." : `Submit for Scoring (${wordCount} words)`}
+              {submitting ? "Đang nộp..." : `Nộp bài chấm điểm (${wordCount} từ)`}
             </button>
           </div>
         )}

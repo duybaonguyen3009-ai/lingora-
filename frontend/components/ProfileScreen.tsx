@@ -69,7 +69,7 @@ function EditProfileModal({ stats, onClose, onSaved }: { stats: ProfileStats; on
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.6)" }}
+    <div className="fixed inset-0 z-sheet flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.6)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
         style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
@@ -110,9 +110,9 @@ function EditProfileModal({ stats, onClose, onSaved }: { stats: ProfileStats; on
         </select>
 
         <div className="flex gap-2 mt-1">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)" }}>Cancel</button>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)" }}>Hủy</button>
           <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50" style={{ background: "#00A896", color: "#fff" }}>
-            {saving ? "Saving..." : "Save"}
+            {saving ? "Đang lưu..." : "Lưu"}
           </button>
         </div>
       </div>
@@ -195,17 +195,17 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
       <div className="flex flex-col items-center gap-4 py-16">
         <div className="text-4xl">😕</div>
         <h3 className="text-base font-display font-bold" style={{ color: "var(--color-text)" }}>
-          Couldn&apos;t load profile
+          Không tải được hồ sơ
         </h3>
         <p className="text-sm text-center max-w-xs" style={{ color: "var(--color-text-secondary)" }}>
-          There was a problem fetching your profile data. Check your connection and try again.
+          Có vấn đề khi tải dữ liệu. Kiểm tra kết nối và thử lại nhé 🐙
         </p>
         <button
           onClick={loadStats}
           className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.97]"
           style={{ background: "#00A896", color: "#fff" }}
         >
-          Retry
+          Thử lại
         </button>
       </div>
     );
@@ -213,7 +213,7 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
 
   const { user: u, gamification: g, battle, speaking, writing, social, leaderboard: lb } = stats;
   const initials = u.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const joinDate = new Date(u.joined_at).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  const joinDate = new Date(u.joined_at).toLocaleDateString("vi-VN", { month: "short", year: "numeric" });
 
   // ---------------------------------------------------------------------------
   // Render

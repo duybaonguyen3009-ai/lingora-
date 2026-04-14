@@ -139,7 +139,7 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
         <div className="flex flex-col gap-3 stagger-children">
           {scenarios.length === 0 && (
             <div className="text-center py-10 text-base" style={{ color: "var(--color-text-secondary)" }}>
-              No scenarios found for this category.
+              Không tìm thấy kịch bản nào cho danh mục này
             </div>
           )}
 

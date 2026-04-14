@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import Mascot from "@/components/ui/Mascot";
 import {
   getFriends,
   removeFriend,
@@ -67,9 +68,9 @@ function ActivityFeed({ friends }: { friends: Friend[] }) {
       <div className="flex-1 overflow-y-auto px-5 py-4">
         {friends.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="text-4xl mb-3">👥</div>
-            <p className="text-sm mb-1" style={{ color: "var(--color-text-secondary)" }}>No friends yet</p>
-            <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Add friends to see their activity here</p>
+            <Mascot size={56} mood="thinking" />
+            <p className="text-sm mb-1 mt-2" style={{ color: "var(--color-text-secondary)" }}>Chưa có bạn bè!</p>
+            <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Mời bạn cùng luyện IELTS nhé 🐙</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -187,7 +188,7 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
           <div className="text-center py-12">
             <div className="text-2xl mb-2">💬</div>
             <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-              {search ? "No results" : "No chats yet"}
+              {search ? "Không tìm thấy" : "Chưa có tin nhắn nào"}
             </p>
           </div>
         ) : (
@@ -277,8 +278,8 @@ function FriendsList() {
   if (friends.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-3xl mb-3">👥</div>
-        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>No friends yet. Add some!</p>
+        <Mascot size={56} mood="thinking" />
+        <p className="text-sm mt-2" style={{ color: "var(--color-text-secondary)" }}>Chưa có bạn bè! Thêm bạn nhé 🐙</p>
       </div>
     );
   }

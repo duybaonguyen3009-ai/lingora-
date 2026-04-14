@@ -19,10 +19,10 @@ interface ShareCardModalProps {
 type TemplateKey = "streak_flex" | "weekly_grind" | "band_progress" | "squad_win";
 
 const TEMPLATES: { key: TemplateKey; emoji: string; label: string }[] = [
-  { key: "streak_flex", emoji: "🔥", label: "Streak Flex" },
-  { key: "weekly_grind", emoji: "💪", label: "Weekly Grind" },
-  { key: "band_progress", emoji: "🎯", label: "Band Progress" },
-  { key: "squad_win", emoji: "🏆", label: "Squad Win" },
+  { key: "streak_flex", emoji: "🔥", label: "Streak" },
+  { key: "weekly_grind", emoji: "💪", label: "Tuần này" },
+  { key: "band_progress", emoji: "🎯", label: "Band" },
+  { key: "squad_win", emoji: "🏆", label: "Thành tích" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -31,15 +31,16 @@ const TEMPLATES: { key: TemplateKey; emoji: string; label: string }[] = [
 
 function CardPreview({ template, stats }: { template: TemplateKey; stats: ShareCardStats }) {
   const base = "w-full rounded-xl p-6 text-center";
-  const bg = "linear-gradient(135deg, #0F1E33, #1B2B4B)";
+  const bg = "#1B2B4B";
+  const brand = <div className="flex items-center justify-center gap-1.5 mt-4"><img src="/mascot.svg" alt="" width={20} height={20} /><span className="text-xs font-medium" style={{ color: "rgba(0,168,150,0.9)" }}>Lingona · lingona.app</span></div>;
 
   if (template === "streak_flex") {
     return (
       <div className={base} style={{ background: bg }}>
         <div className="text-5xl font-bold mb-1" style={{ color: "#F59E0B", textShadow: "0 0 20px rgba(245,158,11,0.3)" }}>{stats.streak}</div>
-        <div className="text-base font-medium mb-3" style={{ color: "#F59E0B" }}>day streak 🔥</div>
-        <div className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.6)" }}>{stats.weeklyXp} XP this week · Level {stats.level}</div>
-        <div className="text-xs font-medium" style={{ color: "rgba(0,168,150,0.8)" }}>Lingona · study smarter daily</div>
+        <div className="text-base font-medium mb-3" style={{ color: "#F59E0B" }}>ngày liên tiếp 🔥</div>
+        <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>{stats.weeklyXp} XP tuần này · Level {stats.level}</div>
+        {brand}
       </div>
     );
   }
@@ -51,9 +52,9 @@ function CardPreview({ template, stats }: { template: TemplateKey; stats: ShareC
           <div><div className="text-3xl font-bold" style={{ color: "#00A896" }}>{stats.speakingSessionsThisWeek}</div><div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Speaking</div></div>
           <div><div className="text-3xl font-bold" style={{ color: "#F59E0B" }}>{stats.writingTasksThisWeek}</div><div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Writing</div></div>
         </div>
-        <div className="text-sm mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>+{stats.weeklyXp} XP earned this week</div>
-        {stats.weeklyRank && <div className="text-xs mb-3" style={{ color: "#00A896" }}>Ranked #{stats.weeklyRank}</div>}
-        <div className="text-xs font-medium" style={{ color: "rgba(0,168,150,0.8)" }}>Lingona · study smarter daily</div>
+        <div className="text-sm mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>+{stats.weeklyXp} XP tuần này</div>
+        {stats.weeklyRank && <div className="text-xs mb-1" style={{ color: "#00A896" }}>Hạng #{stats.weeklyRank}</div>}
+        {brand}
       </div>
     );
   }
@@ -62,10 +63,10 @@ function CardPreview({ template, stats }: { template: TemplateKey; stats: ShareC
     return (
       <div className={base} style={{ background: bg }}>
         <div className="text-4xl font-bold mb-1" style={{ color: "#00C4B0" }}>{stats.predictedBand?.toFixed(1) ?? "—"}</div>
-        <div className="text-sm mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>Predicted Band Score</div>
-        <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Level {stats.level} · {stats.totalXp.toLocaleString()} total XP</div>
-        <div className="text-xs mb-3" style={{ color: "#F59E0B" }}>Keep grinding →</div>
-        <div className="text-xs font-medium" style={{ color: "rgba(0,168,150,0.8)" }}>Lingona · study smarter daily</div>
+        <div className="text-sm mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>Band dự đoán</div>
+        <div className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Level {stats.level} · {stats.totalXp.toLocaleString()} XP</div>
+        <div className="text-xs mb-1" style={{ color: "#F59E0B" }}>Tiếp tục luyện nhé! 🐙</div>
+        {brand}
       </div>
     );
   }
@@ -77,9 +78,9 @@ function CardPreview({ template, stats }: { template: TemplateKey; stats: ShareC
       <div className="text-lg font-bold mb-1" style={{ color: "#fff" }}>{stats.displayName}</div>
       <div className="flex justify-center gap-6 mb-3">
         <div><span className="text-xl font-bold" style={{ color: "#F59E0B" }}>{stats.streak}</span><span className="text-xs ml-1" style={{ color: "rgba(255,255,255,0.5)" }}>streak</span></div>
-        <div><span className="text-xl font-bold" style={{ color: "#00A896" }}>{stats.weeklyXp}</span><span className="text-xs ml-1" style={{ color: "rgba(255,255,255,0.5)" }}>XP/wk</span></div>
+        <div><span className="text-xl font-bold" style={{ color: "#00A896" }}>{stats.weeklyXp}</span><span className="text-xs ml-1" style={{ color: "rgba(255,255,255,0.5)" }}>XP/tuần</span></div>
       </div>
-      <div className="text-xs font-medium" style={{ color: "rgba(0,168,150,0.8)" }}>Lingona · study smarter daily</div>
+      {brand}
     </div>
   );
 }
@@ -142,7 +143,7 @@ export default function ShareCardModal({ isOpen, onClose }: ShareCardModalProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center" style={{ background: "rgba(0,0,0,0.5)" }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-sheet flex items-end justify-center" style={{ background: "rgba(0,0,0,0.5)" }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-lg rounded-t-2xl px-5 py-5 max-h-[85vh] overflow-y-auto" style={{ background: "var(--color-bg-card)", borderTop: "1px solid var(--color-border)" }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold" style={{ color: "var(--color-text)" }}>Share Progress</h3>

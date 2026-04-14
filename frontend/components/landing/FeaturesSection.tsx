@@ -56,7 +56,7 @@ export default function FeaturesSection() {
         >
           <h2 className="font-playfair text-3xl sm:text-4xl font-bold text-white">
             Tất cả những gì bạn cần để đạt{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A896] to-[#00C9B1]">
+            <span className="text-teal">
               IELTS mục tiêu
             </span>
           </h2>

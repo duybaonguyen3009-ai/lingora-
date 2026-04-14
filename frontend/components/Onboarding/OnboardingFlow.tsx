@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { completeOnboarding, skipOnboarding } from "@/lib/api";
+import { analytics } from "@/lib/analytics";
 import Mascot from "@/components/ui/Mascot";
 
 interface OnboardingFlowProps {
@@ -100,8 +101,9 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Screen 5: complete onboarding
   const handleComplete = useCallback(async () => {
     try { await completeOnboarding(targetBand); } catch { /* silent */ }
+    analytics.onboardingComplete(targetBand, estimatedBand);
     goTo(6);
-  }, [targetBand, goTo]);
+  }, [targetBand, estimatedBand, goTo]);
 
   // Screen 6: auto-transition
   useEffect(() => {
@@ -123,7 +125,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F172A, #020617)" }}>
+    <div className="fixed inset-0 z-splash flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F172A, #020617)" }}>
       <div className={`w-full max-w-md px-6 flex flex-col items-center text-center transition-opacity duration-300 ${fade ? "opacity-100" : "opacity-0"}`}>
 
         {/* SCREEN 1 — Target Band */}

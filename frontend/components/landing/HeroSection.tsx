@@ -17,11 +17,7 @@ const fadeUp = {
 export default function HeroSection() {
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-28 pb-20">
-      {/* Background glow effects */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[#00A896]/[0.07] blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[400px] rounded-full bg-[#1B2B4B]/[0.15] blur-[100px]" />
-      </div>
+      {/* Clean background — no gradient blobs */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -34,10 +30,11 @@ export default function HeroSection() {
           >
             <motion.h1
               variants={fadeUp}
-              className="font-playfair text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight"
+              className="font-playfair text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight"
+              style={{ color: "var(--color-text)" }}
             >
               Luyện IELTS{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A896] to-[#00C9B1]">
+              <span className="text-[#00A896]">
                 thông minh hơn
               </span>
               <br />
@@ -46,7 +43,8 @@ export default function HeroSection() {
 
             <motion.p
               variants={fadeUp}
-              className="mt-6 text-base sm:text-lg text-gray-400 max-w-lg mx-auto lg:mx-0 leading-relaxed"
+              className="mt-6 text-base sm:text-lg max-w-lg mx-auto lg:mx-0 leading-relaxed"
+              style={{ color: "var(--color-text-secondary)" }}
             >
               Lingona giúp bạn cải thiện Speaking, Grammar và Writing với phản hồi
               AI real-time. Không cần gia sư. Học mọi lúc, mọi nơi.
@@ -67,7 +65,8 @@ export default function HeroSection() {
               </Link>
               <a
                 href="#features"
-                className="inline-flex items-center justify-center px-7 py-3.5 rounded-md border border-white/[0.1] text-gray-300 font-medium text-base hover:bg-white/[0.04] hover:border-white/[0.15] transition-all duration-200 cursor-pointer"
+                className="inline-flex items-center justify-center px-7 py-3.5 rounded-md border font-medium text-base transition-all duration-200 cursor-pointer"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
               >
                 Xem demo
               </a>
@@ -75,7 +74,8 @@ export default function HeroSection() {
 
             <motion.div
               variants={fadeUp}
-              className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm text-gray-500"
+              className="mt-6 flex items-center gap-2 justify-center lg:justify-start text-sm"
+              style={{ color: "var(--color-text-tertiary)" }}
             >
               <span>Mi&#7877;n ph&iacute; ho&agrave;n to&agrave;n</span>
               <span>&bull;</span>

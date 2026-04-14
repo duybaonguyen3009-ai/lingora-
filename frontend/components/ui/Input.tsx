@@ -17,8 +17,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const sizeClasses: Record<InputSize, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-sm",
+  sm: "h-9 px-3 text-base",
+  md: "h-11 px-4 text-base",
   lg: "h-12 px-4 text-base",
 };
 
@@ -27,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const classes = [
       "rounded-md border outline-none",
       "transition duration-normal",
-      "focus:ring-2 focus:ring-[#00A896]/20 focus:border-[#00A896]",
+      "focus-visible:ring-2 focus-visible:ring-[#00A896]/30 focus-visible:border-[#00A896]",
       fullWidth ? "w-full" : "",
       sizeClasses[inputSize],
       className,
@@ -69,8 +69,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const classes = [
       "rounded-md border outline-none",
       "transition duration-normal",
-      "px-4 py-3 text-sm resize-none",
-      "focus:ring-2 focus:ring-[#00A896]/20 focus:border-[#00A896]",
+      "px-4 py-3 text-base resize-none",
+      "focus-visible:ring-2 focus-visible:ring-[#00A896]/30 focus-visible:border-[#00A896]",
       fullWidth ? "w-full" : "",
       className,
     ]

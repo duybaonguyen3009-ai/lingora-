@@ -93,10 +93,10 @@ export default function AchievementsSection() {
                   style={{ background: r.bg, border: `1px solid ${r.border}`, boxShadow: r.glow }}>
                   <span className="text-2xl">{b.emoji}</span>
                   <span className="text-[11px] font-semibold leading-tight" style={{ color: "var(--color-text)" }}>{b.name}</span>
-                  <span className="text-[9px] font-medium uppercase" style={{ color: r.border }}>{r.label}</span>
+                  <span className="text-[10px] font-medium uppercase" style={{ color: r.border }}>{r.label}</span>
                   {earnedBadge?.awarded_at && (
-                    <span className="text-[8px]" style={{ color: "var(--color-text-tertiary)" }}>
-                      {new Date(earnedBadge.awarded_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    <span className="text-[10px]" style={{ color: "var(--color-text-tertiary)" }}>
+                      {new Date(earnedBadge.awarded_at).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
                     </span>
                   )}
                 </div>
@@ -123,7 +123,7 @@ export default function AchievementsSection() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold" style={{ color: "var(--color-text-secondary)" }}>{b.name}</span>
-                      <span className="text-[9px] font-medium uppercase" style={{ color: r.border }}>{r.label}</span>
+                      <span className="text-[10px] font-medium uppercase" style={{ color: r.border }}>{r.label}</span>
                     </div>
                     <span className="text-[10px]" style={{ color: "var(--color-text-tertiary)" }}>{b.description}</span>
                     {prog && (
@@ -131,7 +131,7 @@ export default function AchievementsSection() {
                         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                           <div className="h-full rounded-full" style={{ width: `${prog.percent}%`, background: r.border, transition: "width 400ms ease-out" }} />
                         </div>
-                        <span className="text-[9px] mt-0.5 block" style={{ color: "var(--color-text-tertiary)" }}>
+                        <span className="text-[10px] mt-0.5 block" style={{ color: "var(--color-text-tertiary)" }}>
                           {prog.current}/{prog.target}
                         </span>
                       </div>

@@ -32,7 +32,7 @@ export default function PublicProfileClient({ username }: Props) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-bg)" }}>
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: "var(--color-bg)" }}>
         <Skeleton.Profile />
       </div>
     );
@@ -40,7 +40,7 @@ export default function PublicProfileClient({ username }: Props) {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6" style={{ background: "var(--color-bg)" }}>
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4 px-6" style={{ background: "var(--color-bg)" }}>
         <div className="text-4xl">👤</div>
         <p className="text-base font-semibold" style={{ color: "var(--color-text)" }}>User not found</p>
         <Link href="/" className="text-sm font-medium" style={{ color: "#00A896" }}>Go to Lingona →</Link>
@@ -49,11 +49,11 @@ export default function PublicProfileClient({ username }: Props) {
   }
 
   const initials = profile.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const joinDate = new Date(profile.joined_at).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  const joinDate = new Date(profile.joined_at).toLocaleDateString("vi-VN", { month: "short", year: "numeric" });
   const rankEmoji = RANK_EMOJI[profile.battle.rank_tier] || "🪨";
 
   return (
-    <div className="min-h-screen px-4 py-10 max-w-lg mx-auto" style={{ background: "var(--color-bg)", color: "var(--color-text)" }}>
+    <div className="min-h-dvh px-4 py-10 max-w-lg mx-auto" style={{ background: "var(--color-bg)", color: "var(--color-text)" }}>
       {/* Header */}
       <div className="flex flex-col items-center gap-3 mb-6">
         <div className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center font-display font-bold text-2xl text-white"

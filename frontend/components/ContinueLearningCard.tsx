@@ -109,7 +109,7 @@ export default function ContinueLearningCard({
             color: "var(--color-text)",
           }}
         >
-          Quick Vocab Review
+          Ôn từ vựng nhanh
         </button>
       </div>
     );
@@ -126,10 +126,10 @@ export default function ContinueLearningCard({
         }}
       >
         <p className="text-base font-semibold mb-1" style={{ color: "var(--color-text)" }}>
-          Start your learning journey
+          Bắt đầu hành trình học của bạn
         </p>
         <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
-          Lessons will appear here once content is available.
+          Bài học sẽ xuất hiện ở đây khi có nội dung 🐙
         </p>
       </div>
     );
@@ -210,7 +210,7 @@ export default function ContinueLearningCard({
           }}
         >
           <IconPlay size={14} />
-          {totalCompleted === 0 ? "Start Learning" : "Continue Learning"}
+          {totalCompleted === 0 ? "Bắt đầu học" : "Tiếp tục học"}
         </button>
       </div>
     </div>

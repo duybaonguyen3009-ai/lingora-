@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getBandProgress } from "@/lib/api";
+import Mascot from "@/components/ui/Mascot";
 import type { BandProgressData, BandHistoryEntry } from "@/lib/types";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -25,7 +26,7 @@ interface BandProgressCardProps {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
 }
 
 function SkillBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
@@ -129,12 +130,12 @@ export default function BandProgressCard({ userId }: BandProgressCardProps) {
         className="rounded-2xl p-5 text-center"
         style={{ background: "linear-gradient(135deg, #0F172A, #1E293B)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
-        <div className="text-3xl mb-3">📊</div>
-        <p className="text-sm font-medium mb-1" style={{ color: "#E2E8F0" }}>
-          No band data yet
+        <Mascot size={56} mood="thinking" />
+        <p className="text-sm font-medium mb-1 mt-2" style={{ color: "#E2E8F0" }}>
+          Chưa có dữ liệu band
         </p>
         <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>
-          Take a Speaking or Writing test to see your band progress
+          Làm bài Speaking hoặc Writing để xem tiến bộ band của bạn 🐙
         </p>
         <div className="inline-flex px-4 py-2 rounded-full text-xs font-semibold" style={{ background: "rgba(139,113,234,0.15)", color: "#A5B4FC" }}>
           Start a test to begin tracking

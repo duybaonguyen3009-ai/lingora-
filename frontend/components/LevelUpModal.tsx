@@ -66,7 +66,7 @@ export default function LevelUpModal({ level, onClose }: LevelUpModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-sheet flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
       aria-modal="true"
       role="dialog"
