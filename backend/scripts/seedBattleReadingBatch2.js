@@ -25,7 +25,7 @@ const PASSAGES = [
   {
     id: "d4f2b7c1-9a6e-4c3d-8f21-5b7e9a2c1134",
     topic: "environment",
-    difficulty: "band_55_70",
+    difficulty: "band_50_55",
     estimated_minutes: 7,
     passage_title: "Deforestation and Its Global Impact",
     passage_text: "A. Deforestation is the large-scale removal of forests, often to make space for agriculture, industry, or urban development. In many parts of the world, especially in tropical regions, forests are being cleared at an alarming rate. This process not only destroys natural habitats but also reduces biodiversity, as many plant and animal species lose their homes.\n\nB. One of the main causes of deforestation is agriculture. Farmers cut down trees to create land for crops or livestock. While this can increase food production, it often leads to soil degradation. Without trees, the soil becomes less stable and more likely to be washed away by rain, reducing its fertility over time.\n\nC. Deforestation also plays a significant role in climate change. Trees absorb carbon dioxide from the atmosphere, helping to regulate the Earth\u2019s climate. When forests are cut down, this stored carbon is released back into the air, contributing to global warming. As a result, deforestation is considered one of the key environmental challenges today.\n\nD. To address deforestation, governments and organizations are promoting sustainable practices. These include reforestation projects, stricter laws, and encouraging the use of alternative materials. However, success depends on cooperation between countries, businesses, and individuals. Without collective action, it will be difficult to slow down the destruction of forests.",
@@ -46,7 +46,7 @@ const PASSAGES = [
   {
     id: "f2c9a1d7-6e4b-4b9c-9f2a-3d8e7c5a1123",
     topic: "technology",
-    difficulty: "band_55_70",
+    difficulty: "band_50_55",
     estimated_minutes: 7,
     passage_title: "The Impact of Artificial Intelligence on Daily Life",
     passage_text: "A. Artificial intelligence (AI) has become an important part of modern life. It refers to computer systems that can perform tasks that usually require human intelligence, such as recognizing speech or making decisions. Today, AI is used in many areas, including smartphones, online services, and even home devices. Its rapid development has changed how people interact with technology.\n\nB. One of the most noticeable uses of AI is in communication. Social media platforms and messaging apps use AI to suggest content, filter spam, and recommend friends. While this makes communication faster and more convenient, some people worry that it can reduce face-to-face interaction and create dependence on technology.\n\nC. AI is also transforming the workplace. In some industries, machines can now perform repetitive tasks more efficiently than humans. For example, robots are used in factories to assemble products. This can increase productivity and reduce costs, but it may also lead to job losses in certain sectors.\n\nD. Despite these challenges, AI offers many benefits for society. In healthcare, AI can help doctors diagnose diseases more accurately. In education, it can provide personalized learning experiences for students. However, experts believe it is important to use AI responsibly and ensure that its development benefits everyone.",
@@ -67,7 +67,7 @@ const PASSAGES = [
   {
     id: "b7e3c2d9-4a6f-4f1b-9c2e-8d5a1b3f7781",
     topic: "science",
-    difficulty: "band_55_70",
+    difficulty: "band_50_55",
     estimated_minutes: 7,
     passage_title: "Advances in Renewable Energy Research",
     passage_text: "A. Renewable energy has become a key focus of scientific research in recent years. Unlike fossil fuels, renewable sources such as solar, wind, and hydro power can be used without running out. Scientists are working to improve the efficiency and affordability of these energy sources to reduce dependence on traditional fuels and limit environmental damage.\n\nB. Solar energy is one of the fastest-growing renewable technologies. Researchers have developed more advanced solar panels that can capture sunlight more effectively, even in cloudy conditions. In addition, new materials are being tested to make solar panels cheaper to produce. These improvements could allow more households to access clean energy in the future.\n\nC. Wind energy is another important area of development. Modern wind turbines are larger and more powerful than earlier designs, allowing them to generate more electricity. Offshore wind farms, built in the sea, can take advantage of stronger and more consistent winds. However, the high cost of installation remains a challenge for many countries.\n\nD. Despite the progress, renewable energy still faces limitations. Energy storage is a major issue, as solar and wind power are not always available. Scientists are exploring better battery technologies to store excess energy for later use. With continued research and investment, renewable energy could become the main source of power in the future.",
@@ -88,7 +88,7 @@ const PASSAGES = [
   {
     id: "e3a1b9c7-5d2f-4a8e-9b6c-1f7d2e4c8890",
     topic: "history",
-    difficulty: "band_55_70",
+    difficulty: "band_50_55",
     estimated_minutes: 7,
     passage_title: "The Silk Road and Its Influence",
     passage_text: "A. The Silk Road was an ancient network of trade routes connecting Asia, Europe, and parts of Africa. It was not a single road but a series of paths used by traders for over a thousand years. Goods such as silk, spices, and precious metals were transported across long distances. The route played a key role in shaping early global trade and cultural exchange.\n\nB. Trade along the Silk Road was not easy. Merchants faced dangerous conditions, including harsh weather, difficult terrain, and the risk of theft. Despite these challenges, trade continued because of the high value of goods. Cities located along the route became important centers of commerce and attracted travelers from different regions.\n\nC. In addition to goods, ideas and knowledge also spread along the Silk Road. Religions such as Buddhism and Islam moved between regions, influencing local cultures. Scientific knowledge, including mathematics and medicine, was shared among different civilizations. This exchange contributed to the development of societies along the route.\n\nD. Over time, the importance of the Silk Road declined. The rise of sea trade routes provided faster and more efficient ways to transport goods. As a result, many land routes were used less frequently. However, the historical impact of the Silk Road remains significant, as it connected distant parts of the world for centuries.",
@@ -109,7 +109,7 @@ const PASSAGES = [
   {
     id: "c8b4d2e1-7a5f-4d9c-9e12-3f6a8b1c5520",
     topic: "society",
-    difficulty: "band_55_70",
+    difficulty: "band_50_55",
     estimated_minutes: 7,
     passage_title: "The Challenges of an Aging Population",
     passage_text: "A. Many countries around the world are experiencing an aging population. This means that the number of elderly people is increasing while the number of young people is decreasing. Advances in healthcare and living standards have allowed people to live longer, but this demographic shift creates new challenges for society.\n\nB. One major issue is the pressure on healthcare systems. Older people often require more medical care, which increases the demand for hospitals, doctors, and services. Governments must spend more money to support healthcare, which can lead to higher taxes or reduced funding in other areas.\n\nC. Another challenge is the impact on the workforce. As more people retire, there are fewer workers to support the economy. This can slow economic growth and create shortages in certain industries. Some countries have responded by encouraging older people to work longer or by accepting more immigrants to fill job gaps.\n\nD. Despite these challenges, an aging population can also bring benefits. Older individuals often have valuable experience and knowledge that can be shared with younger generations. In addition, they can contribute to society through volunteer work and community activities. Finding ways to support and include older people is important for building a balanced society.",

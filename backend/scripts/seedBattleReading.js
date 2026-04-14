@@ -27,7 +27,7 @@ const { pool } = require(path.join(BACKEND_DIR, "src", "config", "db.js"));
 const PASSAGE = {
   id: "c1f9a7e2-6b3e-4b6a-9d9a-1f8a2b7c9d11",
   topic: "urban development",
-  difficulty: "band_55_70",
+  difficulty: "band_50_55",
   estimated_minutes: 7,
   passage_title: "The Rise of Smart Cities",
   passage_text:
