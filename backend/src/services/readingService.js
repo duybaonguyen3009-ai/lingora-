@@ -7,6 +7,16 @@
 "use strict";
 
 const readingRepo = require("../repositories/readingRepository");
+const { updateStreak } = require("./streakService");
+const { awardXp } = require("./xpService");
+
+// ---------------------------------------------------------------------------
+// XP rewards
+// ---------------------------------------------------------------------------
+// Flat rewards per reading completion. Full test scales higher since it
+// covers 3 passages and 24+ questions vs single-passage practice.
+const XP_REWARD_READING_PASSAGE   = 10;
+const XP_REWARD_READING_FULL_TEST = 30;
 
 // Band estimation from score
 function estimateBand(correct, total) {
@@ -69,6 +79,36 @@ async function submitPractice(userId, passageId, answers, timeSeconds) {
     onUserCompletedActivity(userId, "lessons", 1).catch(() => {});
   } catch { /* silent */ }
 
+  // ── Gamification: Award XP + update streak on reading completion ──
+  // xp_ledger has no lesson_id column — we use the passageId as ref_id.
+  // updateStreak is idempotent for same-day calls (no double-counting).
+  try {
+    await awardXp(userId, XP_REWARD_READING_PASSAGE, "reading_practice_complete", passageId);
+  } catch (err) {
+    // Non-fatal: XP award failure should not break practice scoring
+    console.error(`[reading] XP award failed for user ${userId}:`, err.message);
+  }
+
+  try {
+    await updateStreak(userId);
+  } catch (err) {
+    // Non-fatal: streak update failure should not break practice scoring
+    console.error(`[reading] streak update failed for user ${userId}:`, err.message);
+  }
+
+  // Fire-and-forget: check reading achievements (log errors, don't swallow)
+  try {
+    const { checkReadingBadges } = require("./badgeService");
+    const countRow = await require("../config/db").query(
+      `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
+    );
+    checkReadingBadges(userId, countRow.rows[0]?.c ?? correct).catch((err) => {
+      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`[reading] badge module load failed:`, err.message);
+  }
+
   return { score: correct, total, band_estimate: bandEstimate, time_seconds: timeSeconds, per_question_results: results };
 }
 
@@ -119,6 +159,32 @@ async function submitFullTest(userId, passageResults, timeSeconds) {
     const { updateUserBand } = require("../repositories/userRepository");
     await updateUserBand(userId, bandEstimate, "reading", "full-test");
   } catch { /* silent */ }
+
+  // ── Gamification: Award XP + update streak on full-test completion ──
+  try {
+    await awardXp(userId, XP_REWARD_READING_FULL_TEST, "reading_full_test_complete", null);
+  } catch (err) {
+    console.error(`[reading] XP award failed for user ${userId}:`, err.message);
+  }
+
+  try {
+    await updateStreak(userId);
+  } catch (err) {
+    console.error(`[reading] streak update failed for user ${userId}:`, err.message);
+  }
+
+  // Fire-and-forget: check reading achievements (log errors, don't swallow)
+  try {
+    const { checkReadingBadges } = require("./badgeService");
+    const countRow = await require("../config/db").query(
+      `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
+    );
+    checkReadingBadges(userId, countRow.rows[0]?.c ?? totalCorrect).catch((err) => {
+      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`[reading] badge module load failed:`, err.message);
+  }
 
   return {
     total_score: totalCorrect,
