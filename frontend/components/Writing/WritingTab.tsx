@@ -11,6 +11,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { submitWritingEssay } from "@/lib/api";
 import { useWritingResult } from "@/hooks/useWritingResult";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
+import UpgradeTrigger from "@/components/Pro/UpgradeTrigger";
+import RemainingBadge from "@/components/Pro/RemainingBadge";
+import ProUpgradeModal from "@/components/Pro/ProUpgradeModal";
 import WritingResult from "./WritingResult";
 import WritingHistory from "./WritingHistory";
 import type { WritingTaskType } from "@/lib/types";
@@ -45,6 +49,8 @@ type Phase = "intro" | "editor" | "pending" | "result" | "history";
 export default function WritingTab({ onClose }: WritingTabProps) {
   // Phase management — starts with intro
   const [phase, setPhase] = useState<Phase>("intro");
+  const limits = useDailyLimits();
+  const [proModalOpen, setProModalOpen] = useState(false);
 
   // Editor state
   const [taskType, setTaskType] = useState<WritingTaskType>("task2");
@@ -125,6 +131,12 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   // Submit essay
   const handleSubmit = useCallback(async () => {
     if (!isValid || submitting) return;
+    // Proactive gate: if the free user has already hit the daily writing limit,
+    // open the Pro modal instead of calling the API.
+    if (!limits.isPro && !limits.writing.allowed) {
+      setProModalOpen(true);
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
@@ -136,12 +148,22 @@ export default function WritingTab({ onClose }: WritingTabProps) {
       });
       setActiveSubmissionId(result.submissionId);
       setPhase("pending");
+      // Refetch limits so the RemainingBadge updates after a successful submit.
+      limits.refetch();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Submission failed");
+      // Backend returns 403 "Daily writing limit reached" when the gate is hit
+      // between the hook's fetch and the user's submit — catch and surface the modal.
+      const message = err instanceof Error ? err.message : "Submission failed";
+      if (/limit reached/i.test(message) || /403/.test(message)) {
+        setProModalOpen(true);
+        limits.refetch();
+      } else {
+        setSubmitError(message);
+      }
     } finally {
       setSubmitting(false);
     }
-  }, [isValid, submitting, taskType, questionText, essayText]);
+  }, [isValid, submitting, taskType, questionText, essayText, limits]);
 
   // View a submission from history
   const handleHistorySelect = useCallback((submissionId: string) => {
@@ -269,6 +291,23 @@ export default function WritingTab({ onClose }: WritingTabProps) {
         {/* ── EDITOR PHASE ── */}
         {phase === "editor" && (
           <div className="flex flex-col gap-5 max-w-2xl mx-auto">
+            {/* Remaining-count badge (free users only, hides for Pro) */}
+            {!limits.loading && !limits.isPro && limits.writing.allowed && (
+              <div className="flex justify-start">
+                <RemainingBadge type="writing" bucket={limits.writing} />
+              </div>
+            )}
+
+            {/* Limit-hit banner — shown above the editor when the free user has used all writing submissions */}
+            {!limits.loading && !limits.isPro && !limits.writing.allowed && (
+              <UpgradeTrigger
+                type="writing"
+                used={limits.writing.used}
+                limit={limits.writing.limit ?? 0}
+                onUpgrade={() => setProModalOpen(true)}
+              />
+            )}
+
             {/* Task Type Toggle + Timer */}
             <div className="flex items-center gap-3">
               <div
@@ -481,6 +520,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
           </div>
         )}
       </div>
+
+      <ProUpgradeModal
+        isOpen={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        onUpgraded={() => {
+          setProModalOpen(false);
+          limits.refetch();
+        }}
+      />
     </div>
   );
 }

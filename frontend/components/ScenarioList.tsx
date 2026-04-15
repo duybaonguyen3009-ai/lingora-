@@ -2,7 +2,11 @@
 
 import React, { useState } from "react";
 import { useScenarios } from "@/hooks/useScenarios";
+import { useDailyLimits } from "@/hooks/useDailyLimits";
 import Badge from "@/components/ui/Badge";
+import UpgradeTrigger from "@/components/Pro/UpgradeTrigger";
+import RemainingBadge from "@/components/Pro/RemainingBadge";
+import ProUpgradeModal from "@/components/Pro/ProUpgradeModal";
 import type { Scenario } from "@/lib/types";
 
 interface ScenarioListProps {
@@ -83,19 +87,56 @@ const ScenarioCard = React.memo(function ScenarioCard({
 export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProps) {
   const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   const { scenarios: rawScenarios, loading, error } = useScenarios(activeCategory);
+  const limits = useDailyLimits();
+  const [proModalOpen, setProModalOpen] = useState(false);
 
   const scenarios = excludeExam
     ? rawScenarios.filter((s) => s.exam_type !== "ielts")
     : rawScenarios;
 
+  // Gate speaking scenarios: if the free user hit their limit, block the card click.
+  const handleSelect = (scenario: Scenario) => {
+    if (!limits.isPro && !limits.speaking.allowed) {
+      setProModalOpen(true);
+      return;
+    }
+    onSelect(scenario);
+  };
+
   return (
     <div className="flex flex-col gap-5">
-      <h2
-        className="text-xl font-bold"
-        style={{ color: "var(--color-text)" }}
-      >
-        Speak Scenarios
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          className="text-xl font-bold"
+          style={{ color: "var(--color-text)" }}
+        >
+          Speak Scenarios
+        </h2>
+        <RemainingBadge
+          type="speaking"
+          bucket={limits.speaking}
+          hidden={limits.loading || limits.isPro}
+        />
+      </div>
+
+      {/* Limit-hit banner — only renders when used >= limit */}
+      {!limits.loading && !limits.isPro && !limits.speaking.allowed && (
+        <UpgradeTrigger
+          type="speaking"
+          used={limits.speaking.used}
+          limit={limits.speaking.limit ?? 0}
+          onUpgrade={() => setProModalOpen(true)}
+        />
+      )}
+
+      <ProUpgradeModal
+        isOpen={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        onUpgraded={() => {
+          setProModalOpen(false);
+          limits.refetch();
+        }}
+      />
 
       {/* Category filter pills */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
@@ -144,7 +185,7 @@ export default function ScenarioList({ onSelect, excludeExam }: ScenarioListProp
           )}
 
           {scenarios.map((scenario) => (
-            <ScenarioCard key={scenario.id} scenario={scenario} onSelect={onSelect} />
+            <ScenarioCard key={scenario.id} scenario={scenario} onSelect={handleSelect} />
           ))}
         </div>
       )}
