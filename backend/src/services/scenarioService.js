@@ -15,6 +15,15 @@ const { createAiProvider } = require("../providers/ai/aiProvider");
 const scenarioRepository = require("../repositories/scenarioRepository");
 const { analyzeSpeechFlow, aggregateSpeechFlow } = require("./speechAnalyzer");
 const { updateStreak } = require("./streakService");
+const { awardXp } = require("./xpService");
+
+// ---------------------------------------------------------------------------
+// XP rewards
+// ---------------------------------------------------------------------------
+// Flat rewards per session completion. Scaled slightly for IELTS exam
+// (full 3-part simulation) vs regular scenario (single-topic conversation).
+const XP_REWARD_SCENARIO = 15;
+const XP_REWARD_IELTS    = 25;
 
 const ai = createAiProvider();
 
@@ -1231,9 +1240,19 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     durationMs: durationMs || 0,
   });
 
-  // ── Gamification: Update streak on scenario completion ──
+  // ── Gamification: Award XP + update streak on scenario completion ──
+  // xp_ledger has no lesson_id column — we use the sessionId as ref_id.
+  // learning_events is NOT written here (that table requires lesson_id).
   // updateStreak is idempotent for same-day calls (no double-counting).
-  // XP + learning events deferred until learning_events.lesson_id is nullable.
+  try {
+    const xpReward = isIelts ? XP_REWARD_IELTS : XP_REWARD_SCENARIO;
+    const reason   = isIelts ? "ielts_session_complete" : "scenario_session_complete";
+    await awardXp(userId, xpReward, reason, sessionId);
+  } catch (err) {
+    // Non-fatal: XP award failure should not break session scoring
+    console.error(`[scenario] XP award failed for user ${userId}:`, err.message);
+  }
+
   try {
     await updateStreak(userId);
   } catch (err) {
@@ -1266,14 +1285,18 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     onUserCompletedActivity(userId, "speaking_sessions", 1).catch(() => {});
   } catch { /* module load safety */ }
 
-  // Fire-and-forget: check speaking achievements
+  // Fire-and-forget: check speaking achievements (log errors, don't swallow)
   try {
     const { checkSpeakingBadges } = require("./badgeService");
     const countRow = await require("../config/db").query(
       `SELECT COUNT(*)::int AS c FROM scenario_sessions WHERE user_id = $1 AND status = 'completed'`, [userId]
     );
-    checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, bandScore).catch(() => {});
-  } catch { /* module load safety */ }
+    checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, bandScore).catch((err) => {
+      console.error(`[scenario] badge check failed for user ${userId}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`[scenario] badge module load failed:`, err.message);
+  }
 
   return {
     overallScore: adjustedOverall,
