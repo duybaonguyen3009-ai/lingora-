@@ -46,6 +46,8 @@ interface AuthState {
   clearAuth:   () => void;
   /** Flips the loading flag — used by AuthProvider during init. */
   setLoading:  (loading: boolean) => void;
+  /** Merge partial fields into the current user (e.g. after avatar upload). */
+  patchUser:   (fields: Partial<AuthUser>) => void;
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -63,4 +65,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setLoading: (isLoading) =>
     set({ isLoading }),
+
+  patchUser: (fields) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, ...fields } : null,
+    })),
 }));

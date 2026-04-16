@@ -48,6 +48,7 @@ function EditProfileModal({ stats, onClose, onSaved }: { stats: ProfileStats; on
   const [saving, setSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const patchUser = useAuthStore((s) => s.patchUser);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,8 +61,22 @@ function EditProfileModal({ stats, onClose, onSaved }: { stats: ProfileStats; on
   const handleSave = async () => {
     setSaving(true);
     try {
-      if (avatarPreview) await uploadAvatar(avatarPreview);
+      // Upload avatar first — capture the new URL so auth store + profile stay in sync.
+      let newAvatarUrl: string | undefined;
+      if (avatarPreview) {
+        const res = await uploadAvatar(avatarPreview);
+        newAvatarUrl = res.avatar_url;
+      }
+
       await updateProfile({ name: name.trim(), bio: bio.trim(), location: location.trim(), target_band: Number(targetBand) });
+
+      // Patch the auth store so Topbar, Sidebar, etc. show the new avatar immediately
+      // without waiting for a full page refresh / token refresh cycle.
+      patchUser({
+        name: name.trim(),
+        ...(newAvatarUrl ? { avatar_url: newAvatarUrl } : {}),
+      });
+
       onSaved();
       onClose();
     } catch { /* silent */ }
