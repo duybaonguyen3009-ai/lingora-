@@ -64,15 +64,45 @@ function TfngQuestion({ answer, onAnswer }: { answer: string; onAnswer: (a: stri
 
 function MatchingQuestion({ q, answer, onAnswer }: { q: ReadingPassageFull["questions"][0]; answer: string; onAnswer: (a: string) => void }) {
   if (!q.options) return null;
+  const entries = Object.entries(q.options);
+
   return (
-    <select value={answer} onChange={(e) => onAnswer(e.target.value)}
-      className="w-full rounded-lg px-3 py-2.5 text-sm"
-      style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)", color: "var(--color-text)" }}>
-      <option value="">Select answer...</option>
-      {Object.entries(q.options).map(([key, text]) => (
-        <option key={key} value={key}>{key}. {text}</option>
-      ))}
-    </select>
+    <div className="flex flex-col gap-1.5">
+      {/* Prompt: show which option is selected (or nudge to pick one) */}
+      <div className="text-xs mb-1" style={{ color: answer ? "#00A896" : "var(--color-text-tertiary)" }}>
+        {answer ? `Đã chọn: ${answer}` : "Chọn đáp án phù hợp"}
+      </div>
+
+      {/* Option pills — compact grid */}
+      <div className="grid gap-2" style={{ gridTemplateColumns: entries.length <= 5 ? "repeat(auto-fill, minmax(100%, 1fr))" : "repeat(auto-fill, minmax(48%, 1fr))" }}>
+        {entries.map(([key, text]) => {
+          const isSelected = answer === key;
+          return (
+            <button
+              key={key}
+              onClick={() => onAnswer(isSelected ? "" : key)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left text-sm transition-all active:scale-[0.97]"
+              style={{
+                background: isSelected ? "rgba(0,168,150,0.12)" : "var(--color-bg-secondary)",
+                border: `1px solid ${isSelected ? "rgba(0,168,150,0.4)" : "var(--color-border)"}`,
+                color: "var(--color-text)",
+              }}
+            >
+              <span
+                className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
+                style={{
+                  background: isSelected ? "#00A896" : "var(--color-border)",
+                  color: isSelected ? "#fff" : "var(--color-text-secondary)",
+                }}
+              >
+                {key}
+              </span>
+              <span className="flex-1 line-clamp-2">{text}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
