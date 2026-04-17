@@ -74,12 +74,10 @@ Database
 
 ## Documentation
 
-| File                          | Description                          |
-|-------------------------------|--------------------------------------|
-| `docs/project-blueprint.md`   | High-level architecture overview     |
-| `docs/roadmap.md`             | Phased feature roadmap               |
-| `docs/api-spec.md`            | REST API endpoint specification      |
-| `docs/db-schema.md`           | Database schema planning             |
+| File                          | Description                                                         |
+|-------------------------------|---------------------------------------------------------------------|
+| `CLAUDE.md`                   | Authoritative project overview, architecture decisions, phase plan  |
+| `docs/technical-roadmap.md`   | Full system architecture + scaling target (1M users)                |
 
 ---
 
