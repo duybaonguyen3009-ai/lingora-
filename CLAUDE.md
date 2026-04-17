@@ -416,6 +416,28 @@ Tasks in order:
 
 ---
 
+## Examiner Control System (HARD LOCK)
+
+**Decision:** The IELTS examiner is a CONTROLLED OUTPUT SYSTEM, not a conversational agent. All transitions are hardcoded. All LLM outputs are sanitized. This section is a HARD LOCK — do not change without explicit discussion.
+
+**Non-negotiable rules:**
+1. **Zero Reaction Policy** — examiner NEVER reacts to user answers. No "interesting", "thank you", "I see".
+2. **Hardcoded Transitions** — `FIXED_TRANSITIONS` object contains exact strings. LLM never generates transitions.
+3. **One Utterance Rule** — each response is exactly ONE question OR ONE transition. Never combined.
+4. **Question Length Lock** — max 12 words (15 for Part 3). Enforced by `sanitizeExaminerOutput()`.
+5. **Validation Layer** — `sanitizeExaminerOutput()` strips banned phrases, enforces single sentence, caps word count.
+6. **Opening = Name Only** — examiner asks name, system outputs "Now let's start Part 1." — no ID check, no explanation.
+
+**Architecture:**
+- `FIXED_TRANSITIONS` — hardcoded strings for part1/part2/part3/closing.
+- `BANNED_PATTERNS` — regex array of forbidden phrases.
+- `sanitizeExaminerOutput()` — post-processes every LLM response before delivery.
+- `buildIeltsSystemPrompt()` — minimal prompt (no personality, no acknowledgment instructions).
+
+**Why:** Prompt-based control is unreliable. The LLM can drift, add reactions, improvise. Code-based control with post-processing ensures deterministic examiner behavior.
+
+---
+
 ## Phase Roadmap Summary (Revised)
 
 > Phases reordered after strategy review. Speaking-first direction: ship the core speaking coach, monetize, then expand to writing/grammar.
@@ -559,3 +581,12 @@ Tasks in order:
 | `frontend/components/ExamScreen.tsx` | Exam hub — IELTS featured card, coming soon modules, auth gate |
 | `backend/src/providers/tts/ttsProvider.js` | TTS factory — returns mock or OpenAI provider based on TTS_PROVIDER env |
 | `backend/src/providers/tts/openaiTts.js` | OpenAI TTS — Audio API, 6 voice options, mp3 output |
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
