@@ -202,12 +202,13 @@ async function abandonActiveSession(userId) {
  * @param {string} content
  * @returns {Promise<object>}
  */
-async function insertTurn(sessionId, turnIndex, role, content) {
+async function insertTurn(sessionId, turnIndex, role, content, options = {}) {
+  const { audioStorageKey = null } = options;
   const result = await query(
-    `INSERT INTO conversation_turns (session_id, turn_index, role, content)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO conversation_turns (session_id, turn_index, role, content, audio_storage_key)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [sessionId, turnIndex, role, content]
+    [sessionId, turnIndex, role, content, audioStorageKey]
   );
   return result.rows[0];
 }

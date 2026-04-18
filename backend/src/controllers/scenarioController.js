@@ -109,13 +109,26 @@ async function submitTurn(req, res, next) {
   try {
     const { sessionId } = req.params;
     const userId = req.user.id;
-    const { content, speechMetrics, part2Notes } = req.body;
+    const { content, speechMetrics, part2Notes, storageKey } = req.body;
 
     if (!UUID_RE.test(sessionId)) {
       return sendError(res, { status: 400, message: "Valid sessionId (UUID) is required" });
     }
-    if (!content || typeof content !== "string" || !content.trim()) {
-      return sendError(res, { status: 400, message: "content is required" });
+    // Accept EITHER text content (legacy / identity check / placeholders) OR
+    // an R2 storageKey that the backend will transcribe via Whisper.
+    const hasText = typeof content === "string" && content.trim().length > 0;
+    const hasKey = typeof storageKey === "string" && storageKey.length > 0;
+    if (!hasText && !hasKey) {
+      return sendError(res, { status: 400, message: "content or storageKey is required" });
+    }
+    // Guard against obvious storageKey tampering. Our mediaService mints keys
+    // under `scenarios/:userId/:sessionId/` — enforce the prefix so one user
+    // can't point the transcription path at another user's audio.
+    if (hasKey) {
+      const expectedPrefix = `scenarios/${userId}/${sessionId}/`;
+      if (!storageKey.startsWith(expectedPrefix)) {
+        return sendError(res, { status: 403, message: "Invalid storageKey for this session" });
+      }
     }
 
     // Validate speechMetrics if provided (optional — frontend may not send it)
@@ -131,7 +144,16 @@ async function submitTurn(req, res, next) {
 
     // V2: Pass experimental flag from query param
     const experimental = req.query.experimental === "true";
-    const result = await scenarioService.submitTurn(sessionId, userId, content.trim(), validMetrics, { experimental, part2Notes: notes });
+    // If the client sent a storageKey, `content` is a placeholder — service
+    // overwrites it with the Whisper transcript. Otherwise use submitted text.
+    const initialContent = hasText ? content.trim() : "";
+    const result = await scenarioService.submitTurn(
+      sessionId,
+      userId,
+      initialContent,
+      validMetrics,
+      { experimental, part2Notes: notes, storageKey: hasKey ? storageKey : undefined },
+    );
 
     return sendSuccess(res, {
       data: result,

@@ -770,30 +770,49 @@ export async function endScenarioSession(
 // V2 Experimental API wrappers — append ?experimental=true to endpoints
 // ---------------------------------------------------------------------------
 
-/** V2: Submit turn with experimental examiner behavior. */
+/** V2: Submit turn with experimental examiner behavior.
+ *
+ * Accepts EITHER:
+ *   - `content`: a text turn (identity check, placeholders like "[READY FOR PART 1]"),
+ *   - OR `storageKey`: a prior R2 upload; backend transcribes via Whisper.
+ *
+ * Exactly one of the two must be non-empty. `speechMetrics` is legacy — with
+ * the Whisper flow, the backend computes metrics from Whisper segments.
+ */
 export async function submitScenarioTurnV2(
   sessionId: string,
-  content: string,
-  speechMetrics?: {
-    totalDurationMs: number;
-    wordsPerMinute: number;
-    pauseCount: number;
-    longestPauseMs: number;
-    segmentCount: number;
-    speakingRatio: number;
-  } | null,
+  submission: { content: string } | { storageKey: string },
   extras?: { part2Notes?: string },
 ): Promise<SubmitTurnResult> {
-  const body: Record<string, unknown> = { content };
-  if (speechMetrics) body.speechMetrics = speechMetrics;
-  // Part 2 prep notes — only sent on the prep→speak transition. Empty string
-  // is intentional (signals "user entered prep but wrote nothing") so do not
-  // filter it out.
+  const body: Record<string, unknown> = { ...submission };
   if (extras && typeof extras.part2Notes === "string") body.part2Notes = extras.part2Notes;
   return apiPostAuth<SubmitTurnResult>(
     `/scenarios/sessions/${sessionId}/turns?experimental=true`,
     body
   );
+}
+
+/** POST /scenarios/sessions/:id/audio/upload-url — pre-signed R2 PUT URL. */
+export async function getScenarioAudioUploadUrl(
+  sessionId: string,
+  contentType: string = "audio/webm",
+): Promise<{ uploadUrl: string; storageKey: string; expiresIn: number }> {
+  return apiPostAuth(`/scenarios/sessions/${sessionId}/audio/upload-url`, { contentType });
+}
+
+/**
+ * Upload an audio blob to a pre-signed R2 URL. Simple PUT with Content-Type.
+ * Caller is responsible for retry; see uploadAudioWithRetry for the wrapper.
+ */
+export async function putAudioToStorage(uploadUrl: string, blob: Blob): Promise<void> {
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": blob.type || "audio/webm" },
+    body: blob,
+  });
+  if (!res.ok) {
+    throw new Error(`R2 upload failed (${res.status})`);
+  }
 }
 
 /** V2: End session with enhanced scoring (Vietnamese L1 detection). */

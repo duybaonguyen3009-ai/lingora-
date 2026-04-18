@@ -26,6 +26,11 @@ const {
   speakingScoreToBand,
   speakingScoreToBandRange,
 } = require("../domain/ielts/scoring");
+const { computeSpeechMetricsFromSegments } = require("../domain/ielts/speechMetrics");
+const { createWhisperProvider } = require("../providers/ai/whisperProvider");
+const mediaService = require("./mediaService");
+
+const whisper = createWhisperProvider();
 
 // ---------------------------------------------------------------------------
 // XP rewards
@@ -928,11 +933,51 @@ async function submitTurn(sessionId, userId, content, speechMetrics = null, opti
     throw err;
   }
 
+  // Whisper path: if the caller uploaded audio to R2 and passed storageKey, we
+  // fetch the bytes, transcribe, and derive speechMetrics server-side. Text
+  // `content` submissions still work (identity check, placeholder turns, older
+  // clients active during deploy) — backward-compat branch.
+  let audioStorageKey = null;
+  if (options.storageKey && typeof options.storageKey === "string") {
+    try {
+      const audioBuffer = await mediaService.getObjectBuffer(options.storageKey);
+      const { transcript, durationSeconds, segments } = await whisper.transcribeAudio(
+        audioBuffer,
+        "en",
+      );
+      content = transcript && transcript.trim().length > 0
+        ? transcript.trim()
+        : "[inaudible]";
+      speechMetrics = computeSpeechMetricsFromSegments(segments, durationSeconds);
+      audioStorageKey = options.storageKey;
+      console.log(JSON.stringify({
+        event: "whisper_transcribe",
+        sessionId,
+        userId,
+        storageKey: options.storageKey,
+        durationSeconds,
+        transcriptLength: content.length,
+        wpm: speechMetrics.wordsPerMinute,
+      }));
+    } catch (err) {
+      console.error(`[whisper] transcribe failed for session=${sessionId}: ${err.message}`);
+      const e = new Error("Audio transcription failed. Please try recording again.");
+      e.status = 503;
+      throw e;
+    }
+  }
+
   const existingTurns = await scenarioRepository.findSessionTurns(sessionId);
   const nextIndex = existingTurns.length;
 
-  // Save user turn
-  const userTurn = await scenarioRepository.insertTurn(sessionId, nextIndex, "user", content);
+  // Save user turn (with audio_storage_key if Whisper path was used)
+  const userTurn = await scenarioRepository.insertTurn(
+    sessionId,
+    nextIndex,
+    "user",
+    content,
+    { audioStorageKey },
+  );
 
   // Build conversation history for AI
   const conversationHistory = existingTurns.map(t => ({ role: t.role, content: t.content }));
