@@ -50,7 +50,7 @@ module.exports = {
   // Free period: all users get unlimited access for launch period.
   // Flip to false after 88 days to enforce daily limits.
   freePeriod: process.env.FREE_PERIOD === "false" ? false : true,
-  speakingDailyLimit: parseInt(process.env.SPEAKING_DAILY_LIMIT, 10) || 3,
+  speakingDailyLimit: parseInt(process.env.SPEAKING_DAILY_LIMIT, 10) || 1,
   writingDailyLimit: parseInt(process.env.WRITING_DAILY_LIMIT, 10) || 1,
 
   cookie: {
