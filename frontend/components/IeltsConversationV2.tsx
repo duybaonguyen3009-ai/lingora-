@@ -45,33 +45,11 @@ import type { SpeechMetrics } from "@/hooks/useSpeechTiming";
 
 // ─── V2: Diagnostic data builder ────────────────────────────────────────────
 
-function toBandRange(score100: number): BandRange {
-  // Convert 0-100 to IELTS band, then create a ±0.5 range
-  const band = toBandScore(score100);
-  const low = Math.max(1.0, band - 0.5);
-  const high = Math.min(9.0, band);
-  // Round to nearest 0.5
-  return {
-    low: Math.round(low * 2) / 2,
-    high: Math.round(high * 2) / 2,
-  };
-}
+// Band ranges come from the backend (EndSessionResult.bandRanges). Never
+// convert 0-100 → band on the client — backend is the single source of truth.
+// A defensive fallback kicks in only if an older backend omits the field.
 
-function toBandScore(score100: number): number {
-  if (score100 >= 95) return 9.0;
-  if (score100 >= 90) return 8.5;
-  if (score100 >= 85) return 8.0;
-  if (score100 >= 80) return 7.5;
-  if (score100 >= 75) return 7.0;
-  if (score100 >= 70) return 6.5;
-  if (score100 >= 60) return 6.0;
-  if (score100 >= 50) return 5.5;
-  if (score100 >= 40) return 5.0;
-  if (score100 >= 30) return 4.5;
-  if (score100 >= 20) return 4.0;
-  if (score100 >= 10) return 3.0;
-  return 2.0;
-}
+const FALLBACK_BAND_RANGE: BandRange = { low: 2, high: 2 };
 
 /** Vietnamese L1 patterns: detect from criteria feedback text */
 function detectVietnameseL1Patterns(result: EndSessionResult) {
@@ -144,10 +122,11 @@ function buildDiagnosticData(
   result: EndSessionResult,
   previousAttempt: IeltsDiagnosticData["previousAttempt"] | null
 ): IeltsDiagnosticData {
+  const ranges = result.bandRanges ?? null;
   const criteria: CriterionDiagnostic[] = [
     {
       label: "Fluency & Coherence",
-      bandRange: toBandRange(result.fluency),
+      bandRange: ranges?.fluency ?? FALLBACK_BAND_RANGE,
       score100: result.fluency,
       justification: result.criteriaFeedback?.fluency || "Score based on overall speaking flow and idea development.",
       action: result.fluency < 60
@@ -157,7 +136,7 @@ function buildDiagnosticData(
     },
     {
       label: "Lexical Resource",
-      bandRange: toBandRange(result.vocabulary),
+      bandRange: ranges?.vocabulary ?? FALLBACK_BAND_RANGE,
       score100: result.vocabulary,
       justification: result.criteriaFeedback?.vocabulary || "Score based on vocabulary range and precision.",
       action: result.vocabulary < 60
@@ -166,7 +145,7 @@ function buildDiagnosticData(
     },
     {
       label: "Grammatical Range & Accuracy",
-      bandRange: toBandRange(result.grammar),
+      bandRange: ranges?.grammar ?? FALLBACK_BAND_RANGE,
       score100: result.grammar,
       justification: result.criteriaFeedback?.grammar || "Score based on sentence structure variety and accuracy.",
       action: result.grammar < 60
@@ -175,7 +154,7 @@ function buildDiagnosticData(
     },
     {
       label: "Pronunciation",
-      bandRange: toBandRange(result.pronunciation ?? result.fluency),
+      bandRange: ranges?.pronunciation ?? FALLBACK_BAND_RANGE,
       score100: result.pronunciation ?? result.fluency,
       justification: result.criteriaFeedback?.pronunciation || "Score based on pronunciation clarity and natural rhythm.",
       action: "Focus on word-final consonant sounds — the highest-impact area for Vietnamese speakers.",
@@ -197,12 +176,15 @@ function buildDiagnosticData(
     topPriority = vietnameseL1[0].suggestion;
   }
 
-  const overallScore100 = Math.round(
+  // Both values come from backend (diagnosticOverall100 + bandRanges.overall).
+  // If an older backend omits them, fall back to the same avg-of-4 formula
+  // the backend uses so the two never visibly disagree.
+  const overallScore100 = result.diagnosticOverall100 ?? Math.round(
     criteria.reduce((s, c) => s + c.score100, 0) / criteria.length
   );
 
   return {
-    overallBandRange: toBandRange(overallScore100),
+    overallBandRange: ranges?.overall ?? FALLBACK_BAND_RANGE,
     overallScore100,
     criteria,
     topPriority,

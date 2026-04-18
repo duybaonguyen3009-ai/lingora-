@@ -264,6 +264,69 @@ function listeningRawToBand(rawScore) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// LINGONA SPEAKING: 0-100 SCORE → BAND
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Convert Lingona's 0–100 internal speaking score to an IELTS band.
+ *
+ * NOTE: This is a **Lingona-specific calibrated heuristic, NOT official IELTS
+ * spec.** Unlike IELTS band descriptors (which grade criteria directly on a
+ * 0–9 scale), this function maps Lingona's aggregate 0–100 score via a
+ * hand-tuned bin table that is deliberately more generous than a naïve linear
+ * interpolation (e.g. 40/100 → 5.0, not ~3.5).
+ *
+ * Edge behaviour is preserved verbatim from the historical implementation:
+ *   score ≥ 95      → 9.0
+ *   score ∈ [10, 20) → 3.0
+ *   score < 10       → 2.0  (floor — never returns 0.0/1.0/1.5)
+ *   NaN / undefined  → 2.0  (falls through all comparisons)
+ *   score > 100      → 9.0  (first branch)
+ *
+ * Used by scenarioService.endSession to produce a band-score estimate and
+ * per-criterion band ranges for the frontend diagnostic report.
+ *
+ * @param {number} score100 Aggregate score in [0, 100]
+ * @returns {number} IELTS band in [2.0, 9.0], step 0.5 (see edges above)
+ */
+function speakingScoreToBand(score100) {
+  if (score100 >= 95) return 9.0;
+  if (score100 >= 90) return 8.5;
+  if (score100 >= 85) return 8.0;
+  if (score100 >= 80) return 7.5;
+  if (score100 >= 75) return 7.0;
+  if (score100 >= 70) return 6.5;
+  if (score100 >= 60) return 6.0;
+  if (score100 >= 50) return 5.5;
+  if (score100 >= 40) return 5.0;
+  if (score100 >= 30) return 4.5;
+  if (score100 >= 20) return 4.0;
+  if (score100 >= 10) return 3.0;
+  return 2.0;
+}
+
+/**
+ * Build a ±0.5 confidence range around the band produced by
+ * `speakingScoreToBand`. Used by the frontend diagnostic report to render
+ * "Band 6.5–7.0"-style cards.
+ *
+ *   band          → { low: max(1.0, band - 0.5), high: min(9.0, band) }
+ *   both rounded to the nearest 0.5.
+ *
+ * @param {number} score100
+ * @returns {{ low: number, high: number }}
+ */
+function speakingScoreToBandRange(score100) {
+  const band = speakingScoreToBand(score100);
+  const low = Math.max(1.0, band - 0.5);
+  const high = Math.min(9.0, band);
+  return {
+    low: Math.round(low * 2) / 2,
+    high: Math.round(high * 2) / 2,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
 // BAND → BATTLE TIER
 // ════════════════════════════════════════════════════════════════
 
@@ -305,5 +368,7 @@ module.exports = {
   calculateSpeakingBand,
   readingRawToBand,
   listeningRawToBand,
+  speakingScoreToBand,
+  speakingScoreToBandRange,
   bandToTier,
 };

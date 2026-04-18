@@ -253,6 +253,14 @@ export interface FeedbackCard {
   example: string;
 }
 
+export interface SpeakingBandRanges {
+  fluency:       BandRange;
+  vocabulary:    BandRange;
+  grammar:       BandRange;
+  pronunciation: BandRange;
+  overall:       BandRange;
+}
+
 export interface EndSessionResult {
   overallScore: number;
   fluency: number;
@@ -260,6 +268,11 @@ export interface EndSessionResult {
   grammar: number;
   pronunciation: number;
   bandScore?: number | null;
+  /** Per-criterion + overall band ranges for the diagnostic report. Backend
+   *  is the single source of truth — never derive these on the client. */
+  bandRanges?: SpeakingBandRanges | null;
+  /** Avg-of-4 criteria (0–100) used as the input for `bandRanges.overall`. */
+  diagnosticOverall100?: number | null;
   criteriaFeedback?: CriteriaFeedback | null;
   coachFeedback: string;
   turnFeedback: TurnFeedback[];

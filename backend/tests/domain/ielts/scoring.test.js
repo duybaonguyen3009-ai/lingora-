@@ -14,6 +14,8 @@ const {
   calculateSpeakingBand,
   readingRawToBand,
   listeningRawToBand,
+  speakingScoreToBand,
+  speakingScoreToBandRange,
   bandToTier,
 } = require('../../../src/domain/ielts/scoring');
 
@@ -303,5 +305,55 @@ describe('bandToTier', () => {
   it('throws on invalid band', () => {
     expect(() => bandToTier(7.3)).toThrow(RangeError);
     expect(() => bandToTier(-1)).toThrow(RangeError);
+  });
+});
+
+describe('speakingScoreToBand (Lingona heuristic)', () => {
+  // Canonical bin table — must match historical behaviour from scenarioService
+  // and IeltsConversationV2 so migration does not shift any user's band.
+  it.each([
+    [100, 9.0],
+    [95,  9.0],
+    [94,  8.5],
+    [90,  8.5],
+    [85,  8.0],
+    [80,  7.5],
+    [75,  7.0],
+    [74,  6.5],
+    [70,  6.5],
+    [60,  6.0],
+    [50,  5.5],
+    [40,  5.0],
+    [30,  4.5],
+    [20,  4.0],
+    [10,  3.0],
+    [9,   2.0],
+    [0,   2.0],
+  ])('score %i → band %p', (score, expected) => {
+    expect(speakingScoreToBand(score)).toBe(expected);
+  });
+
+  it('preserves historical edge behaviour for out-of-range + junk inputs', () => {
+    // These are NOT fixed — they match what the original local copy did.
+    expect(speakingScoreToBand(150)).toBe(9.0);   // > 100 → first branch
+    expect(speakingScoreToBand(-50)).toBe(2.0);   // negative → floor
+    expect(speakingScoreToBand(NaN)).toBe(2.0);   // NaN >= x is false → floor
+    expect(speakingScoreToBand(undefined)).toBe(2.0);
+  });
+});
+
+describe('speakingScoreToBandRange', () => {
+  it('returns a ±0.5 window rounded to nearest 0.5', () => {
+    // band 7.0 → [6.5, 7.0]
+    expect(speakingScoreToBandRange(75)).toEqual({ low: 6.5, high: 7.0 });
+    // band 6.0 → [5.5, 6.0]
+    expect(speakingScoreToBandRange(60)).toEqual({ low: 5.5, high: 6.0 });
+    // band 9.0 clamped → [8.5, 9.0]
+    expect(speakingScoreToBandRange(100)).toEqual({ low: 8.5, high: 9.0 });
+  });
+
+  it('floors low at 1.0', () => {
+    // band 2.0 → [1.5, 2.0]  (low would be 1.5, above the 1.0 floor)
+    expect(speakingScoreToBandRange(0)).toEqual({ low: 1.5, high: 2.0 });
   });
 });

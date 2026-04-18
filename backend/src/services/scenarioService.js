@@ -22,6 +22,10 @@ const {
   buildOpeningMessage,
   normalizeTimezone,
 } = require("../domain/ielts/examinerPersona");
+const {
+  speakingScoreToBand,
+  speakingScoreToBandRange,
+} = require("../domain/ielts/scoring");
 
 // ---------------------------------------------------------------------------
 // XP rewards
@@ -1138,26 +1142,6 @@ function computeHybridPenalties(turns) {
   return { penalty, floorScore, avgWords, totalWords };
 }
 
-/**
- * Convert a 0-100 score to an IELTS band (1.0–9.0 in 0.5 increments).
- */
-function toBandScore(score100) {
-  // Map: 0→1, 20→3, 40→4.5, 60→6, 75→7, 85→7.5, 95→8.5, 100→9
-  if (score100 >= 95) return 9.0;
-  if (score100 >= 90) return 8.5;
-  if (score100 >= 85) return 8.0;
-  if (score100 >= 80) return 7.5;
-  if (score100 >= 75) return 7.0;
-  if (score100 >= 70) return 6.5;
-  if (score100 >= 60) return 6.0;
-  if (score100 >= 50) return 5.5;
-  if (score100 >= 40) return 5.0;
-  if (score100 >= 30) return 4.5;
-  if (score100 >= 20) return 4.0;
-  if (score100 >= 10) return 3.0;
-  return 2.0;
-}
-
 async function endSession(sessionId, userId, durationMs, options = {}) {
   const session = await scenarioRepository.findSessionById(sessionId);
   if (!session) {
@@ -1254,8 +1238,27 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
   const turnCount = realUserTurns.length;
   const wordCount = totalWords;
 
-  // Band score conversion for IELTS
-  const bandScore = isIelts ? toBandScore(adjustedOverall) : null;
+  // Band score conversion for IELTS. Canonical converter lives in
+  // domain/ielts/scoring.js — do not re-implement locally.
+  const bandScore = isIelts ? speakingScoreToBand(adjustedOverall) : null;
+
+  // Per-criterion + overall band ranges for the diagnostic report. Frontend
+  // renders these verbatim; any conversion duplication there is a drift bug.
+  // Overall uses avg-of-4 (not `adjustedOverall`) to match the report's
+  // "average criterion band" framing — keep behaviour identical to the
+  // previous client-side computation.
+  const diagnosticOverall100 = isIelts
+    ? Math.round((adjustedFluency + adjustedVocab + adjustedGrammar + adjustedPronunciation) / 4)
+    : null;
+  const bandRanges = isIelts
+    ? {
+        fluency:       speakingScoreToBandRange(adjustedFluency),
+        vocabulary:    speakingScoreToBandRange(adjustedVocab),
+        grammar:       speakingScoreToBandRange(adjustedGrammar),
+        pronunciation: speakingScoreToBandRange(adjustedPronunciation),
+        overall:       speakingScoreToBandRange(diagnosticOverall100),
+      }
+    : null;
 
   // Notable vocabulary + enhanced feedback from AI scoring
   const notableVocabulary = aiScores.notableVocabulary || [];
@@ -1342,6 +1345,8 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     grammar: adjustedGrammar,
     pronunciation: adjustedPronunciation,
     bandScore,
+    bandRanges,
+    diagnosticOverall100,
     criteriaFeedback,
     coachFeedback,
     turnFeedback: aiScores.turnFeedback,
