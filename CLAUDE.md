@@ -173,9 +173,17 @@ Every rule in Lingona falls into one of the categories below. When implementing 
 
 ## 6. IELTS Domain Layer (locked)
 
-Lives in `backend/src/domain/ielts/` (and mirrored in `frontend/lib/domain/ielts/` where needed). Pure functions and constants — no DB, no API. All features import from this layer.
+Lives in `backend/src/domain/ielts/` (JavaScript + CommonJS, mirrored in `frontend/lib/domain/ielts/` where needed). Pure functions and constants — no DB, no API. All features import from this layer via `require('./domain/ielts')`.
 
 This layer encodes specifications from IELTS itself (IDP/British Council). **You cannot change these values** — Task 2 = 250 words, not 200.
+
+**Structure (6 files):**
+- `format.js` — test spec constants (question counts, timing, task types)
+- `scoring.js` — band calculation, IELTS rounding, raw→band conversion, tier mapping
+- `exam-ux.js` — Practice vs Full Test vs Battle behavior configs
+- `rubrics.js` — 4-tier rubric per criterion (descriptors + signals + suggestions + promptBrief)
+- `postProcessor.js` — LLM output sanitizer (parse, validate, clamp, hallucination guard)
+- `index.js` — barrel export
 
 ### What lives here
 
@@ -189,7 +197,7 @@ This layer encodes specifications from IELTS itself (IDP/British Council). **You
 | Answer validation | "NO MORE THAN TWO WORDS", digits = words, case-insensitive, spelling must be correct |
 | Timing rules | Practice = pauseable; Full Test = hard cutoff |
 
-### Exam UX fidelity (`domain/ielts/exam-ux.ts`)
+### Exam UX fidelity (`domain/ielts/exam-ux.js`)
 
 Behavior rules that simulate the real exam room — this is business logic, not styling.
 
@@ -233,6 +241,7 @@ Authentic palette variables live in `frontend/styles/exam-authentic.css`. Switch
 | Theme system | CSS custom properties + `next-themes` | SSR-safe, zero runtime cost |
 | Frontend navigation | 5-tab BottomNav, mobile-first | Replaces 8-item sidebar dashboard |
 | Payment provider | MoMo (Vietnam market) | PSP of choice for 18–25 VN demographic |
+| Backend language | JavaScript + CommonJS (TypeScript migration deferred post-launch) | Converting 109 files blocks 2+ weeks of launch-critical work; JSDoc gives ~70% of TS benefit |
 
 ---
 
@@ -278,7 +287,7 @@ Authentic palette variables live in `frontend/styles/exam-authentic.css`. Switch
 
 ### Shipped (see `docs/CHANGELOG.md` for detail)
 
-Auth + JWT, migrations 0001–0026, gamification (XP/streak/badge/leaderboard), pronunciation (provider abstraction + Azure REST), scenario speaking (12 scenarios + IELTS exam mode), AI study coach (rules-based), dark/light theme, BottomNav, profile section, onboarding 6-screen diagnostic, Battle Arena MVP (Reading, 1v1 async 2h, ranked + friend, 56 passages seeded), Friend Chat (Socket.IO + voice notes), Achievement system (45 badges), landing page.
+Auth + JWT, migrations 0001–0027, gamification (XP/streak/badge/leaderboard), pronunciation (provider abstraction + Azure REST), scenario speaking (12 scenarios + IELTS exam mode), AI study coach (rules-based), dark/light theme, BottomNav, profile section, onboarding 6-screen diagnostic, Battle Arena MVP (Reading, 1v1 async 2h, ranked + friend, 56 passages seeded), Friend Chat (Socket.IO + voice notes), Achievement system (45 badges), landing page.
 
 ### Post-launch backlog
 
@@ -297,6 +306,8 @@ Listening feature, Full Test Mode (all 4 skills), team Battle V2, Exam tab redes
 - Errors thrown as `Error` instances with `.status` attached (never plain objects — they have no `.stack` and Sentry can't capture them).
 - `Promise.all()` for parallel DB queries inside services.
 - `userId` is always derived from `req.user.id` (verified JWT), never from request body.
+- **JSDoc discipline.** Every exported function has JSDoc with `@typedef`, `@param`, `@returns`. Types defined in JSDoc mirror frontend TypeScript types where they cross the API boundary. When we migrate to TypeScript post-launch, `@typedef` → `interface` is a 1:1 mapping.
+- **Freeze constants.** Configuration objects exported from `domain/` use `Object.freeze()` recursively to prevent accidental mutation.
 
 ### Frontend
 
@@ -312,12 +323,12 @@ Listening feature, Full Test Mode (all 4 skills), team Battle V2, Exam tab redes
 - Every table has `created_at TIMESTAMPTZ DEFAULT now()`.
 - Mutable tables add `updated_at` + trigger.
 - Soft delete via `deleted_at TIMESTAMPTZ NULLABLE`.
-- Every schema change is a numbered `node-pg-migrate` file. Next migration: `0027_*`.
+- Every schema change is a numbered `node-pg-migrate` file. Next migration: `0028_*`.
 
 ### IELTS-specific
 
 - All IELTS constants and scoring functions live in `backend/src/domain/ielts/`. Do not hardcode band rules, word counts, or timers elsewhere.
-- Exam UX behaviors (pauseable, one-way nav, anti-cheat) are read from `EXAM_UX[mode]` in `domain/ielts/exam-ux.ts`. Components must not hardcode these.
+- Exam UX behaviors (pauseable, one-way nav, anti-cheat) are read from `EXAM_UX[mode]` in `domain/ielts/exam-ux.js`. Components must not hardcode these.
 - Band scores are never displayed in red (see Soul section).
 
 ---
@@ -343,7 +354,7 @@ backend/
     providers/      storage/, speech/, ai/, tts/, payment/
     domain/ielts/   Format, scoring, exam-ux, constants (PURE — no DB, no API)
     config/         sentry.js, etc.
-  migrations/       node-pg-migrate files (0001..0026)
+  migrations/       node-pg-migrate files (0001..0027)
   sql/              Seed data
 
 docs/
