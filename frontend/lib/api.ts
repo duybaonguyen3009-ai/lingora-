@@ -782,9 +782,14 @@ export async function submitScenarioTurnV2(
     segmentCount: number;
     speakingRatio: number;
   } | null,
+  extras?: { part2Notes?: string },
 ): Promise<SubmitTurnResult> {
   const body: Record<string, unknown> = { content };
   if (speechMetrics) body.speechMetrics = speechMetrics;
+  // Part 2 prep notes — only sent on the prep→speak transition. Empty string
+  // is intentional (signals "user entered prep but wrote nothing") so do not
+  // filter it out.
+  if (extras && typeof extras.part2Notes === "string") body.part2Notes = extras.part2Notes;
   return apiPostAuth<SubmitTurnResult>(
     `/scenarios/sessions/${sessionId}/turns?experimental=true`,
     body

@@ -716,6 +716,44 @@ body {
   padding: 10px 14px;
 }
 
+/* ── Part 2 Notepad (lined paper) ── */
+.ielts-notepad {
+  width: 100%;
+  min-height: 224px; /* ~8 lines × 28px line-height */
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: #FFFEF7;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 27px,
+    #E5E5E5 27px,
+    #E5E5E5 28px
+  );
+  background-attachment: local;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 28px;
+  color: #1B2B4B;
+  resize: none;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 150ms ease;
+}
+.ielts-notepad:focus {
+  border-color: rgba(0, 168, 150, 0.45);
+  box-shadow: 0 0 0 3px rgba(0, 168, 150, 0.12);
+}
+.ielts-notepad::placeholder {
+  color: var(--ielts-placeholder-color);
+  font-style: italic;
+}
+.ielts-notepad[readonly] {
+  background-color: #FAF9F2;
+  cursor: default;
+}
+
 /* ── Timer ── */
 .ielts-timer {
   display: flex; flex-direction: column; align-items: center;

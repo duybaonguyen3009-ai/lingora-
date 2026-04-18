@@ -107,7 +107,7 @@ async function submitTurn(req, res, next) {
   try {
     const { sessionId } = req.params;
     const userId = req.user.id;
-    const { content, speechMetrics } = req.body;
+    const { content, speechMetrics, part2Notes } = req.body;
 
     if (!UUID_RE.test(sessionId)) {
       return sendError(res, { status: 400, message: "Valid sessionId (UUID) is required" });
@@ -121,9 +121,15 @@ async function submitTurn(req, res, next) {
       ? speechMetrics
       : null;
 
+    // Optional Part 2 prep notes. Frontend sends this only on the prep→speak
+    // transition turn. Capped at 10k chars as a sanity bound (textarea is for
+    // short jottings, not essays). Notes are persisted verbatim to session_meta
+    // — they never reach the scoring prompt.
+    const notes = typeof part2Notes === "string" ? part2Notes.slice(0, 10000) : undefined;
+
     // V2: Pass experimental flag from query param
     const experimental = req.query.experimental === "true";
-    const result = await scenarioService.submitTurn(sessionId, userId, content.trim(), validMetrics, { experimental });
+    const result = await scenarioService.submitTurn(sessionId, userId, content.trim(), validMetrics, { experimental, part2Notes: notes });
 
     return sendSuccess(res, {
       data: result,

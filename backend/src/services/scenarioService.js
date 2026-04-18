@@ -981,6 +981,16 @@ async function submitTurn(sessionId, userId, content, speechMetrics = null, opti
     nextState.userResponseCount = currentState.userResponseCount;
     nextState.part3PrevWordCount = currentState.part3PrevWordCount || 0;
     nextState.turnSpeechMetrics = currentState.turnSpeechMetrics || [];
+
+    // Part 2 notepad: persist whatever the candidate jotted during the 60s prep.
+    // Only accept notes on the prep→speak transition — any other time it's a
+    // stale client or a bug, and silently ignoring keeps the API forgiving.
+    // Notes never reach the scoring prompt; they are pure UX aid.
+    if (typeof options.part2Notes === "string" && currentState.part === 2 && currentState.phase === "cue_card") {
+      nextState.part2Notes = options.part2Notes;
+    } else if (currentState.part2Notes !== undefined) {
+      nextState.part2Notes = currentState.part2Notes;
+    }
     ieltsState = nextState;
 
     const toState = `part${nextState.part}:${nextState.phase}:${nextState.questionIndex}`;

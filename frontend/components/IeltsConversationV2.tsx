@@ -353,6 +353,20 @@ export default function IeltsConversationV2({
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const consecutiveShortSegmentsRef = useRef(0);
 
+  // Part 2 notepad: free-form jottings the candidate makes during the 60s prep.
+  // Editable during part2_prep, read-only during part2_speak, unmounted elsewhere.
+  // Persisted to session_meta on the prep→speak transition turn.
+  const [part2Notes, setPart2Notes] = useState("");
+  const notepadRef = useRef<HTMLTextAreaElement>(null);
+
+  // Autofocus the notepad when prep starts — candidate can begin typing
+  // immediately without clicking.
+  useEffect(() => {
+    if (phase === "part2_prep" && notepadRef.current) {
+      notepadRef.current.focus();
+    }
+  }, [phase]);
+
   // Voice input — with timing hooks
   const voice = useVoiceInput(
     useCallback((transcript: string) => {
@@ -1060,9 +1074,17 @@ export default function IeltsConversationV2({
     prepSkipFiredRef.current = true;
     setTimerActive(false);
 
-    // Advance backend from cue_card → long_turn
+    // Advance backend from cue_card → long_turn, and persist the candidate's
+    // prep notes into session_meta.part2Notes on this same transition turn.
+    // Empty string is intentional — it signals "candidate entered prep but
+    // wrote nothing" to any future history UI.
     try {
-      const result = await submitScenarioTurn(sessionId, "[PREP TIME COMPLETE — I AM READY TO SPEAK]");
+      const result = await submitScenarioTurn(
+        sessionId,
+        "[PREP TIME COMPLETE — I AM READY TO SPEAK]",
+        null,
+        { part2Notes },
+      );
 
       // Add the examiner's announcement as a turn so it appears in transcript
       if (result.aiTurn) {
@@ -1097,7 +1119,7 @@ export default function IeltsConversationV2({
     if (voice.isSupported) {
       setTimeout(() => startMicWithTiming(), 300);
     }
-  }, [sessionId, voice, playTTS, startMicWithTiming]);
+  }, [sessionId, voice, playTTS, startMicWithTiming, part2Notes]);
 
   // ── Timer expiry handlers ──
   // CRITICAL: Use timerExpired flag, NOT timerSeconds === 0.
@@ -1506,6 +1528,18 @@ export default function IeltsConversationV2({
                 </ul>
               </div>
 
+              {/* Notepad — lined paper for prep jottings */}
+              <textarea
+                ref={notepadRef}
+                className="ielts-notepad"
+                value={part2Notes}
+                onChange={(e) => setPart2Notes(e.target.value)}
+                placeholder="You may make some notes here. (Optional)"
+                spellCheck={false}
+                autoCorrect="off"
+                aria-label="Part 2 preparation notes"
+              />
+
               {/* Timer + controls */}
               <div className="flex flex-col items-center gap-5">
                 <div className={`ielts-timer ${timerUrgent ? "ielts-timer-urgent" : ""}`}>
@@ -1536,6 +1570,18 @@ export default function IeltsConversationV2({
                 <span className="text-xs uppercase tracking-wider text-indigo-300 font-semibold">Topic:</span>
                 <span className="text-sm ml-2" style={{ color: 'var(--ielts-text-secondary)' }}>{cueCard.topic}</span>
               </div>
+
+              {/* Notepad — read-only during the long turn so the candidate can
+                  glance at their prep notes while speaking. Only render if
+                  they actually wrote something; otherwise it is just clutter. */}
+              {part2Notes.trim().length > 0 && (
+                <textarea
+                  className="ielts-notepad"
+                  value={part2Notes}
+                  readOnly
+                  aria-label="Part 2 preparation notes (read-only)"
+                />
+              )}
 
               {/* Timer */}
               <div className="flex flex-col items-center gap-5">
