@@ -731,6 +731,12 @@ export async function startScenarioSession(
 ): Promise<StartSessionResult> {
   const body: Record<string, unknown> = {};
   if (options?.cueCardIndex != null) body.cueCardIndex = options.cueCardIndex;
+  // Send the user's IANA timezone so backend can pick the correct greeting
+  // ("Good morning/afternoon/evening") for their local time. Falls back server-side.
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) body.timezone = tz;
+  } catch { /* older browsers — backend falls back to Asia/Ho_Chi_Minh */ }
   return apiPostAuth<StartSessionResult>(`/scenarios/${scenarioId}/start`, body);
 }
 
@@ -818,7 +824,8 @@ export async function getScenarioHistory(): Promise<SessionDetail[]> {
  * keeps working even if the access token expires mid-IELTS exam (the exam
  * can run 14+ minutes against a 15-minute token).
  */
-export async function synthesizeSpeech(text: string): Promise<Blob | null> {
+export async function synthesizeSpeech(text: string, voice?: string): Promise<Blob | null> {
+  const body = voice ? { text, voice } : { text };
   const makeReq = (token: string | null) =>
     fetch(`${BASE_URL}/scenarios/tts`, {
       method: "POST",
@@ -827,7 +834,7 @@ export async function synthesizeSpeech(text: string): Promise<Blob | null> {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       credentials: "include",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(body),
     });
 
   try {

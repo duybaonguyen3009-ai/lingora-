@@ -16,6 +16,12 @@ const scenarioRepository = require("../repositories/scenarioRepository");
 const { analyzeSpeechFlow, aggregateSpeechFlow } = require("./speechAnalyzer");
 const { updateStreak } = require("./streakService");
 const { awardXp } = require("./xpService");
+const {
+  pickPersona,
+  computeGreeting,
+  buildOpeningMessage,
+  normalizeTimezone,
+} = require("../domain/ielts/examinerPersona");
 
 // ---------------------------------------------------------------------------
 // XP rewards
@@ -840,6 +846,7 @@ async function startSession(scenarioId, userId, options = {}) {
   const isIelts = scenario.category === "exam";
   let openingContent;
   let cueCardIndex = -1;
+  let examinerPersonaOut;
 
   if (isIelts) {
     // V2: Allow cueCardIndex override for retry-same-topic
@@ -850,15 +857,25 @@ async function startSession(scenarioId, userId, options = {}) {
     // V2: On retry, align Part 1 topics with the cue card theme
     const initialState = createInitialIeltsState(cueCardIndex, isRetry);
 
+    // Pick examiner persona + compute local greeting. Backend is the single
+    // source of truth for both — frontend only renders.
+    const persona = pickPersona();
+    const timezone = normalizeTimezone(options.timezone);
+    const greeting = computeGreeting(new Date(), timezone);
+
+    initialState.examinerPersona = { name: persona.name, voice: persona.voice };
+    initialState.greeting = greeting;
+    initialState.timezone = timezone;
+    examinerPersonaOut = initialState.examinerPersona;
+
     // Persist state to DB
     await scenarioRepository.updateSessionMeta(session.id, initialState);
 
-    // Generate examiner opening — sanitized
-    const systemPrompt = buildIeltsSystemPrompt(initialState);
-    const rawOpening = await ai.generateResponse(systemPrompt, [], { category: "exam" });
-    openingContent = sanitizeExaminerOutput(rawOpening);
+    // Opening is built from a hardcoded template — no LLM call. Keeps the
+    // examiner's first utterance fully deterministic (Zero Reaction safe).
+    openingContent = buildOpeningMessage(persona, greeting);
 
-    console.log(`[ielts] Session started: ${session.id} | cueCard: ${cueCardIndex} | state: part1:question:0`);
+    console.log(`[ielts] Session started: ${session.id} | cueCard: ${cueCardIndex} | persona: ${persona.name}/${persona.voice} | tz: ${timezone} | greeting: ${greeting}`);
   } else {
     openingContent = scenario.opening_message;
   }
@@ -879,6 +896,7 @@ async function startSession(scenarioId, userId, options = {}) {
     category: session.category,
     cueCard: cueCard || undefined,
     cueCardIndex: isIelts ? cueCardIndex : undefined,
+    examinerPersona: examinerPersonaOut,
     turns: [{
       turnIndex: openingTurn.turn_index,
       role: openingTurn.role,

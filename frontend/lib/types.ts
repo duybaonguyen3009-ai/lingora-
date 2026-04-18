@@ -190,6 +190,11 @@ export interface ConversationTurn {
   createdAt: string;
 }
 
+export interface ExaminerPersona {
+  name: string;
+  voice: string;
+}
+
 export interface StartSessionResult {
   sessionId: string;
   title: string;
@@ -197,6 +202,7 @@ export interface StartSessionResult {
   category: string;
   cueCard?: IeltsCueCard;
   cueCardIndex?: number;
+  examinerPersona?: ExaminerPersona;
   turns: ConversationTurn[];
 }
 

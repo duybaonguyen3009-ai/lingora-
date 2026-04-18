@@ -33,6 +33,11 @@ Rules:
 - Use natural examiner phrases: "Could you expand on that?", "That is interesting.", "Moving on..."
 - Never break character or mention that you are an AI`;
 
+// NOTE: deprecated by the examinerPersona module (domain/ielts/examinerPersona.js).
+// The opening message is now built per-session from a template with a randomly
+// picked persona and a time-of-day greeting. This constant remains only so the
+// original migration still runs cleanly against an empty DB — the seeded value
+// is never read at runtime.
 const IELTS_OPENING_MESSAGE = `Hello! Welcome to your IELTS Speaking practice test. I am your examiner today. Let us begin with Part 1.\n\nCould you tell me your full name and where you are from?`;
 
 exports.up = (pgm) => {

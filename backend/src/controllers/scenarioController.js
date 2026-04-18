@@ -79,7 +79,9 @@ async function startSession(req, res, next) {
 
     // V2: Optional cueCardIndex for retry-same-topic
     const cueCardIndex = req.body.cueCardIndex != null ? Number(req.body.cueCardIndex) : undefined;
-    const result = await scenarioService.startSession(scenarioId, userId, { cueCardIndex });
+    // Optional IANA timezone — service normalizes invalid values to the VN default.
+    const timezone = typeof req.body.timezone === "string" ? req.body.timezone : undefined;
+    const result = await scenarioService.startSession(scenarioId, userId, { cueCardIndex, timezone });
 
     return sendSuccess(res, {
       data: result,
@@ -241,8 +243,13 @@ async function synthesizeSpeech(req, res, next) {
       return sendError(res, { status: 400, message: "text is required (max 2000 chars)" });
     }
 
-    console.log(`[tts] chars: ${text.length}`);
-    const audioBuffer = await tts.synthesize(text, { voice });
+    // Invalid/missing voice falls back to "alloy" — never 400, so TTS stays robust
+    // when older clients (or clients with stale sessions) omit the field.
+    const { normalizeVoice } = require("../domain/ielts/examinerPersona");
+    const safeVoice = normalizeVoice(voice);
+
+    console.log(`[tts] chars: ${text.length} | voice: ${safeVoice}`);
+    const audioBuffer = await tts.synthesize(text, { voice: safeVoice });
     console.log(`[tts] bytes: ${audioBuffer.length}`);
     console.log(`[tts] status: OK`);
     res.set("Content-Type", "audio/mpeg");

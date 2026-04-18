@@ -36,6 +36,7 @@ import type {
   CriterionDiagnostic,
   BandRange,
   FeedbackAccuracy,
+  ExaminerPersona,
 } from "@/lib/types";
 import IeltsDiagnosticReport from "./IeltsDiagnosticReport";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
@@ -237,8 +238,13 @@ const PART3_QUESTIONS = 4;
 const PREP_SECONDS = 60;
 const SPEAK_SECONDS = 120;
 
-// V2: Examiner greeting — warm, professional, IELTS-accurate
-const EXAMINER_GREETING = "Good morning. My name is Sarah, and I'll be your examiner today. This speaking test has three parts. First, could you tell me your full name, please?";
+// V2: Examiner opening is built server-side (persona + time-of-day greeting) and
+// returned as turns[0] from POST /scenarios/:id/start. Do not hardcode it here.
+
+// Fallback persona for sessions started before the multi-persona rollout — their
+// session_meta has no examinerPersona, so TTS would otherwise send no voice.
+// "alloy" is the historical default so audio continuity is preserved.
+const FALLBACK_PERSONA: ExaminerPersona = { name: "Sarah", voice: "alloy" };
 
 // V2: After identity check, transition to Part 1
 const EXAMINER_PART1_START = "Thank you. Now, in the first part, I'd like to ask you some questions about yourself.";
@@ -297,6 +303,14 @@ export default function IeltsConversationV2({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [turns, setTurns] = useState<TaggedTurn[]>([]);
   const [cueCard, setCueCard] = useState<IeltsCueCard | null>(null);
+  // Examiner persona from backend. Ref mirrors it so playTTS (memoized) picks up
+  // the latest voice without being re-created on every persona change.
+  const [, setExaminerPersona] = useState<ExaminerPersona>(FALLBACK_PERSONA);
+  const personaRef = useRef<ExaminerPersona>(FALLBACK_PERSONA);
+  const setPersona = useCallback((p: ExaminerPersona) => {
+    personaRef.current = p;
+    setExaminerPersona(p);
+  }, []);
   const [userTurnCount, setUserTurnCount] = useState(0);
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -503,7 +517,7 @@ export default function IeltsConversationV2({
     };
 
     try {
-      const blob = await synthesizeSpeech(text);
+      const blob = await synthesizeSpeech(text, personaRef.current.voice);
       if (blob && blob.size > 0) {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -555,12 +569,18 @@ export default function IeltsConversationV2({
         const result = await startScenarioSession(scenario.id);
         if (cancelled) return;
 
+        // Backend is the source of truth for greeting + persona — just render.
+        const persona = result.examinerPersona ?? FALLBACK_PERSONA;
+        setPersona(persona);
+
+        const openingContent = result.turns[0]?.content ?? "";
+
         // V2: Scripted greeting includes identity check — NOT scored
         const greetingTurn: TaggedTurn = {
           id: "greeting-0",
           turnIndex: -1,
           role: "assistant",
-          content: EXAMINER_GREETING,
+          content: openingContent,
           audioStorageKey: null,
           scores: null,
           feedback: null,
@@ -586,7 +606,7 @@ export default function IeltsConversationV2({
 
         // Play the greeting (includes name request)
         if (!cancelled) {
-          await playTTS(EXAMINER_GREETING, true); // auto-mic for name response
+          await playTTS(openingContent, true); // auto-mic for name response
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -1227,11 +1247,18 @@ export default function IeltsConversationV2({
         });
         if (cancelled) return;
 
+        // On retry the backend picks a fresh persona + greeting — we do not carry
+        // the old ones over. User may see a different examiner, which is intended.
+        const persona = result.examinerPersona ?? FALLBACK_PERSONA;
+        setPersona(persona);
+
+        const openingContent = result.turns[0]?.content ?? "";
+
         const greetingTurn: TaggedTurn = {
           id: "greeting-retry",
           turnIndex: -1,
           role: "assistant",
-          content: EXAMINER_GREETING,
+          content: openingContent,
           audioStorageKey: null,
           scores: null,
           feedback: null,
@@ -1245,7 +1272,7 @@ export default function IeltsConversationV2({
         setPhase("identity");
 
         if (!cancelled) {
-          await playTTS(EXAMINER_GREETING, true);
+          await playTTS(openingContent, true);
         }
       } catch (err: unknown) {
         if (cancelled) return;
