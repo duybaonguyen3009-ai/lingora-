@@ -623,6 +623,7 @@ export default function IeltsConversationV2({
 
   const handleEndSession = useCallback(async (sid: string) => {
     setPhase("ending");
+    setPart2Notes("");
     try {
       const durationMs = Date.now() - startTimeRef.current;
       const [result] = await Promise.all([
@@ -973,6 +974,11 @@ export default function IeltsConversationV2({
     consecutiveShortSegmentsRef.current = 0;
 
     setPart2Nudge(null);
+    // Part 2 speak is ending — notes have already been persisted on the
+    // prep→speak transition, so drop them from local state now that we are
+    // leaving Part 2. Defensive: guards against stale notes if the user later
+    // retries inline or hits a back-button flow.
+    setPart2Notes("");
     setTimerActive(false);
     setInputText("");
     setIsProcessing(true);
@@ -1244,6 +1250,8 @@ export default function IeltsConversationV2({
         setPhase("error");
         return;
       }
+      // Fresh session — wipe any Part 2 notes left from the previous attempt.
+      setPart2Notes("");
       try {
         await new Promise((r) => setTimeout(r, 2000));
         if (cancelled) return;
