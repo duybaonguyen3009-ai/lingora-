@@ -237,16 +237,78 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   // Passage panel content
   // ---------------------------------------------------------------------------
 
-  const PassagePanel = () => (
-    <div>
-      <h3 className="text-lg font-display font-bold mb-4" style={{ color: "var(--color-text)" }}>
-        {data.passage.passage_title}
-      </h3>
-      <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--color-text-secondary)" }}>
-        {data.passage.passage_text}
+  const PassagePanel = () => {
+    const PARAGRAPH_LABEL_RE = /^([A-Z])\.\s/;
+    const LINE_WIDTH_CHARS = 85;
+    const PASSAGE_FONT = 'Georgia, "Times New Roman", Times, serif';
+
+    const splitToLines = (text: string, maxChars: number): string[] => {
+      const words = text.split(/\s+/).filter(Boolean);
+      const lines: string[] = [];
+      let curr = "";
+      for (const w of words) {
+        const candidate = curr ? curr + " " + w : w;
+        if (candidate.length > maxChars && curr) {
+          lines.push(curr);
+          curr = w;
+        } else {
+          curr = candidate;
+        }
+      }
+      if (curr) lines.push(curr);
+      return lines;
+    };
+
+    const paragraphs = data.passage.passage_text
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    let lineCounter = 0;
+
+    return (
+      <div>
+        <h3 className="text-lg font-display font-bold mb-4" style={{ color: "var(--color-text)" }}>
+          {data.passage.passage_title}
+        </h3>
+        <div className="text-[15px] leading-[1.8]" style={{ color: "var(--color-text)", fontFamily: PASSAGE_FONT }}>
+          {paragraphs.map((para, paraIdx) => {
+            const match = para.match(PARAGRAPH_LABEL_RE);
+            const displayLabel = match ? match[1] : String.fromCharCode(65 + paraIdx);
+            const body = match ? para.slice(match[0].length) : para;
+            const lines = splitToLines(body, LINE_WIDTH_CHARS);
+            return (
+              <div key={paraIdx} className="mb-5">
+                {lines.map((line, i) => {
+                  lineCounter += 1;
+                  const showNumber = lineCounter % 5 === 0;
+                  return (
+                    <div key={i} className="flex items-baseline gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="inline-block text-right text-xs tabular-nums shrink-0"
+                        style={{
+                          width: "2ch",
+                          color: "var(--color-text-tertiary)",
+                          userSelect: "none",
+                          opacity: showNumber ? 0.7 : 0,
+                        }}
+                      >
+                        {showNumber ? lineCounter : ""}
+                      </span>
+                      <span>
+                        {i === 0 && <strong>{displayLabel}. </strong>}
+                        {line}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ---------------------------------------------------------------------------
   // Confirm modal
