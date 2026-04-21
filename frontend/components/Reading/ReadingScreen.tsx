@@ -139,7 +139,7 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   const [flagged, setFlagged] = useState<Record<number, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
-  const warningsFiredRef = useRef<{ five: boolean; one: boolean }>({ five: false, one: false });
+  const warningsFiredRef = useRef<{ five: boolean; one: boolean; zero: boolean }>({ five: false, one: false, zero: false });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -155,21 +155,25 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [data, loading, paused]);
 
-  // Time-warning toasts — Practice Mode only, fire once per threshold.
-  // Uses passage.estimated_minutes as the soft budget (no hard cutoff).
+  // Time-warning toasts — Practice Mode uses a fixed 20-minute budget per
+  // passage, matching IELTS Academic Reading (60 min / 3 passages). No hard
+  // cutoff: at 0:00 we fire one "Hết giờ" toast and leave the user in control.
   useEffect(() => {
     if (!data) return;
-    const budget = (data.passage.estimated_minutes ?? 0) * 60;
-    if (budget <= 60) return;
-    const fiveLeft = budget - 300;
-    const oneLeft = budget - 60;
-    if (!warningsFiredRef.current.five && fiveLeft >= 60 && elapsed >= fiveLeft) {
+    const BUDGET_SECONDS = 20 * 60;
+    const fiveLeft = BUDGET_SECONDS - 300;
+    const oneLeft = BUDGET_SECONDS - 60;
+    if (!warningsFiredRef.current.five && elapsed >= fiveLeft) {
       warningsFiredRef.current.five = true;
       setToast("Còn 5 phút");
     }
     if (!warningsFiredRef.current.one && elapsed >= oneLeft) {
       warningsFiredRef.current.one = true;
       setToast("Còn 1 phút — cố lên!");
+    }
+    if (!warningsFiredRef.current.zero && elapsed >= BUDGET_SECONDS) {
+      warningsFiredRef.current.zero = true;
+      setToast("Hết giờ — tùy bạn quyết tiếp");
     }
   }, [elapsed, data]);
 
