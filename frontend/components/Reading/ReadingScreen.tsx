@@ -136,6 +136,7 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   const [showConfirm, setShowConfirm] = useState(false);
   const [paused, setPaused] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
+  const [flagged, setFlagged] = useState<Record<number, boolean>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -153,6 +154,10 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
 
   const handleAnswer = useCallback((orderIndex: number, answer: string) => {
     setAnswers((prev) => ({ ...prev, [orderIndex]: answer }));
+  }, []);
+
+  const handleToggleFlag = useCallback((orderIndex: number) => {
+    setFlagged((prev) => ({ ...prev, [orderIndex]: !prev[orderIndex] }));
   }, []);
 
   const handleSubmit = useCallback(async () => {
@@ -238,6 +243,22 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
             <span className="text-xs font-medium uppercase px-1.5 py-0.5 rounded" style={{ background: "rgba(0,168,150,0.08)", color: "#00A896" }}>
               {q.type.toUpperCase()}
             </span>
+            <button
+              type="button"
+              onClick={() => handleToggleFlag(q.order_index)}
+              aria-label={flagged[q.order_index] ? "Bỏ đánh dấu" : "Đánh dấu xem lại"}
+              aria-pressed={!!flagged[q.order_index]}
+              className="ml-auto w-6 h-6 rounded-md flex items-center justify-center transition-colors"
+              style={{
+                background: flagged[q.order_index] ? "rgba(245,158,11,0.15)" : "transparent",
+                color: flagged[q.order_index] ? "#F59E0B" : "var(--color-text-tertiary)",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={flagged[q.order_index] ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                <line x1="4" y1="22" x2="4" y2="15" />
+              </svg>
+            </button>
           </div>
           <p className="text-sm font-medium mb-3" style={{ color: "var(--color-text)" }}>{q.question_text}</p>
           {q.type === "mcq" && <McqQuestion q={q} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
