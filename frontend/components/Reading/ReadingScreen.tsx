@@ -137,6 +137,8 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   const [paused, setPaused] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [flagged, setFlagged] = useState<Record<number, boolean>>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const warningsFiredRef = useRef<{ five: boolean; one: boolean }>({ five: false, one: false });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -151,6 +153,30 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
     timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [data, loading, paused]);
+
+  // Time-warning toasts — Practice Mode only, fire once per threshold.
+  // Uses passage.estimated_minutes as the soft budget (no hard cutoff).
+  useEffect(() => {
+    if (!data) return;
+    const budget = (data.passage.estimated_minutes ?? 0) * 60;
+    if (budget <= 60) return;
+    const fiveLeft = budget - 300;
+    const oneLeft = budget - 60;
+    if (!warningsFiredRef.current.five && fiveLeft >= 60 && elapsed >= fiveLeft) {
+      warningsFiredRef.current.five = true;
+      setToast("Còn 5 phút");
+    }
+    if (!warningsFiredRef.current.one && elapsed >= oneLeft) {
+      warningsFiredRef.current.one = true;
+      setToast("Còn 1 phút — cố lên!");
+    }
+  }, [elapsed, data]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 4500);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   const handleAnswer = useCallback((orderIndex: number, answer: string) => {
     setAnswers((prev) => ({ ...prev, [orderIndex]: answer }));
@@ -459,6 +485,21 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
 
       {showConfirm && <ConfirmModal />}
       {showPauseModal && <PauseModal />}
+
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[90] px-4 py-2 rounded-lg text-sm font-semibold shadow-lg"
+          style={{
+            background: "rgba(245,158,11,0.95)",
+            color: "#1B2B4B",
+            border: "1px solid rgba(245,158,11,0.6)",
+          }}
+        >
+          ⏱ {toast}
+        </div>
+      )}
     </div>
   );
 }
