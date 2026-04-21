@@ -15,6 +15,16 @@ import MatchingHeadingsQuestion from "./questions/MatchingHeadingsQuestion";
 import SentenceCompletionQuestion from "./questions/SentenceCompletionQuestion";
 import SummaryCompletionQuestion from "./questions/SummaryCompletionQuestion";
 
+const KNOWN_QUESTION_TYPES = [
+  "mcq",
+  "tfng",
+  "ynng",
+  "matching",
+  "matching_headings",
+  "sentence_completion",
+  "summary_completion",
+] as const;
+
 interface ReadingScreenProps {
   passageId: string;
   onComplete: (result: ReadingPracticeResult) => void;
@@ -319,6 +329,11 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
           {q.type === "matching_headings" && <MatchingHeadingsQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
           {q.type === "sentence_completion" && <SentenceCompletionQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
           {q.type === "summary_completion" && <SummaryCompletionQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {!KNOWN_QUESTION_TYPES.includes(q.type) && (
+            <div className="rounded-lg p-3 text-sm" style={{ background: "var(--color-bg-secondary)", border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)" }}>
+              Dạng câu hỏi này đang được cập nhật, vui lòng thử dạng khác.
+            </div>
+          )}
         </div>
       ))}
     </div>
