@@ -5,6 +5,7 @@
  */
 
 const { query } = require("../config/db");
+const { scoreSubmission } = require("../services/readingScoring");
 
 async function listPassages({ difficulty, topic, limit = 20 } = {}) {
   let sql = `SELECT id, topic, difficulty, estimated_minutes, passage_title, created_at
@@ -52,27 +53,13 @@ async function getPassagesByDifficulties(difficulties, countPerDifficulty = 1) {
 
 async function scoreAnswers(passageId, answers) {
   const { rows: questions } = await query(
-    `SELECT id, order_index, correct_answer, explanation, type FROM reading_questions WHERE passage_id = $1 ORDER BY order_index`,
+    `SELECT id, order_index, correct_answer, explanation, type, options
+       FROM reading_questions
+      WHERE passage_id = $1
+      ORDER BY order_index`,
     [passageId]
   );
-
-  let correct = 0;
-  const results = questions.map((q) => {
-    const userAnswer = answers.find((a) => a.question_id === q.id || a.order_index === q.order_index);
-    const isCorrect = userAnswer && userAnswer.answer.toLowerCase() === q.correct_answer.toLowerCase();
-    if (isCorrect) correct++;
-    return {
-      question_id: q.id,
-      order_index: q.order_index,
-      type: q.type,
-      user_answer: userAnswer?.answer || null,
-      correct_answer: q.correct_answer,
-      is_correct: !!isCorrect,
-      explanation: q.explanation,
-    };
-  });
-
-  return { correct, total: questions.length, results };
+  return scoreSubmission(questions, answers);
 }
 
 module.exports = {
