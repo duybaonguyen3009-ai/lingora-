@@ -6,6 +6,7 @@
  */
 
 const writingService = require("../services/writingService");
+const writingQuestionsService = require("../services/writingQuestionsService");
 const { sendSuccess, sendError } = require("../response");
 
 // UUID v4 pattern
@@ -111,8 +112,112 @@ async function getHistory(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// GET /api/v1/writing/questions
+// ---------------------------------------------------------------------------
+
+/**
+ * List curated writing prompts with filters.
+ *
+ * Query: ?task_type=&topic=&difficulty=&excludeAttempted=true&page=1&limit=24
+ */
+async function listQuestions(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 24));
+    const offset = (page - 1) * limit;
+
+    const rows = await writingQuestionsService.listQuestions(userId, {
+      taskType: req.query.task_type,
+      topic: req.query.topic,
+      difficulty: req.query.difficulty,
+      excludeAttempted: req.query.excludeAttempted === "true",
+      limit,
+      offset,
+    });
+
+    return sendSuccess(res, {
+      data: { questions: rows, page, limit },
+      message: "Questions retrieved",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/writing/questions/topics
+// ---------------------------------------------------------------------------
+
+async function listQuestionTopics(req, res, next) {
+  try {
+    const topics = await writingQuestionsService.listTopics(req.query.task_type);
+    return sendSuccess(res, { data: { topics } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/writing/questions/:id
+// ---------------------------------------------------------------------------
+
+async function getQuestion(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    if (!UUID_RE.test(id)) {
+      return sendError(res, { status: 400, message: "Valid question id (UUID) is required" });
+    }
+    const question = await writingQuestionsService.getQuestion(userId, id);
+    if (!question) {
+      return sendError(res, { status: 404, message: "Writing question not found" });
+    }
+    return sendSuccess(res, { data: question });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/v1/writing/questions/:id/attempt
+// ---------------------------------------------------------------------------
+
+async function recordAttempt(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    if (!UUID_RE.test(id)) {
+      return sendError(res, { status: 400, message: "Valid question id (UUID) is required" });
+    }
+    const result = await writingQuestionsService.recordAttempt(userId, id);
+    return sendSuccess(res, { data: result, status: 201, message: "Attempt recorded" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/writing/full-test/start
+// ---------------------------------------------------------------------------
+
+async function startFullTest(req, res, next) {
+  try {
+    const pair = await writingQuestionsService.startFullTest();
+    return sendSuccess(res, { data: pair });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   submitEssay,
   getResult,
   getHistory,
+  listQuestions,
+  listQuestionTopics,
+  getQuestion,
+  recordAttempt,
+  startFullTest,
 };
