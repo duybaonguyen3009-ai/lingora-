@@ -217,7 +217,7 @@ export default function ReadingTab({ onClose }: { onClose: () => void }) {
       label: `Passage ${i + 1}`,
       score: b.score,
       total: b.total,
-      band: null, // per-section band requires the IELTS table on FE; deferred
+      band: b.band,
     }));
     return (
       <ReadingResult

@@ -125,7 +125,10 @@ export default function ReadingResult({ result, onPracticeAgain, onClose, sectio
                   <div className="text-base font-semibold" style={{ color: "var(--color-text)" }}>
                     {s.score}/{s.total}
                   </div>
-                  <div className="text-xs" style={{ color: "var(--color-text-secondary)" }}>
+                  <div
+                    className="text-xs font-medium"
+                    style={{ color: s.band != null ? bandColor(s.band) : "var(--color-text-secondary)" }}
+                  >
                     {s.band != null ? `Band ${s.band.toFixed(1)}` : `${sPct}%`}
                   </div>
                 </div>

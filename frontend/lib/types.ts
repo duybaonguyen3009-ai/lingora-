@@ -904,6 +904,8 @@ export interface ReadingFullTestResult {
     passage_id: string;
     score: number;
     total: number;
+    /** Per-section band, computed by backend via canonical readingScoreToBand. */
+    band: number;
     per_question_results: ReadingQuestionResult[];
   }>;
 }
