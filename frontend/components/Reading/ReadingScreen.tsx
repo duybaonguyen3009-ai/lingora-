@@ -14,6 +14,11 @@ import YnngQuestion from "./questions/YnngQuestion";
 import MatchingHeadingsQuestion from "./questions/MatchingHeadingsQuestion";
 import SentenceCompletionQuestion from "./questions/SentenceCompletionQuestion";
 import SummaryCompletionQuestion from "./questions/SummaryCompletionQuestion";
+import MatchingInformationQuestion from "./questions/MatchingInformationQuestion";
+import MatchingFeaturesQuestion from "./questions/MatchingFeaturesQuestion";
+import MatchingSentenceEndingsQuestion from "./questions/MatchingSentenceEndingsQuestion";
+import NoteTableDiagramCompletion from "./questions/NoteTableDiagramCompletion";
+import ShortAnswerQuestion from "./questions/ShortAnswerQuestion";
 
 const KNOWN_QUESTION_TYPES = [
   "mcq",
@@ -23,6 +28,11 @@ const KNOWN_QUESTION_TYPES = [
   "matching_headings",
   "sentence_completion",
   "summary_completion",
+  "matching_information",
+  "matching_features",
+  "matching_sentence_endings",
+  "note_table_diagram_completion",
+  "short_answer",
 ] as const;
 
 interface ReadingScreenProps {
@@ -329,6 +339,11 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
           {q.type === "matching_headings" && <MatchingHeadingsQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
           {q.type === "sentence_completion" && <SentenceCompletionQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
           {q.type === "summary_completion" && <SummaryCompletionQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {q.type === "matching_information" && <MatchingInformationQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {q.type === "matching_features" && <MatchingFeaturesQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {q.type === "matching_sentence_endings" && <MatchingSentenceEndingsQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {q.type === "note_table_diagram_completion" && <NoteTableDiagramCompletion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
+          {q.type === "short_answer" && <ShortAnswerQuestion options={q.options} answer={answers[q.order_index] || ""} onAnswer={(a) => handleAnswer(q.order_index, a)} />}
           {!KNOWN_QUESTION_TYPES.includes(q.type) && (
             <div className="rounded-lg p-3 text-sm" style={{ background: "var(--color-bg-secondary)", border: "1px dashed var(--color-border)", color: "var(--color-text-secondary)" }}>
               Dạng câu hỏi này đang được cập nhật, vui lòng thử dạng khác.

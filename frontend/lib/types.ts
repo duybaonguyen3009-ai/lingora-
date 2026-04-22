@@ -800,7 +800,12 @@ export type ReadingQuestionType =
   | 'ynng'
   | 'matching_headings'
   | 'sentence_completion'
-  | 'summary_completion';
+  | 'summary_completion'
+  | 'matching_information'
+  | 'matching_features'
+  | 'matching_sentence_endings'
+  | 'note_table_diagram_completion'
+  | 'short_answer';
 
 export interface ReadingQuestion {
   id: string;
