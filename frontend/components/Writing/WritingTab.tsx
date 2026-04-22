@@ -69,18 +69,37 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   const [paused, setPaused] = useState(false);
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
-  // Exam-input toast (shown when paste is blocked on essay textarea)
-  const [pasteToast, setPasteToast] = useState(false);
+  // Ephemeral toast slot — used for paste-blocked, time warnings, timeout messages.
+  const [toast, setToast] = useState<{ message: string; key: number } | null>(null);
+  // Fire-once guards for Practice-mode time warnings.
+  const [warned5m, setWarned5m] = useState(false);
+  const [warned1m, setWarned1m] = useState(false);
 
   // Scratch notes — kept in local state, reset on task switch / submit, NOT persisted to DB
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<Record<WritingTaskType, string>>({ task1: "", task2: "" });
 
   useEffect(() => {
-    if (!pasteToast) return;
-    const t = setTimeout(() => setPasteToast(false), 2000);
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(t);
-  }, [pasteToast]);
+  }, [toast]);
+
+  const showToast = useCallback((message: string) => {
+    setToast({ message, key: Date.now() });
+  }, []);
+
+  // Practice-mode time warnings — fire once at 5min and 1min remaining.
+  useEffect(() => {
+    if (mode !== "practice" || !timerStarted || paused || timeLeft === null) return;
+    if (!warned5m && timeLeft <= 300 && timeLeft > 60) {
+      setWarned5m(true);
+      showToast("Còn 5 phút");
+    } else if (!warned1m && timeLeft <= 60 && timeLeft > 0) {
+      setWarned1m(true);
+      showToast("Còn 1 phút — cố lên!");
+    }
+  }, [mode, timerStarted, paused, timeLeft, warned5m, warned1m, showToast]);
 
   // Result state
   const [activeSubmissionId, setActiveSubmissionId] = useState<string | null>(null);
@@ -207,6 +226,9 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setTimerStarted(false);
     setPaused(false);
     setPauseConfirmOpen(false);
+    setWarned5m(false);
+    setWarned1m(false);
+    setToast(null);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -480,7 +502,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                 <textarea
                   value={essayText}
                   onChange={handleEssayChange}
-                  onPaste={(e) => { e.preventDefault(); setPasteToast(true); }}
+                  onPaste={(e) => { e.preventDefault(); showToast("Thi thật không cho phép paste"); }}
                   onContextMenu={(e) => e.preventDefault()}
                   spellCheck={false}
                   autoCorrect="off"
@@ -662,9 +684,10 @@ export default function WritingTab({ onClose }: WritingTabProps) {
         onClose={() => setNotesOpen(false)}
       />
 
-      {/* Paste-blocked toast */}
-      {pasteToast && (
+      {/* Ephemeral toast (paste-blocked, time warnings, etc.) */}
+      {toast && (
         <div
+          key={toast.key}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg"
           style={{
             background: "rgba(27,43,75,0.95)",
@@ -672,8 +695,9 @@ export default function WritingTab({ onClose }: WritingTabProps) {
             border: "1px solid rgba(255,255,255,0.12)",
           }}
           role="status"
+          aria-live="polite"
         >
-          Thi thật không cho phép paste
+          {toast.message}
         </div>
       )}
 
