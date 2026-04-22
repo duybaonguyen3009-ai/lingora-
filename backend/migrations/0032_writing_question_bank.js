@@ -61,7 +61,7 @@ exports.up = (pgm) => {
     supplementary: {
       type: "jsonb",
       notNull: true,
-      default: "'{}'::jsonb",
+      default: pgm.func("'{}'::jsonb"),
     },
     review_status: {
       type: "varchar(20)",
