@@ -63,6 +63,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [timerStarted, setTimerStarted] = useState(false);
 
+  // Exam-input toast (shown when paste is blocked on essay textarea)
+  const [pasteToast, setPasteToast] = useState(false);
+
+  useEffect(() => {
+    if (!pasteToast) return;
+    const t = setTimeout(() => setPasteToast(false), 2000);
+    return () => clearTimeout(t);
+  }, [pasteToast]);
+
   // Result state
   const [activeSubmissionId, setActiveSubmissionId] = useState<string | null>(null);
   const { submission, loading: resultLoading, polling } = useWritingResult(
@@ -439,6 +448,11 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                 <textarea
                   value={essayText}
                   onChange={handleEssayChange}
+                  onPaste={(e) => { e.preventDefault(); setPasteToast(true); }}
+                  onContextMenu={(e) => e.preventDefault()}
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
                   placeholder={`Start writing your ${taskType === "task1" ? "Task 1" : "Task 2"} response...\n\nMinimum ${minRequired} words required. Timer starts on first keystroke.`}
                   rows={16}
                   maxLength={5000}
@@ -552,6 +566,21 @@ export default function WritingTab({ onClose }: WritingTabProps) {
           </div>
         )}
       </div>
+
+      {/* Paste-blocked toast */}
+      {pasteToast && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg"
+          style={{
+            background: "rgba(27,43,75,0.95)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.12)",
+          }}
+          role="status"
+        >
+          Thi thật không cho phép paste
+        </div>
+      )}
 
       <ProUpgradeModal
         isOpen={proModalOpen}
