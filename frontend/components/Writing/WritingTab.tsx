@@ -66,6 +66,8 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   // Timer state
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [timerStarted, setTimerStarted] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
   // Exam-input toast (shown when paste is blocked on essay textarea)
   const [pasteToast, setPasteToast] = useState(false);
@@ -102,12 +104,12 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    if (!timerStarted || timeLeft === null || timeLeft <= 0) return;
+    if (!timerStarted || paused || timeLeft === null || timeLeft <= 0) return;
     const interval = setInterval(() => {
       setTimeLeft((t) => (t !== null ? t - 1 : null));
     }, 1000);
     return () => clearInterval(interval);
-  }, [timerStarted, timeLeft]);
+  }, [timerStarted, paused, timeLeft]);
 
   // When polling completes, move to result phase
   if (phase === "pending" && submission && submission.status !== "pending") {
@@ -203,6 +205,8 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setSubmitError(null);
     setTimeLeft(null);
     setTimerStarted(false);
+    setPaused(false);
+    setPauseConfirmOpen(false);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -277,6 +281,12 @@ export default function WritingTab({ onClose }: WritingTabProps) {
           timerSeconds={timeLeft}
           totalSeconds={TOTAL_TIMER_SECONDS}
           modeBadge={mode === "full_test" ? "Full Test" : undefined}
+          canPause={mode === "practice" && timeLeft !== null && timeLeft > 0}
+          paused={paused}
+          onPauseToggle={() => {
+            if (paused) setPaused(false);
+            else setPauseConfirmOpen(true);
+          }}
         />
       )}
 
@@ -475,6 +485,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                   spellCheck={false}
                   autoCorrect="off"
                   autoCapitalize="off"
+                  readOnly={paused}
                   placeholder={`Start writing your ${taskType === "task1" ? "Task 1" : "Task 2"} response...\n\nMinimum ${minRequired} words required. Timer starts on first keystroke.`}
                   rows={16}
                   maxLength={5000}
@@ -484,6 +495,8 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                     border: `1px solid ${wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)"}`,
                     color: "var(--color-text)",
                     minHeight: "360px",
+                    opacity: paused ? 0.5 : 1,
+                    cursor: paused ? "not-allowed" : "text",
                   }}
                   onFocus={(e) => {
                     if (!(wordCount > 0 && wordCount < minRequired)) {
@@ -588,6 +601,58 @@ export default function WritingTab({ onClose }: WritingTabProps) {
           </div>
         )}
       </div>
+
+      {/* Pause-confirmation modal (Practice mode) */}
+      {pauseConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[65] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setPauseConfirmOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4"
+            style={{
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "0 20px 48px rgba(0,0,0,0.25)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <div className="text-base font-semibold" style={{ color: "var(--color-text)" }}>
+                Tạm dừng luyện tập?
+              </div>
+              <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>
+                Đây chỉ là luyện tập. Nếu bận thì dừng lại, xong quay lại tiếp tục nhé.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPauseConfirmOpen(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium cursor-pointer"
+                style={{
+                  background: "var(--color-bg-secondary)",
+                  color: "var(--color-text)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                Tiếp tục làm
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPaused(true); setPauseConfirmOpen(false); }}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer"
+                style={{ background: "#1B2B4B" }}
+              >
+                Tạm dừng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scratch-notes modal */}
       <WritingNotesModal

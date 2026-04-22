@@ -12,6 +12,10 @@ interface WritingTimerBarProps {
   totalSeconds: number | null;
   /** Optional mode label rendered as a pill (e.g. "Full Test"). Hidden when omitted. */
   modeBadge?: string;
+  /** When true, renders a Pause/Resume button wired to onPauseToggle. Practice mode only. */
+  canPause?: boolean;
+  paused?: boolean;
+  onPauseToggle?: () => void;
 }
 
 function formatHMS(seconds: number): string {
@@ -21,18 +25,18 @@ function formatHMS(seconds: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export default function WritingTimerBar({ timerSeconds, totalSeconds, modeBadge }: WritingTimerBarProps) {
+export default function WritingTimerBar({ timerSeconds, totalSeconds, modeBadge, canPause, paused, onPauseToggle }: WritingTimerBarProps) {
   if (timerSeconds === null || totalSeconds === null || totalSeconds <= 0) return null;
 
   const elapsedRatio = Math.min(Math.max((totalSeconds - timerSeconds) / totalSeconds, 0), 1);
   const remainingRatio = 1 - elapsedRatio;
 
-  // Color bands based on elapsed time
-  const isRed = elapsedRatio > 0.9;
-  const isYellow = elapsedRatio > 0.7 && !isRed;
+  // Color bands based on elapsed time — paused state overrides with a muted grey.
+  const isRed = !paused && elapsedRatio > 0.9;
+  const isYellow = !paused && elapsedRatio > 0.7 && !isRed;
 
-  const barColor = isRed ? "#EF4444" : isYellow ? "#F59E0B" : "#16A34A";
-  const textColor = isRed ? "#EF4444" : isYellow ? "#F59E0B" : "var(--color-text)";
+  const barColor = paused ? "var(--color-text-tertiary)" : isRed ? "#EF4444" : isYellow ? "#F59E0B" : "#16A34A";
+  const textColor = paused ? "var(--color-text-tertiary)" : isRed ? "#EF4444" : isYellow ? "#F59E0B" : "var(--color-text)";
 
   return (
     <div
@@ -90,6 +94,31 @@ export default function WritingTimerBar({ timerSeconds, totalSeconds, modeBadge 
             }}
           />
         </div>
+        {canPause && onPauseToggle && (
+          <button
+            type="button"
+            onClick={onPauseToggle}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium shrink-0 cursor-pointer"
+            style={{
+              background: paused ? "rgba(0,168,150,0.12)" : "var(--color-bg-secondary)",
+              color: paused ? "#00A896" : "var(--color-text-secondary)",
+              border: "1px solid var(--color-border)",
+            }}
+            aria-label={paused ? "Tiếp tục làm bài" : "Tạm dừng"}
+          >
+            {paused ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                <span>Tiếp tục</span>
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+                <span>Tạm dừng</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
