@@ -30,7 +30,9 @@ interface WritingTabProps {
 // ---------------------------------------------------------------------------
 
 const MIN_WORDS: Record<WritingTaskType, number> = { task1: 150, task2: 250 };
-const TIMER_SECONDS: Record<WritingTaskType, number> = { task1: 1200, task2: 2400 };
+// Combined 60-min pool shared across Task 1 + Task 2 (real IELTS behavior).
+const TOTAL_TIMER_SECONDS = 3600;
+const EMPTY_TASK_BUFFERS: Record<WritingTaskType, string> = { task1: "", task2: "" };
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -48,12 +50,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   const limits = useDailyLimits();
   const [proModalOpen, setProModalOpen] = useState(false);
 
-  // Editor state
+  // Editor state — per-task buffers so the user can freely switch without losing work.
   const [taskType, setTaskType] = useState<WritingTaskType>("task2");
-  const [questionText, setQuestionText] = useState("");
-  const [essayText, setEssayText] = useState("");
+  const [questionTexts, setQuestionTexts] = useState<Record<WritingTaskType, string>>(EMPTY_TASK_BUFFERS);
+  const [essayTexts, setEssayTexts] = useState<Record<WritingTaskType, string>>(EMPTY_TASK_BUFFERS);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const questionText = questionTexts[taskType];
+  const essayText = essayTexts[taskType];
 
   // Timer state
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -114,29 +119,31 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   // Handlers
   // ---------------------------------------------------------------------------
 
-  // Handle task type switch — resets essay, timer, and scratch notes
+  // Task switch keeps all state — combined-timer mode preserves both buffers + timer.
   const handleTaskSwitch = useCallback((type: WritingTaskType) => {
     setTaskType(type);
-    setQuestionText("");
-    setEssayText("");
-    setTimeLeft(null);
-    setTimerStarted(false);
-    setNotes({ task1: "", task2: "" });
     setNotesOpen(false);
   }, []);
 
-  // Handle essay text change — starts timer on first keystroke
+  const handleQuestionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const next = e.target.value;
+      setQuestionTexts((prev) => ({ ...prev, [taskType]: next }));
+    },
+    [taskType]
+  );
+
+  // Essay change — starts the combined 60-min pool on first keystroke in either task.
   const handleEssayChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newText = e.target.value;
-      // Start timer on first keystroke
-      if (essayText === "" && newText.length > 0 && !timerStarted) {
-        setTimeLeft(TIMER_SECONDS[taskType]);
+      if (!timerStarted && newText.length > 0) {
+        setTimeLeft(TOTAL_TIMER_SECONDS);
         setTimerStarted(true);
       }
-      setEssayText(newText);
+      setEssayTexts((prev) => ({ ...prev, [taskType]: newText }));
     },
-    [essayText, timerStarted, taskType]
+    [timerStarted, taskType]
   );
 
   // Submit essay
@@ -159,7 +166,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
       });
       setActiveSubmissionId(result.submissionId);
       setPhase("pending");
-      setNotes({ task1: "", task2: "" });
+      setNotes(EMPTY_TASK_BUFFERS);
       // Refetch limits so the RemainingBadge updates after a successful submit.
       limits.refetch();
     } catch (err) {
@@ -183,11 +190,12 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setPhase("result");
   }, []);
 
-  // Reset to editor
+  // Reset to editor — wipes both task buffers and the combined timer.
   const handleNewEssay = useCallback(() => {
     setPhase("editor");
-    setEssayText("");
-    setQuestionText("");
+    setEssayTexts(EMPTY_TASK_BUFFERS);
+    setQuestionTexts(EMPTY_TASK_BUFFERS);
+    setNotes(EMPTY_TASK_BUFFERS);
     setActiveSubmissionId(null);
     setSubmitError(null);
     setTimeLeft(null);
@@ -260,11 +268,11 @@ export default function WritingTab({ onClose }: WritingTabProps) {
         )}
       </div>
 
-      {/* Global Timer Bar — shown only during active editor session */}
+      {/* Global Timer Bar — combined 60-min pool shared across both tasks */}
       {phase === "editor" && timerStarted && (
         <WritingTimerBar
           timerSeconds={timeLeft}
-          totalSeconds={TIMER_SECONDS[taskType]}
+          totalSeconds={TOTAL_TIMER_SECONDS}
         />
       )}
 
@@ -320,7 +328,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                     color: taskType === t ? "#fff" : "var(--color-text-secondary)",
                   }}
                 >
-                  {t === "task1" ? "Task 1 (20 min)" : "Task 2 (40 min)"}
+                  {t === "task1" ? "Task 1 (~20 min)" : "Task 2 (~40 min)"}
                 </button>
               ))}
             </div>
@@ -365,7 +373,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
 
                 <textarea
                   value={questionText}
-                  onChange={(e) => setQuestionText(e.target.value)}
+                  onChange={handleQuestionChange}
                   placeholder={
                     taskType === "task1"
                       ? "Paste or type the Task 1 question here (e.g., describe the chart)..."
