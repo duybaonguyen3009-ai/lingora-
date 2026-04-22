@@ -68,6 +68,8 @@ export default function WritingTab({ onClose }: WritingTabProps) {
   const [timerStarted, setTimerStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
+  const [timeOutFired, setTimeOutFired] = useState(false);
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
 
   // Ephemeral toast slot — used for paste-blocked, time warnings, timeout messages.
   const [toast, setToast] = useState<{ message: string; key: number } | null>(null);
@@ -208,6 +210,17 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     }
   }, [isValid, submitting, taskType, questionText, essayText, limits]);
 
+  // Timer reaching 0 — Practice shows a toast, Full Test auto-submits once.
+  useEffect(() => {
+    if (!timerStarted || timeLeft === null || timeLeft > 0 || timeOutFired) return;
+    setTimeOutFired(true);
+    if (mode === "practice") {
+      showToast("Hết giờ — tùy bạn quyết tiếp");
+    } else {
+      void handleSubmit();
+    }
+  }, [timerStarted, timeLeft, timeOutFired, mode, showToast, handleSubmit]);
+
   // View a submission from history
   const handleHistorySelect = useCallback((submissionId: string) => {
     setActiveSubmissionId(submissionId);
@@ -228,6 +241,8 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setPauseConfirmOpen(false);
     setWarned5m(false);
     setWarned1m(false);
+    setTimeOutFired(false);
+    setSubmitConfirmOpen(false);
     setToast(null);
   }, []);
 
@@ -557,9 +572,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Submit Button — Full Test with time remaining asks for confirmation first */}
             <button
-              onClick={handleSubmit}
+              onClick={() => {
+                if (mode === "full_test" && timerStarted && timeLeft !== null && timeLeft > 0) {
+                  setSubmitConfirmOpen(true);
+                } else {
+                  void handleSubmit();
+                }
+              }}
               disabled={!isValid || submitting}
               className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
               style={{
@@ -623,6 +644,58 @@ export default function WritingTab({ onClose }: WritingTabProps) {
           </div>
         )}
       </div>
+
+      {/* Full Test manual submit confirmation (time remaining > 0) */}
+      {submitConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[65] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setSubmitConfirmOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-sm rounded-xl p-5 flex flex-col gap-4"
+            style={{
+              background: "var(--color-bg-card)",
+              border: "1px solid var(--color-border)",
+              boxShadow: "0 20px 48px rgba(0,0,0,0.25)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <div className="text-base font-semibold" style={{ color: "var(--color-text)" }}>
+                Bạn muốn kiểm tra lại bài không?
+              </div>
+              <p className="text-sm mt-1.5" style={{ color: "var(--color-text-secondary)" }}>
+                Còn thời gian để xem lại trước khi nộp.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSubmitConfirmOpen(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium cursor-pointer"
+                style={{
+                  background: "var(--color-bg-secondary)",
+                  color: "var(--color-text)",
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                Xem lại
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSubmitConfirmOpen(false); void handleSubmit(); }}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white cursor-pointer"
+                style={{ background: "linear-gradient(135deg, #00A896, #00C4B0)" }}
+              >
+                Nộp bài
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pause-confirmation modal (Practice mode) */}
       {pauseConfirmOpen && (
