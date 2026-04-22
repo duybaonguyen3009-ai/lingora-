@@ -4,9 +4,12 @@
  * SummaryCompletionQuestion — renders a summary paragraph with inline blanks.
  *
  * with_bank mode: each word_bank chip is HTML5-draggable; each blank is a
- *   drop target. Words are not consumed on drop (a learner can reuse a word
- *   across blanks — the real IELTS rule varies, and the backend validates
- *   correctness independently).
+ *   drop target. Each chip is single-use: once placed in a blank, the chip
+ *   in the bank is greyed out and non-draggable. Clearing the blank (click
+ *   the filled slot) restores that chip. If the bank lists the same word
+ *   twice (rare but allowed), the chips are tracked positionally — the
+ *   first N instances are marked used where N is how many blanks contain
+ *   that word.
  * without_bank mode: inline text inputs with live "No more than N words"
  *   counter, mirroring SentenceCompletion.
  *
@@ -74,6 +77,28 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
     for (const b of payload.blanks ?? []) m[b.id] = b;
     return m;
   }, [payload.blanks]);
+
+  // One-use word bank: walk the bank left-to-right, mark the first N
+  // chips of each word as "used" where N is how many blanks currently
+  // hold that word. Repeated words in the bank are tracked positionally
+  // so a 2x-listed word can be used twice.
+  const chipUsed = useMemo(() => {
+    const bank = payload.word_bank ?? [];
+    const usageByWord: Record<string, number> = {};
+    for (const v of Object.values(values)) {
+      if (v) usageByWord[v] = (usageByWord[v] || 0) + 1;
+    }
+    const consumed: Record<string, number> = {};
+    return bank.map((w) => {
+      const cap = usageByWord[w] || 0;
+      const taken = consumed[w] || 0;
+      if (taken < cap) {
+        consumed[w] = taken + 1;
+        return true;
+      }
+      return false;
+    });
+  }, [payload.word_bank, values]);
 
   const write = (id: string, text: string) => {
     const next = { ...values, [id]: text };
@@ -154,21 +179,28 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
         <div className="rounded-lg p-3" style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)" }}>
           <div className="text-xs font-semibold mb-2 uppercase" style={{ color: "var(--color-text-tertiary)" }}>Word bank</div>
           <div className="flex flex-wrap gap-2">
-            {(payload.word_bank ?? []).map((w, i) => (
-              <span
-                key={`${w}-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, w)}
-                className="px-2.5 py-1 rounded-md text-sm cursor-grab active:cursor-grabbing select-none"
-                style={{
-                  background: "var(--color-bg-card)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text)",
-                }}
-              >
-                {w}
-              </span>
-            ))}
+            {(payload.word_bank ?? []).map((w, i) => {
+              const used = chipUsed[i];
+              return (
+                <span
+                  key={`${w}-${i}`}
+                  draggable={!used}
+                  onDragStart={(e) => !used && onDragStart(e, w)}
+                  aria-disabled={used}
+                  className={`px-2.5 py-1 rounded-md text-sm select-none ${
+                    used ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
+                  }`}
+                  style={{
+                    background: "var(--color-bg-card)",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text)",
+                    opacity: used ? 0.4 : 1,
+                  }}
+                >
+                  {w}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
