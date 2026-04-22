@@ -4,14 +4,19 @@
  * Pure scoring functions for IELTS reading question types. No DB access.
  *
  * Type-specific scoring rules:
- *   mcq / tfng / ynng / matching  → 1 point if exact normalized match.
- *   matching_headings             → 1 point per paragraph correctly matched.
- *                                    Max = number of paragraphs in mapping.
- *   sentence_completion           → 1 point per blank. Accepts any string in
- *                                    correct_answers (case-insensitive, trim).
- *                                    Rejects if token count > max_words.
- *   summary_completion            → per-blank scoring. When mode='with_bank',
- *                                    answer must also be present in word_bank.
+ *   mcq / tfng / ynng / matching       → 1 pt if exact normalized match.
+ *   matching_headings, matching_information,
+ *   matching_features, matching_sentence_endings
+ *                                      → per-key correct_mapping. 1 pt per
+ *                                        correctly placed key. Max = key count.
+ *   sentence_completion                → per-blank, case-insensitive trim,
+ *                                        rejects if tokens > max_words.
+ *   summary_completion                 → per-blank. When mode='with_bank' the
+ *                                        answer must also exist in word_bank.
+ *   note_table_diagram_completion      → per-blank, identical to
+ *                                        sentence_completion semantics.
+ *   short_answer                       → per-sub-question, case-insensitive
+ *                                        trim, max_words enforced.
  *
  * All string comparison is normalize(s) = s.trim().toLowerCase().
  * Word count: whitespace-split tokens (matches common IELTS convention where
@@ -46,7 +51,12 @@ function scoreSingleChoice(question, userAnswerRaw) {
   };
 }
 
-function scoreMatchingHeadings(question, userAnswerRaw) {
+/**
+ * Generic per-key mapping scorer. Used by matching_headings,
+ * matching_information, matching_features, matching_sentence_endings — all
+ * share the {correct_mapping: {key: target}} payload contract.
+ */
+function scoreMappingQuestion(question, userAnswerRaw) {
   const mapping = (question.options && question.options.correct_mapping) || {};
   const keys = Object.keys(mapping);
   const user = parseJsonLoose(userAnswerRaw);
@@ -56,7 +66,7 @@ function scoreMatchingHeadings(question, userAnswerRaw) {
     const c = normalize(mapping[k]);
     const ok = !!u && u === c;
     if (ok) points += 1;
-    return { paragraph: k, user: user[k] ?? null, correct: mapping[k], is_correct: ok };
+    return { key: k, user: user[k] ?? null, correct: mapping[k], is_correct: ok };
   });
   return {
     points,
@@ -116,6 +126,21 @@ function scoreSummaryCompletion(question, userAnswerRaw) {
   return r;
 }
 
+function scoreNoteTableDiagramCompletion(question, userAnswerRaw) {
+  const blanks = (question.options && question.options.blanks) || [];
+  const r = scoreBlanks(blanks, userAnswerRaw);
+  r.correct_answer = blanks.map((b) => ({ id: b.id, accepted: b.correct_answers }));
+  return r;
+}
+
+function scoreShortAnswer(question, userAnswerRaw) {
+  // Each sub-question has the same shape as a blank: {id, max_words, correct_answers}.
+  const items = (question.options && question.options.questions) || [];
+  const r = scoreBlanks(items, userAnswerRaw);
+  r.correct_answer = items.map((b) => ({ id: b.id, accepted: b.correct_answers }));
+  return r;
+}
+
 function scoreQuestion(question, userAnswerRaw) {
   switch (question.type) {
     case "mcq":
@@ -124,11 +149,18 @@ function scoreQuestion(question, userAnswerRaw) {
     case "matching":
       return scoreSingleChoice(question, userAnswerRaw);
     case "matching_headings":
-      return scoreMatchingHeadings(question, userAnswerRaw);
+    case "matching_information":
+    case "matching_features":
+    case "matching_sentence_endings":
+      return scoreMappingQuestion(question, userAnswerRaw);
     case "sentence_completion":
       return scoreSentenceCompletion(question, userAnswerRaw);
     case "summary_completion":
       return scoreSummaryCompletion(question, userAnswerRaw);
+    case "note_table_diagram_completion":
+      return scoreNoteTableDiagramCompletion(question, userAnswerRaw);
+    case "short_answer":
+      return scoreShortAnswer(question, userAnswerRaw);
     default:
       return {
         points: 0,

@@ -184,6 +184,133 @@ describe("scoreQuestion — summary_completion", () => {
   });
 });
 
+describe("scoreQuestion — matching_information / matching_features / matching_sentence_endings", () => {
+  test("matching_information: paragraph reuse + partial credit", () => {
+    const q = {
+      type: "matching_information",
+      correct_answer: "{}",
+      options: {
+        statements: [{ id: "s1" }, { id: "s2" }, { id: "s3" }],
+        paragraph_labels: ["A", "B", "C"],
+        correct_mapping: { s1: "A", s2: "C", s3: "A" }, // A used twice
+      },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ s1: "A", s2: "B", s3: "A" }));
+    expect(r.points).toBe(2);
+    expect(r.max).toBe(3);
+    expect(r.is_correct).toBe(false);
+  });
+
+  test("matching_features: case-insensitive feature letter match", () => {
+    const q = {
+      type: "matching_features",
+      correct_answer: "{}",
+      options: {
+        features: [{ letter: "A" }, { letter: "B" }],
+        items: [{ id: "i1" }, { id: "i2" }],
+        correct_mapping: { i1: "A", i2: "B" },
+      },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ i1: "a", i2: "B" }));
+    expect(r.points).toBe(2);
+  });
+
+  test("matching_sentence_endings: distractor endings don't crash scoring", () => {
+    const q = {
+      type: "matching_sentence_endings",
+      correct_answer: "{}",
+      options: {
+        sentence_starts: [{ id: "s1" }, { id: "s2" }],
+        endings: [{ letter: "A" }, { letter: "B" }, { letter: "C" }, { letter: "D" }],
+        correct_mapping: { s1: "C", s2: "A" },
+      },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ s1: "C", s2: "D" }));
+    expect(r.points).toBe(1);
+    expect(r.max).toBe(2);
+    expect(r.sub_results[1].is_correct).toBe(false);
+  });
+});
+
+describe("scoreQuestion — note_table_diagram_completion", () => {
+  const baseBlanks = [
+    { id: "b1", max_words: 2, correct_answers: ["the lab", "lab"] },
+    { id: "b2", max_words: 1, correct_answers: ["1965"] },
+  ];
+
+  test("note format: per-blank scoring", () => {
+    const q = {
+      type: "note_table_diagram_completion",
+      correct_answer: "lab",
+      options: { format: "note", structure: "Built in {{b1}}, opened {{b2}}.", blanks: baseBlanks },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ b1: "the lab", b2: "1965" }));
+    expect(r.points).toBe(2);
+    expect(r.is_correct).toBe(true);
+  });
+
+  test("table format: max_words enforced", () => {
+    const q = {
+      type: "note_table_diagram_completion",
+      correct_answer: "1965",
+      options: { format: "table", structure: { rows: [["{{b2}}"]] }, blanks: baseBlanks },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ b1: "this is the laboratory", b2: "1965" }));
+    expect(r.points).toBe(1);
+    expect(r.sub_results[0].reason).toBe("exceeds_max_words");
+  });
+
+  test("diagram format: blanks scored regardless of structure shape", () => {
+    const q = {
+      type: "note_table_diagram_completion",
+      correct_answer: "lab",
+      options: {
+        format: "diagram",
+        structure: { image_url: "https://x", caption: "Fig 1" },
+        blanks: baseBlanks,
+      },
+    };
+    const r = scoreQuestion(q, JSON.stringify({ b1: "lab", b2: "1965" }));
+    expect(r.points).toBe(2);
+  });
+});
+
+describe("scoreQuestion — short_answer", () => {
+  const q = {
+    type: "short_answer",
+    correct_answer: "in the lab",
+    options: {
+      questions: [
+        { id: "q1", question_text: "Where?", max_words: 3, correct_answers: ["in the lab", "lab"] },
+        { id: "q2", question_text: "When?", max_words: 1, correct_answers: ["1965"] },
+      ],
+    },
+  };
+
+  test("happy path → full points", () => {
+    const r = scoreQuestion(q, JSON.stringify({ q1: "in the lab", q2: "1965" }));
+    expect(r.points).toBe(2);
+    expect(r.is_correct).toBe(true);
+  });
+
+  test("alternate accepted answer + case-insensitive trim", () => {
+    const r = scoreQuestion(q, JSON.stringify({ q1: "  LAB  ", q2: "1965" }));
+    expect(r.points).toBe(2);
+  });
+
+  test("exceeds max_words → that sub-question scores 0", () => {
+    const r = scoreQuestion(q, JSON.stringify({ q1: "deep in the underground lab", q2: "1965" }));
+    expect(r.points).toBe(1);
+    expect(r.sub_results[0].reason).toBe("exceeds_max_words");
+  });
+
+  test("missing answer → 0 for that sub-question", () => {
+    const r = scoreQuestion(q, JSON.stringify({ q1: "lab" }));
+    expect(r.points).toBe(1);
+    expect(r.sub_results[1].is_correct).toBe(false);
+  });
+});
+
 describe("scoreQuestion — unsupported type", () => {
   test("returns 0 points with unsupported_type flag", () => {
     const r = scoreQuestion({ type: "diagram_labelling", correct_answer: "X" }, "X");
