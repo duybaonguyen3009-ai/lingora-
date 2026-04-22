@@ -594,7 +594,7 @@ export async function skipOnboarding(): Promise<unknown> {
 // Reading
 // ---------------------------------------------------------------------------
 
-import type { ReadingPassageSummary, ReadingPassageFull, ReadingPracticeResult, ReadingFullTestData, ReadingFullTestResult } from "./types";
+import type { ReadingPassageSummary, ReadingPassageFull, ReadingPracticeResult, ReadingFullTestData, ReadingFullTestResult, ReadingTestSummary } from "./types";
 
 export async function getReadingPassages(filters?: { difficulty?: string; topic?: string; limit?: number }): Promise<{ passages: ReadingPassageSummary[] }> {
   const params = new URLSearchParams();
@@ -612,11 +612,19 @@ export async function submitReadingPractice(body: { passage_id: string; answers:
   return apiPostAuth<ReadingPracticeResult>("/reading/submit", body);
 }
 
-export async function startReadingFullTest(): Promise<ReadingFullTestData> {
-  return apiPostAuth<ReadingFullTestData>("/reading/full-test/start", {});
+export async function listReadingFullTests(): Promise<{ tests: ReadingTestSummary[] }> {
+  return apiFetchAuth<{ tests: ReadingTestSummary[] }>("/reading/full-tests");
 }
 
-export async function submitReadingFullTest(body: { passage_results: Array<{ passage_id: string; answers: Array<{ question_id?: string; order_index?: number; answer: string }> }>; time_seconds: number }): Promise<ReadingFullTestResult> {
+export async function startReadingFullTest(testId?: string): Promise<ReadingFullTestData> {
+  return apiPostAuth<ReadingFullTestData>("/reading/full-test/start", testId ? { test_id: testId } : {});
+}
+
+export async function submitReadingFullTest(body: {
+  passage_results: Array<{ passage_id: string; answers: Array<{ question_id?: string; order_index?: number; answer: string }> }>;
+  time_seconds: number;
+  started_at?: string;
+}): Promise<ReadingFullTestResult> {
   return apiPostAuth<ReadingFullTestResult>("/reading/full-test/submit", body);
 }
 

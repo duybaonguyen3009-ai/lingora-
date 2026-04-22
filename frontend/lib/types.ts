@@ -872,9 +872,25 @@ export interface ReadingPracticeResult {
   per_question_results: ReadingQuestionResult[];
 }
 
+export type ReadingTestDifficulty = 'foundation' | 'standard' | 'challenge';
+
+export interface ReadingTestSummary {
+  id: string;
+  title: string;
+  difficulty_tier: ReadingTestDifficulty;
+  passage_1_id: string;
+  passage_2_id: string;
+  passage_3_id: string;
+  created_at: string;
+}
+
 export interface ReadingFullTestData {
+  test_id: string | null;
+  test_title: string | null;
+  difficulty_tier: ReadingTestDifficulty | null;
   passages: ReadingPassageFull[];
   time_limit: number;
+  started_at: string;
 }
 
 export interface ReadingFullTestResult {
@@ -882,6 +898,8 @@ export interface ReadingFullTestResult {
   total_questions: number;
   band_estimate: number;
   time_seconds: number;
+  /** True when server-trusted elapsed > 60 min + 10 sec grace. */
+  late?: boolean;
   passage_breakdowns: Array<{
     passage_id: string;
     score: number;
