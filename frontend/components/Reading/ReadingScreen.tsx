@@ -40,6 +40,12 @@ interface ReadingScreenProps {
   passageId: string;
   onComplete: (result: ReadingPracticeResult) => void;
   onClose: () => void;
+  /**
+   * 'practice' (default): pause + per-passage 20-min warnings on, free flow.
+   * 'full_test': no pause, no per-passage warnings — the parent (Full Test
+   * runner) owns the unified 60-min countdown and auto-submit.
+   */
+  mode?: "practice" | "full_test";
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +116,8 @@ function ReadingSkeleton() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function ReadingScreen({ passageId, onComplete, onClose }: ReadingScreenProps) {
+export default function ReadingScreen({ passageId, onComplete, onClose, mode = "practice" }: ReadingScreenProps) {
+  const isPractice = mode === "practice";
   const [data, setData] = useState<ReadingPassageFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -142,8 +149,10 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   // Time-warning toasts — Practice Mode uses a fixed 20-minute budget per
   // passage, matching IELTS Academic Reading (60 min / 3 passages). No hard
   // cutoff: at 0:00 we fire one "Hết giờ" toast and leave the user in control.
+  // Full Test Mode skips this — the parent runner owns the unified 60-min
+  // countdown and its own warnings (10/5/1 min) + auto-submit.
   useEffect(() => {
-    if (!data) return;
+    if (!data || !isPractice) return;
     const BUDGET_SECONDS = 20 * 60;
     const fiveLeft = BUDGET_SECONDS - 300;
     const oneLeft = BUDGET_SECONDS - 60;
@@ -159,7 +168,7 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
       warningsFiredRef.current.zero = true;
       setToast("Hết giờ — tùy bạn quyết tiếp");
     }
-  }, [elapsed, data]);
+  }, [elapsed, data, isPractice]);
 
   useEffect(() => {
     if (!toast) return;
@@ -247,23 +256,26 @@ export default function ReadingScreen({ passageId, onComplete, onClose }: Readin
   const QuestionsPanel = () => (
     <div className="flex flex-col gap-5">
       <QuestionNav />
-      {/* Timer + Pause */}
-      <div className="flex items-center justify-center gap-3">
-        <div className="text-sm font-mono" style={{ color: elapsed > 300 ? "#F59E0B" : "var(--color-text-secondary)" }}>
-          {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+      {/* Timer + Pause — Practice only. Full Test parent owns the unified
+          60-min countdown and disables pause. */}
+      {isPractice && (
+        <div className="flex items-center justify-center gap-3">
+          <div className="text-sm font-mono" style={{ color: elapsed > 300 ? "#F59E0B" : "var(--color-text-secondary)" }}>
+            {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+          </div>
+          <button
+            onClick={() => (paused ? setPaused(false) : setShowPauseModal(true))}
+            className="text-xs px-2.5 py-1 rounded-md font-medium transition-all"
+            style={{
+              background: paused ? "rgba(0,168,150,0.12)" : "var(--color-bg-secondary)",
+              color: paused ? "#00A896" : "var(--color-text-secondary)",
+              border: `1px solid ${paused ? "rgba(0,168,150,0.3)" : "var(--color-border)"}`,
+            }}
+          >
+            {paused ? "Tiếp tục" : "Tạm dừng"}
+          </button>
         </div>
-        <button
-          onClick={() => (paused ? setPaused(false) : setShowPauseModal(true))}
-          className="text-xs px-2.5 py-1 rounded-md font-medium transition-all"
-          style={{
-            background: paused ? "rgba(0,168,150,0.12)" : "var(--color-bg-secondary)",
-            color: paused ? "#00A896" : "var(--color-text-secondary)",
-            border: `1px solid ${paused ? "rgba(0,168,150,0.3)" : "var(--color-border)"}`,
-          }}
-        >
-          {paused ? "Tiếp tục" : "Tạm dừng"}
-        </button>
-      </div>
+      )}
       {/* Questions */}
       {questions.map((q) => (
         <div key={q.order_index} id={`q-${q.order_index}`} className="rounded-lg p-4" style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}>
