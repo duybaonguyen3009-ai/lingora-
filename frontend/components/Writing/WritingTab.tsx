@@ -290,7 +290,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
 
         {/* ── EDITOR PHASE ── */}
         {phase === "editor" && (
-          <div className="flex flex-col gap-5 max-w-2xl mx-auto">
+          <div className="flex flex-col gap-4 max-w-[1400px] mx-auto">
             {/* Remaining-count badge (free users only, hides for Pro) */}
             {!limits.loading && !limits.isPro && limits.writing.allowed && (
               <div className="flex justify-start">
@@ -349,95 +349,127 @@ export default function WritingTab({ onClose }: WritingTabProps) {
               )}
             </div>
 
-            {/* Question */}
-            <div
-              className="rounded-xl p-5"
-              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
-            >
-              <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-text-tertiary)" }}>
-                Question / Prompt
-              </label>
-              <textarea
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder={
-                  taskType === "task1"
-                    ? "Paste or type the Task 1 question here (e.g., describe the chart)..."
-                    : "Paste or type the Task 2 essay question here..."
-                }
-                rows={3}
-                className="w-full rounded-lg px-4 py-3 text-sm resize-none transition-colors focus:outline-none"
-                style={{
-                  background: "var(--color-bg-secondary)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text)",
-                }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = "#00A896"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)"; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }}
-              />
-            </div>
+            {/* Split view: prompt panel (left) + answer panel (right) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ── PROMPT PANEL (left) ── */}
+              <div
+                className="rounded-xl p-5 flex flex-col gap-3"
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
+                    Question / Prompt
+                  </label>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                    style={{ background: "rgba(0,168,150,0.08)", color: "#00A896" }}
+                  >
+                    {taskType === "task1" ? "Task 1" : "Task 2"}
+                  </span>
+                </div>
 
-            {/* Essay Textarea */}
-            <div
-              className="rounded-xl p-5"
-              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
-                  Your Essay
-                </label>
-                {/* Live word count badge */}
-                <span
-                  className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                  style={{
-                    background: wordCount >= minRequired
-                      ? "rgba(22,163,74,0.08)"
-                      : wordCount > 0
-                        ? "rgba(239,68,68,0.08)"
-                        : "var(--surface-subtle)",
-                    color: wordCount >= minRequired
-                      ? "#16A34A"
-                      : wordCount > 0
-                        ? "#EF4444"
-                        : "var(--color-text-tertiary)",
-                  }}
-                >
-                  {wordCount} / {minRequired} words
-                </span>
-              </div>
-              <textarea
-                value={essayText}
-                onChange={handleEssayChange}
-                placeholder={`Start writing your ${taskType === "task1" ? "Task 1" : "Task 2"} response...\n\nMinimum ${minRequired} words required. Timer starts on first keystroke.`}
-                rows={16}
-                maxLength={5000}
-                className="w-full rounded-lg px-4 py-3 text-sm leading-[1.8] resize-none transition-colors focus:outline-none"
-                style={{
-                  background: "var(--color-bg-secondary)",
-                  border: `1px solid ${wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)"}`,
-                  color: "var(--color-text)",
-                  minHeight: "320px",
-                }}
-                onFocus={(e) => {
-                  if (!(wordCount > 0 && wordCount < minRequired)) {
-                    e.currentTarget.style.borderColor = "#00A896";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)";
+                {/* Task 1 chart placeholder — real chart wired in Item 4 of rework plan */}
+                {taskType === "task1" && (
+                  <div
+                    className="rounded-lg flex flex-col items-center justify-center gap-2 py-8"
+                    style={{
+                      background: "var(--color-bg-secondary)",
+                      border: "1px dashed var(--color-border)",
+                      minHeight: "160px",
+                    }}
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-text-tertiary)" }}>
+                      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    <p className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>
+                      Chart / visual data will appear here
+                    </p>
+                  </div>
+                )}
+
+                <textarea
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder={
+                    taskType === "task1"
+                      ? "Paste or type the Task 1 question here (e.g., describe the chart)..."
+                      : "Paste or type the Task 2 essay question here..."
                   }
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              />
-              {/* Word count progress bar */}
-              <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "var(--surface-skeleton)" }}>
-                <div
-                  className="h-full rounded-full transition-all"
+                  rows={taskType === "task1" ? 4 : 8}
+                  className="w-full rounded-lg px-4 py-3 text-sm resize-none transition-colors focus:outline-none flex-1"
                   style={{
-                    width: `${Math.min((wordCount / minRequired) * 100, 100)}%`,
-                    background: wordCount >= minRequired ? "#16A34A" : wordCount > minRequired * 0.5 ? "#F59E0B" : "#EF4444",
+                    background: "var(--color-bg-secondary)",
+                    border: "1px solid var(--color-border)",
+                    color: "var(--color-text)",
+                    minHeight: "120px",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#00A896"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }}
+                />
+              </div>
+
+              {/* ── ANSWER PANEL (right) ── */}
+              <div
+                className="rounded-xl p-5 flex flex-col gap-3"
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
+                    Your Essay
+                  </label>
+                  {/* Live word count badge */}
+                  <span
+                    className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                    style={{
+                      background: wordCount >= minRequired
+                        ? "rgba(22,163,74,0.08)"
+                        : wordCount > 0
+                          ? "rgba(239,68,68,0.08)"
+                          : "var(--surface-subtle)",
+                      color: wordCount >= minRequired
+                        ? "#16A34A"
+                        : wordCount > 0
+                          ? "#EF4444"
+                          : "var(--color-text-tertiary)",
+                    }}
+                  >
+                    {wordCount} / {minRequired} words
+                  </span>
+                </div>
+                <textarea
+                  value={essayText}
+                  onChange={handleEssayChange}
+                  placeholder={`Start writing your ${taskType === "task1" ? "Task 1" : "Task 2"} response...\n\nMinimum ${minRequired} words required. Timer starts on first keystroke.`}
+                  rows={16}
+                  maxLength={5000}
+                  className="w-full rounded-lg px-4 py-3 text-sm leading-[1.8] resize-none transition-colors focus:outline-none flex-1"
+                  style={{
+                    background: "var(--color-bg-secondary)",
+                    border: `1px solid ${wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)"}`,
+                    color: "var(--color-text)",
+                    minHeight: "360px",
+                  }}
+                  onFocus={(e) => {
+                    if (!(wordCount > 0 && wordCount < minRequired)) {
+                      e.currentTarget.style.borderColor = "#00A896";
+                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)";
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = wordCount > 0 && wordCount < minRequired ? "rgba(239,68,68,0.3)" : "var(--color-border)";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 />
+                {/* Word count progress bar */}
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--surface-skeleton)" }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min((wordCount / minRequired) * 100, 100)}%`,
+                      background: wordCount >= minRequired ? "#16A34A" : wordCount > minRequired * 0.5 ? "#F59E0B" : "#EF4444",
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
