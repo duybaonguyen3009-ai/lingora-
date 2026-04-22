@@ -69,24 +69,29 @@ function tokenize(text: string): Segment[] {
 
 export default function SummaryCompletionQuestion({ options, answer, onAnswer }: Props) {
   const payload = options as Payload | null;
-  if (!payload) return null;
 
+  // All hooks must run unconditionally on every render to satisfy
+  // react-hooks/rules-of-hooks. Internals are defensive against a null
+  // payload so the early return below stays safe.
   const values = useMemo(() => parseAnswer(answer), [answer]);
-  const segments = useMemo(() => tokenize(payload.summary_text_with_blanks ?? ""), [payload.summary_text_with_blanks]);
+  const segments = useMemo(
+    () => tokenize(payload?.summary_text_with_blanks ?? ""),
+    [payload?.summary_text_with_blanks],
+  );
   const blanksById = useMemo(() => {
     const m: Record<string, Blank> = {};
-    for (const b of payload.blanks ?? []) m[b.id] = b;
+    for (const b of payload?.blanks ?? []) m[b.id] = b;
     return m;
-  }, [payload.blanks]);
+  }, [payload?.blanks]);
+
+  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<number>();
 
   // One-use word bank: walk the bank left-to-right, mark the first N
   // chips of each word as "used" where N is how many blanks currently
   // hold that word. Repeated words in the bank are tracked positionally
   // so a 2x-listed word can be used twice.
-  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<number>();
-
   const chipUsed = useMemo(() => {
-    const bank = payload.word_bank ?? [];
+    const bank = payload?.word_bank ?? [];
     const usageByWord: Record<string, number> = {};
     for (const v of Object.values(values)) {
       if (v) usageByWord[v] = (usageByWord[v] || 0) + 1;
@@ -101,7 +106,9 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
       }
       return false;
     });
-  }, [payload.word_bank, values]);
+  }, [payload?.word_bank, values]);
+
+  if (!payload) return null;
 
   const write = (id: string, text: string) => {
     const next = { ...values, [id]: text };
