@@ -10,6 +10,8 @@
 interface WritingTimerBarProps {
   timerSeconds: number | null;
   totalSeconds: number | null;
+  /** Optional mode label rendered as a pill (e.g. "Full Test"). Hidden when omitted. */
+  modeBadge?: string;
 }
 
 function formatHMS(seconds: number): string {
@@ -19,7 +21,7 @@ function formatHMS(seconds: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export default function WritingTimerBar({ timerSeconds, totalSeconds }: WritingTimerBarProps) {
+export default function WritingTimerBar({ timerSeconds, totalSeconds, modeBadge }: WritingTimerBarProps) {
   if (timerSeconds === null || totalSeconds === null || totalSeconds <= 0) return null;
 
   const elapsedRatio = Math.min(Math.max((totalSeconds - timerSeconds) / totalSeconds, 0), 1);
@@ -64,6 +66,18 @@ export default function WritingTimerBar({ timerSeconds, totalSeconds }: WritingT
         >
           {formatHMS(Math.max(timerSeconds, 0))}
         </span>
+        {modeBadge && (
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0"
+            style={{
+              background: "rgba(27,43,75,0.92)",
+              color: "#fff",
+              letterSpacing: "0.1em",
+            }}
+          >
+            {modeBadge}
+          </span>
+        )}
         <div
           className="flex-1 h-2 rounded-full overflow-hidden"
           style={{ background: "var(--surface-skeleton)" }}

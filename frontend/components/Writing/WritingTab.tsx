@@ -43,10 +43,13 @@ function countWords(text: string): number {
 // ---------------------------------------------------------------------------
 
 type Phase = "intro" | "editor" | "pending" | "result" | "history";
+type WritingMode = "practice" | "full_test";
 
 export default function WritingTab({ onClose }: WritingTabProps) {
   // Phase management — starts with intro
   const [phase, setPhase] = useState<Phase>("intro");
+  // Practice (default) is pauseable and forgiving; Full Test mimics the real exam.
+  const [mode, setMode] = useState<WritingMode>("practice");
   const limits = useDailyLimits();
   const [proModalOpen, setProModalOpen] = useState(false);
 
@@ -273,6 +276,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
         <WritingTimerBar
           timerSeconds={timeLeft}
           totalSeconds={TOTAL_TIMER_SECONDS}
+          modeBadge={mode === "full_test" ? "Full Test" : undefined}
         />
       )}
 
@@ -312,6 +316,33 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                 onUpgrade={() => setProModalOpen(true)}
               />
             )}
+
+            {/* Mode Selector — locked once the timer starts */}
+            <div
+              className="flex rounded-xl overflow-hidden"
+              style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+            >
+              {(["practice", "full_test"] as WritingMode[]).map((m) => {
+                const active = mode === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => !timerStarted && setMode(m)}
+                    disabled={timerStarted}
+                    className="flex-1 py-2.5 text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{
+                      background: active ? (m === "full_test" ? "#1B2B4B" : "var(--color-accent)") : "transparent",
+                      color: active ? "#fff" : "var(--color-text-secondary)",
+                      cursor: timerStarted ? "not-allowed" : "pointer",
+                    }}
+                    title={timerStarted ? "Không đổi mode khi đang làm bài" : undefined}
+                  >
+                    {m === "practice" ? "Luyện tập" : "Bắt đầu Full Test"}
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Task Type Toggle */}
             <div
