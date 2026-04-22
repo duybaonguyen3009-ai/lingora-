@@ -14,6 +14,7 @@
  */
 
 import { DragEvent, useMemo } from "react";
+import { useTapToDrop } from "@/lib/useTapToDrop";
 
 interface Statement {
   id: string;
@@ -46,6 +47,7 @@ export default function MatchingInformationQuestion({ options, answer, onAnswer 
   const statements = payload?.statements ?? [];
   const labels = payload?.paragraph_labels ?? [];
   const mapping = useMemo(() => parseMapping(answer), [answer]);
+  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<string>();
 
   if (!statements.length || !labels.length) return null;
 
@@ -79,33 +81,44 @@ export default function MatchingInformationQuestion({ options, answer, onAnswer 
     if (id) place(id, null);
   };
 
-  const StatementChip = ({ s, onClickRemove }: { s: Statement; onClickRemove?: () => void }) => (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, s.id)}
-      onClick={onClickRemove}
-      role={onClickRemove ? "button" : undefined}
-      className="rounded-lg px-3 py-2 text-sm cursor-grab active:cursor-grabbing select-none"
-      style={{
-        background: "var(--color-bg-card)",
-        border: "1px solid var(--color-border)",
-        color: "var(--color-text)",
-      }}
-    >
-      {s.text}
-    </div>
-  );
+  const StatementChip = ({ s, onClickRemove }: { s: Statement; onClickRemove?: () => void }) => {
+    const isSel = selected === s.id;
+    return (
+      <div
+        draggable={!isTouch}
+        onDragStart={!isTouch ? (e) => onDragStart(e, s.id) : undefined}
+        onClick={isTouch ? () => selectItem(s.id) : onClickRemove}
+        role={isTouch || onClickRemove ? "button" : undefined}
+        aria-pressed={isTouch ? isSel : undefined}
+        className={`rounded-lg px-3 py-2 text-sm select-none ${
+          isTouch ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+        }`}
+        style={{
+          background: "var(--color-bg-card)",
+          border: `1px solid ${isSel ? "#00A896" : "var(--color-border)"}`,
+          boxShadow: isSel ? "0 0 0 2px rgba(0,168,150,0.35)" : "none",
+          color: "var(--color-text)",
+        }}
+      >
+        {s.text}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-3">
       <div
-        onDragOver={onDragOver}
-        onDrop={onDropToTray}
+        onDragOver={!isTouch ? onDragOver : undefined}
+        onDrop={!isTouch ? onDropToTray : undefined}
+        onClick={isTouch && selected ? () => dropOnZone((id) => place(id, null)) : undefined}
         className="rounded-lg p-3 min-h-[3rem]"
-        style={{ background: "var(--color-bg-secondary)", border: "1px dashed var(--color-border)" }}
+        style={{
+          background: "var(--color-bg-secondary)",
+          border: `1px dashed ${isTouch && selected ? "#00A896" : "var(--color-border)"}`,
+        }}
       >
         <div className="text-xs font-semibold mb-2 uppercase" style={{ color: "var(--color-text-tertiary)" }}>
-          Statements (kéo vào đoạn phù hợp)
+          Statements {isTouch ? "(chạm để chọn, rồi chạm vào đoạn)" : "(kéo vào đoạn phù hợp)"}
         </div>
         {unplaced.length === 0 ? (
           <div className="text-xs italic" style={{ color: "var(--color-text-tertiary)" }}>
@@ -121,15 +134,19 @@ export default function MatchingInformationQuestion({ options, answer, onAnswer 
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
         {labels.map((label) => {
           const inBucket = placedIn(label);
+          const isDropTarget = isTouch && selected != null;
           return (
             <div
               key={label}
-              onDragOver={onDragOver}
-              onDrop={(e) => onDropToBucket(e, label)}
-              className="rounded-lg p-2 min-h-[5rem]"
+              onDragOver={!isTouch ? onDragOver : undefined}
+              onDrop={!isTouch ? (e) => onDropToBucket(e, label) : undefined}
+              onClick={isDropTarget ? () => dropOnZone((id) => place(id, label)) : undefined}
+              className={`rounded-lg p-2 min-h-[5rem] ${isDropTarget ? "cursor-pointer" : ""}`}
               style={{
                 background: "var(--color-bg-secondary)",
-                border: `1px dashed ${inBucket.length ? "rgba(0,168,150,0.4)" : "var(--color-border)"}`,
+                border: `1px dashed ${
+                  isDropTarget ? "#00A896" : inBucket.length ? "rgba(0,168,150,0.4)" : "var(--color-border)"
+                }`,
               }}
             >
               <div className="flex items-center gap-2 mb-1">

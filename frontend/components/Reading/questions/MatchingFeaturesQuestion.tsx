@@ -12,6 +12,7 @@
  */
 
 import { DragEvent, useMemo } from "react";
+import { useTapToDrop } from "@/lib/useTapToDrop";
 
 interface Item { id: string; text: string }
 interface Feature { letter: string; text: string }
@@ -44,6 +45,7 @@ export default function MatchingFeaturesQuestion({ options, answer, onAnswer }: 
   const features = payload?.features ?? [];
   const allowReuse = !!payload?.allow_reuse;
   const mapping = useMemo(() => parseMapping(answer), [answer]);
+  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<string>();
 
   if (!items.length || !features.length) return null;
 
@@ -85,33 +87,46 @@ export default function MatchingFeaturesQuestion({ options, answer, onAnswer }: 
     if (id) place(id, null);
   };
 
-  const ItemChip = ({ it, onClickRemove }: { it: Item; onClickRemove?: () => void }) => (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, it.id)}
-      onClick={onClickRemove}
-      role={onClickRemove ? "button" : undefined}
-      className="rounded-lg px-3 py-2 text-sm cursor-grab active:cursor-grabbing select-none"
-      style={{
-        background: "var(--color-bg-card)",
-        border: "1px solid var(--color-border)",
-        color: "var(--color-text)",
-      }}
-    >
-      {it.text}
-    </div>
-  );
+  const ItemChip = ({ it, onClickRemove }: { it: Item; onClickRemove?: () => void }) => {
+    const isSel = selected === it.id;
+    return (
+      <div
+        draggable={!isTouch}
+        onDragStart={!isTouch ? (e) => onDragStart(e, it.id) : undefined}
+        onClick={isTouch ? () => selectItem(it.id) : onClickRemove}
+        role={isTouch || onClickRemove ? "button" : undefined}
+        aria-pressed={isTouch ? isSel : undefined}
+        className={`rounded-lg px-3 py-2 text-sm select-none ${
+          isTouch ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+        }`}
+        style={{
+          background: "var(--color-bg-card)",
+          border: `1px solid ${isSel ? "#00A896" : "var(--color-border)"}`,
+          boxShadow: isSel ? "0 0 0 2px rgba(0,168,150,0.35)" : "none",
+          color: "var(--color-text)",
+        }}
+      >
+        {it.text}
+      </div>
+    );
+  };
+
+  const isDropTarget = isTouch && selected != null;
 
   return (
     <div className="flex flex-col gap-3">
       <div
-        onDragOver={onDragOver}
-        onDrop={onDropToTray}
-        className="rounded-lg p-3 min-h-[3rem]"
-        style={{ background: "var(--color-bg-secondary)", border: "1px dashed var(--color-border)" }}
+        onDragOver={!isTouch ? onDragOver : undefined}
+        onDrop={!isTouch ? onDropToTray : undefined}
+        onClick={isDropTarget ? () => dropOnZone((id) => place(id, null)) : undefined}
+        className={`rounded-lg p-3 min-h-[3rem] ${isDropTarget ? "cursor-pointer" : ""}`}
+        style={{
+          background: "var(--color-bg-secondary)",
+          border: `1px dashed ${isDropTarget ? "#00A896" : "var(--color-border)"}`,
+        }}
       >
         <div className="text-xs font-semibold mb-2 uppercase" style={{ color: "var(--color-text-tertiary)" }}>
-          Items {allowReuse && "(có thể dùng feature nhiều lần)"}
+          Items {allowReuse && "(có thể dùng feature nhiều lần)"} {isTouch && "— chạm để chọn"}
         </div>
         {unplaced.length === 0 ? (
           <div className="text-xs italic" style={{ color: "var(--color-text-tertiary)" }}>Đã sắp xếp hết.</div>
@@ -128,12 +143,15 @@ export default function MatchingFeaturesQuestion({ options, answer, onAnswer }: 
           return (
             <div
               key={f.letter}
-              onDragOver={onDragOver}
-              onDrop={(e) => onDropToFeature(e, f.letter)}
-              className="rounded-lg p-2"
+              onDragOver={!isTouch ? onDragOver : undefined}
+              onDrop={!isTouch ? (e) => onDropToFeature(e, f.letter) : undefined}
+              onClick={isDropTarget ? () => dropOnZone((id) => place(id, f.letter)) : undefined}
+              className={`rounded-lg p-2 ${isDropTarget ? "cursor-pointer" : ""}`}
               style={{
                 background: "var(--color-bg-secondary)",
-                border: `1px dashed ${inBucket.length ? "rgba(0,168,150,0.4)" : "var(--color-border)"}`,
+                border: `1px dashed ${
+                  isDropTarget ? "#00A896" : inBucket.length ? "rgba(0,168,150,0.4)" : "var(--color-border)"
+                }`,
               }}
             >
               <div className="flex items-start gap-2 mb-1.5">

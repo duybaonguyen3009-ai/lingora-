@@ -19,6 +19,7 @@
  */
 
 import { DragEvent } from "react";
+import { useTapToDrop } from "@/lib/useTapToDrop";
 
 interface Props {
   q: { options: Record<string, unknown> | null };
@@ -95,6 +96,8 @@ function DragDropVariant({
   answer: string;
   onAnswer: (a: string) => void;
 }) {
+  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<string>();
+
   const onDragStart = (ev: DragEvent<HTMLDivElement>, key: string) => {
     ev.dataTransfer.setData("text/plain", key);
     ev.dataTransfer.effectAllowed = "move";
@@ -118,45 +121,62 @@ function DragDropVariant({
         style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)" }}
       >
         <div className="text-xs font-semibold mb-2 uppercase" style={{ color: "var(--color-text-tertiary)" }}>
-          Choices (kéo vào ô bên dưới)
+          {isTouch ? "Choices (chạm để chọn, rồi chạm vào ô bên dưới)" : "Choices (kéo vào ô bên dưới)"}
         </div>
         <div className="flex flex-wrap gap-2">
-          {entries.map(([key, text]) => (
-            <div
-              key={key}
-              draggable
-              onDragStart={(e) => onDragStart(e, key)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm cursor-grab active:cursor-grabbing select-none"
-              style={{
-                background: answer === key ? "rgba(0,168,150,0.12)" : "var(--color-bg-card)",
-                border: `1px solid ${answer === key ? "rgba(0,168,150,0.4)" : "var(--color-border)"}`,
-                color: "var(--color-text)",
-                opacity: answer === key ? 0.5 : 1,
-              }}
-            >
-              <span
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-semibold"
-                style={{ background: "rgba(0,168,150,0.12)", color: "#00A896" }}
+          {entries.map(([key, text]) => {
+            const isSel = selected === key;
+            return (
+              <div
+                key={key}
+                draggable={!isTouch}
+                onDragStart={!isTouch ? (e) => onDragStart(e, key) : undefined}
+                onClick={isTouch ? () => selectItem(key) : undefined}
+                role={isTouch ? "button" : undefined}
+                aria-pressed={isTouch ? isSel : undefined}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm select-none ${
+                  isTouch ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+                }`}
+                style={{
+                  background: answer === key ? "rgba(0,168,150,0.12)" : "var(--color-bg-card)",
+                  border: `1px solid ${
+                    isSel ? "#00A896" : answer === key ? "rgba(0,168,150,0.4)" : "var(--color-border)"
+                  }`,
+                  boxShadow: isSel ? "0 0 0 2px rgba(0,168,150,0.35)" : "none",
+                  color: "var(--color-text)",
+                  opacity: answer === key ? 0.5 : 1,
+                }}
               >
-                {key}
-              </span>
-              <span className="line-clamp-1">{String(text)}</span>
-            </div>
-          ))}
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-semibold"
+                  style={{ background: "rgba(0,168,150,0.12)", color: "#00A896" }}
+                >
+                  {key}
+                </span>
+                <span className="line-clamp-1">{String(text)}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-        onClick={() => answer && onAnswer("")}
+        onDragOver={!isTouch ? onDragOver : undefined}
+        onDrop={!isTouch ? onDrop : undefined}
+        onClick={() => {
+          if (isTouch && selected) {
+            dropOnZone((id) => onAnswer(id));
+          } else if (answer) {
+            onAnswer("");
+          }
+        }}
         role="button"
         tabIndex={0}
-        aria-label={answer ? "Đáp án đã chọn (bấm để xoá)" : "Kéo đáp án vào đây"}
+        aria-label={answer ? "Đáp án đã chọn (bấm để xoá)" : isTouch ? "Chạm vào đây sau khi chọn đáp án" : "Kéo đáp án vào đây"}
         className="rounded-lg p-3 min-h-[3.5rem] flex items-center justify-center cursor-pointer"
         style={{
           background: answer ? "rgba(0,168,150,0.06)" : "var(--color-bg-secondary)",
-          border: `1px dashed ${answer ? "rgba(0,168,150,0.5)" : "var(--color-border)"}`,
+          border: `1px dashed ${answer ? "rgba(0,168,150,0.5)" : isTouch && selected ? "#00A896" : "var(--color-border)"}`,
         }}
       >
         {selectedEntry ? (
@@ -171,7 +191,7 @@ function DragDropVariant({
           </div>
         ) : (
           <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>
-            Kéo một đáp án vào đây
+            {isTouch && selected ? "Chạm để đặt vào đây" : isTouch ? "Chọn đáp án trước, rồi chạm vào đây" : "Kéo một đáp án vào đây"}
           </span>
         )}
       </div>

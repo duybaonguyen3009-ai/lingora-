@@ -21,6 +21,7 @@
 
 import { DragEvent, useMemo } from "react";
 import { countWords } from "@/lib/wordCount";
+import { useTapToDrop } from "@/lib/useTapToDrop";
 
 interface Blank {
   id: string;
@@ -82,6 +83,8 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
   // chips of each word as "used" where N is how many blanks currently
   // hold that word. Repeated words in the bank are tracked positionally
   // so a 2x-listed word can be used twice.
+  const { isTouch, selected, selectItem, dropOnZone } = useTapToDrop<number>();
+
   const chipUsed = useMemo(() => {
     const bank = payload.word_bank ?? [];
     const usageByWord: Record<string, number> = {};
@@ -127,20 +130,32 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
     const v = values[id] ?? "";
 
     if (isWithBank) {
+      const tapDropping = isTouch && selected != null;
       return (
         <span
           key={`blank-${id}`}
-          onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, id)}
-          onClick={() => v && write(id, "")}
+          onDragOver={!isTouch ? onDragOver : undefined}
+          onDrop={!isTouch ? (e) => onDrop(e, id) : undefined}
+          onClick={() => {
+            if (tapDropping) {
+              dropOnZone((idx) => {
+                const word = (payload.word_bank ?? [])[idx];
+                if (word) write(id, word);
+              });
+            } else if (v) {
+              write(id, "");
+            }
+          }}
           role="button"
           tabIndex={0}
-          aria-label={v ? `Đã điền "${v}". Bấm để xoá.` : "Kéo từ vào ô này"}
+          aria-label={v ? `Đã điền "${v}". Bấm để xoá.` : isTouch ? "Chạm để đặt từ đã chọn" : "Kéo từ vào ô này"}
           className="inline-flex items-center mx-1 px-2 py-0.5 rounded-md align-baseline cursor-pointer select-none"
           style={{
             minWidth: "5rem",
             background: v ? "rgba(0,168,150,0.12)" : "var(--color-bg-secondary)",
-            border: `1px dashed ${v ? "rgba(0,168,150,0.4)" : "var(--color-border)"}`,
+            border: `1px dashed ${
+              tapDropping ? "#00A896" : v ? "rgba(0,168,150,0.4)" : "var(--color-border)"
+            }`,
             color: v ? "#00A896" : "var(--color-text-tertiary)",
           }}
         >
@@ -181,18 +196,27 @@ export default function SummaryCompletionQuestion({ options, answer, onAnswer }:
           <div className="flex flex-wrap gap-2">
             {(payload.word_bank ?? []).map((w, i) => {
               const used = chipUsed[i];
+              const isSel = selected === i;
               return (
                 <span
                   key={`${w}-${i}`}
-                  draggable={!used}
-                  onDragStart={(e) => !used && onDragStart(e, w)}
+                  draggable={!isTouch && !used}
+                  onDragStart={!isTouch ? (e) => !used && onDragStart(e, w) : undefined}
+                  onClick={isTouch && !used ? () => selectItem(i) : undefined}
+                  role={isTouch ? "button" : undefined}
+                  aria-pressed={isTouch ? isSel : undefined}
                   aria-disabled={used}
                   className={`px-2.5 py-1 rounded-md text-sm select-none ${
-                    used ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"
+                    used
+                      ? "cursor-not-allowed"
+                      : isTouch
+                      ? "cursor-pointer"
+                      : "cursor-grab active:cursor-grabbing"
                   }`}
                   style={{
                     background: "var(--color-bg-card)",
-                    border: "1px solid var(--color-border)",
+                    border: `1px solid ${isSel ? "#00A896" : "var(--color-border)"}`,
+                    boxShadow: isSel ? "0 0 0 2px rgba(0,168,150,0.35)" : "none",
                     color: "var(--color-text)",
                     opacity: used ? 0.4 : 1,
                   }}
