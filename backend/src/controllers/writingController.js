@@ -314,6 +314,25 @@ async function listFullTests(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
+// GET /api/v1/writing/full-tests/in-progress
+// ---------------------------------------------------------------------------
+
+/**
+ * Most-recent in-progress Full Test for the authenticated user, hydrated
+ * with both prompt questions + time_remaining_seconds. Returns null when
+ * the user has no pending run.
+ */
+async function getInProgressFullTest(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const data = await writingFullTestService.getInProgress(userId);
+    return sendSuccess(res, { data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // GET /api/v1/writing/submissions/:id/progress-context
 // ---------------------------------------------------------------------------
 
@@ -397,6 +416,7 @@ module.exports = {
   finalizeFullTest,
   getFullTest,
   listFullTests,
+  getInProgressFullTest,
   getProgressContext,
   getTrend,
   getSelfCompare,

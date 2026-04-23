@@ -197,10 +197,45 @@ async function listRuns(userId, page = 1, limit = 10) {
   return { runs: rows, page, limit };
 }
 
+const FULL_TEST_TOTAL_SECONDS = 3600;
+
+/**
+ * Most recent in_progress Full Test for a user, hydrated with both prompt
+ * questions and a time_remaining_seconds field. Returns null when the user
+ * has no pending run or when the timer has already expired (defensive —
+ * the expiry cron should have caught it, but the user shouldn't see a
+ * "resume" banner for something already out of time).
+ */
+async function getInProgress(userId) {
+  const writingQuestionsRepository = require("../repositories/writingQuestionsRepository");
+  const run = await writingFullTestRepository.getInProgressForUser(userId);
+  if (!run) return null;
+
+  const elapsed = Math.max(0, Math.round((Date.now() - new Date(run.started_at).getTime()) / 1000));
+  const timeRemaining = Math.max(0, FULL_TEST_TOTAL_SECONDS - elapsed);
+  if (timeRemaining <= 0) return null;
+
+  const [task1Question, task2Question] = await Promise.all([
+    run.task1_question_id ? writingQuestionsRepository.getQuestionById(run.task1_question_id) : Promise.resolve(null),
+    run.task2_question_id ? writingQuestionsRepository.getQuestionById(run.task2_question_id) : Promise.resolve(null),
+  ]);
+
+  return {
+    id: run.id,
+    started_at: run.started_at,
+    task1_question: task1Question,
+    task2_question: task2Question,
+    task1_submitted: Boolean(run.task1_submission_id),
+    task2_submitted: Boolean(run.task2_submission_id),
+    time_remaining_seconds: timeRemaining,
+  };
+}
+
 module.exports = {
   start,
   submitTask,
   finalize,
   getRun,
   listRuns,
+  getInProgress,
 };

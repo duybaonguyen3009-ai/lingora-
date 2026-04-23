@@ -15,10 +15,13 @@ jest.mock("../../src/repositories/writingFullTestRepository", () => ({
   finalizeRun: jest.fn(),
   markExpired: jest.fn(),
   listForUser: jest.fn(),
+  listOverdueInProgress: jest.fn(),
+  getInProgressForUser: jest.fn(),
 }));
 
 jest.mock("../../src/repositories/writingQuestionsRepository", () => ({
   pickRandomQuestion: jest.fn(),
+  getQuestionById: jest.fn(),
 }));
 
 jest.mock("../../src/repositories/writingRepository", () => ({
@@ -172,6 +175,59 @@ describe("writingFullTestService.finalize", () => {
   });
 });
 
+describe("writingFullTestService.getInProgress", () => {
+  it("returns null when no in-progress run exists", async () => {
+    ftRepo.getInProgressForUser.mockResolvedValueOnce(null);
+    const res = await fullTestService.getInProgress(USER);
+    expect(res).toBeNull();
+  });
+
+  it("returns hydrated run with time_remaining and submission flags", async () => {
+    const startedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString(); // 5 min ago
+    ftRepo.getInProgressForUser.mockResolvedValueOnce({
+      id: "run-42",
+      user_id: USER,
+      status: "in_progress",
+      task1_submission_id: "sub-1",
+      task2_submission_id: null,
+      task1_question_id: "q1",
+      task2_question_id: "q2",
+      started_at: startedAt,
+    });
+    qRepo.getQuestionById
+      .mockResolvedValueOnce({ id: "q1", task_type: "task1" })
+      .mockResolvedValueOnce({ id: "q2", task_type: "task2" });
+
+    const res = await fullTestService.getInProgress(USER);
+    expect(res).toMatchObject({
+      id: "run-42",
+      task1_submitted: true,
+      task2_submitted: false,
+      started_at: startedAt,
+    });
+    // Should have ~55 minutes (3300s) remaining, give a tolerance
+    expect(res.time_remaining_seconds).toBeGreaterThan(3000);
+    expect(res.time_remaining_seconds).toBeLessThanOrEqual(3600);
+    expect(res.task1_question).toMatchObject({ id: "q1" });
+    expect(res.task2_question).toMatchObject({ id: "q2" });
+  });
+
+  it("returns null if timer already elapsed (defensive)", async () => {
+    ftRepo.getInProgressForUser.mockResolvedValueOnce({
+      id: "run-stale",
+      user_id: USER,
+      status: "in_progress",
+      task1_submission_id: null,
+      task2_submission_id: null,
+      task1_question_id: "q1",
+      task2_question_id: "q2",
+      started_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2h ago
+    });
+    const res = await fullTestService.getInProgress(USER);
+    expect(res).toBeNull();
+  });
+});
+
 describe("Full Test endpoint auth", () => {
   const request = require("supertest");
   const createApp = require("../../src/app");
@@ -193,6 +249,11 @@ describe("Full Test endpoint auth", () => {
   it("rejects unauthenticated list + get", async () => {
     expect((await request(app).get(`/api/v1/writing/full-tests`)).status).toBe(401);
     expect((await request(app).get(`/api/v1/writing/full-tests/${uuid}`)).status).toBe(401);
+  });
+
+  it("rejects unauthenticated in-progress", async () => {
+    const res = await request(app).get(`/api/v1/writing/full-tests/in-progress`);
+    expect(res.status).toBe(401);
   });
 
   it("rejects unauthenticated analytics", async () => {

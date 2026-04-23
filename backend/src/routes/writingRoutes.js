@@ -53,6 +53,10 @@ router.post("/full-test/:id/finalize", verifyToken, writingController.finalizeFu
 // GET /api/v1/writing/full-tests — list past runs
 router.get("/full-tests", verifyToken, writingController.listFullTests);
 
+// GET /api/v1/writing/full-tests/in-progress — resume-banner data source.
+// MUST be registered before /full-tests/:id so the literal segment wins.
+router.get("/full-tests/in-progress", verifyToken, writingController.getInProgressFullTest);
+
 // GET /api/v1/writing/full-tests/:id — full aggregated result
 router.get("/full-tests/:id", verifyToken, writingController.getFullTest);
 
