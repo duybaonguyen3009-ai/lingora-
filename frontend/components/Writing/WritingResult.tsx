@@ -7,10 +7,19 @@
  * sentence corrections, and collapsible sample essay.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import FeedbackSheet from "@/components/FeedbackSheet";
+import WritingEssayHighlighted from "./WritingEssayHighlighted";
+import WritingCorrectionDrawer, { type WritingDrawerDetail } from "./WritingCorrectionDrawer";
+import WritingParagraphIcons from "./WritingParagraphIcons";
 import { bandColor } from "@/lib/bandColors";
 import type { WritingSubmission, WritingFeedback, WritingFeedbackCard, ParagraphAnalysis } from "@/lib/types";
+
+type ResultTab = "summary" | "highlight";
+
+function normalize(s: string): string {
+  return s.trim().replace(/\s+/g, " ").toLowerCase();
+}
 
 interface WritingResultProps {
   submission: WritingSubmission;
@@ -64,8 +73,36 @@ function CriteriaCard({
 export default function WritingResult({ submission, onBack }: WritingResultProps) {
   const [showSample, setShowSample] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [activeTab, setActiveTab] = useState<ResultTab>("summary");
+  const [drawerDetail, setDrawerDetail] = useState<WritingDrawerDetail | null>(null);
   const feedbackShown = useRef(false);
   const feedback = submission.feedback_json as WritingFeedback | null;
+
+  // Index corrections by normalized sentence so a click on the highlighted
+  // essay can look up every correction attached to that sentence.
+  const correctionsBySentence = useMemo(() => {
+    const map = new Map<string, typeof feedback extends null ? never : NonNullable<typeof feedback>["sentence_corrections"]>();
+    for (const c of feedback?.sentence_corrections ?? []) {
+      if (!c?.original) continue;
+      const key = normalize(c.original);
+      const existing = map.get(key) ?? [];
+      existing.push(c);
+      map.set(key, existing);
+    }
+    return map;
+  }, [feedback]);
+
+  const handleSentenceClick = (normalizedKey: string) => {
+    const hits = correctionsBySentence.get(normalizedKey);
+    if (hits && hits.length > 0) {
+      setDrawerDetail({ kind: "sentence", corrections: hits });
+    }
+  };
+
+  const handleParagraphClick = (paraNum: number) => {
+    const para = (feedback?.paragraph_analysis ?? []).find((p) => p?.paragraph_number === paraNum);
+    if (para) setDrawerDetail({ kind: "paragraph", paragraph: para });
+  };
 
   // Show feedback sheet once when completed result first renders
   useEffect(() => {
@@ -153,6 +190,66 @@ export default function WritingResult({ submission, onBack }: WritingResultProps
         </div>
       )}
 
+      {/* Tab toggle: Summary (default) / Highlight detail */}
+      <div
+        className="flex rounded-xl overflow-hidden"
+        style={{
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border)",
+        }}
+      >
+        {([
+          { key: "summary",   label: "Tóm tắt" },
+          { key: "highlight", label: "Highlight chi tiết" },
+        ] as { key: ResultTab; label: string }[]).map((t) => {
+          const active = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setActiveTab(t.key)}
+              className="flex-1 py-2.5 text-sm font-medium transition-all cursor-pointer"
+              style={{
+                background: active ? "var(--color-accent)" : "transparent",
+                color: active ? "#fff" : "var(--color-text-secondary)",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Highlight tab — essay + inline underlines + paragraph icons */}
+      {activeTab === "highlight" && (
+        <div className="flex flex-col gap-4">
+          <WritingEssayHighlighted
+            essayText={submission.essay_text}
+            corrections={feedback.sentence_corrections ?? []}
+            onCorrectionClick={handleSentenceClick}
+          />
+          {feedback.paragraph_analysis && feedback.paragraph_analysis.length > 0 && (
+            <WritingParagraphIcons
+              essayText={submission.essay_text}
+              paragraphs={feedback.paragraph_analysis}
+              onParagraphClick={handleParagraphClick}
+            />
+          )}
+          <div
+            className="rounded-lg px-3 py-2 text-xs flex items-center gap-3"
+            style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-tertiary)" }}
+          >
+            <span>Màu gạch chân:</span>
+            <span style={{ color: "#1B2B4B" }}>● ngữ pháp</span>
+            <span style={{ color: "#00A896" }}>● từ vựng</span>
+            <span style={{ color: "#F07167" }}>● liên kết</span>
+          </div>
+        </div>
+      )}
+
+      {/* Summary tab — original result layout */}
+      {activeTab === "summary" && (
+      <>
       {/* 4 Criteria Cards */}
       <div className="flex flex-col gap-3">
         <CriteriaCard
@@ -370,6 +467,15 @@ export default function WritingResult({ submission, onBack }: WritingResultProps
           ))}
         </div>
       )}
+
+      </>
+      )}
+
+      <WritingCorrectionDrawer
+        open={drawerDetail !== null}
+        detail={drawerDetail}
+        onClose={() => setDrawerDetail(null)}
+      />
 
       <FeedbackSheet
         isOpen={showFeedback}
