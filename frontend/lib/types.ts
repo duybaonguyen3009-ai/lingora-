@@ -479,6 +479,81 @@ export interface WritingProgressContext {
   sample_size: number;
 }
 
+// ---------------------------------------------------------------------------
+// Full Test lifecycle + analytics (migration 0036)
+// ---------------------------------------------------------------------------
+
+export type WritingFullTestStatus = 'in_progress' | 'submitted' | 'expired';
+
+export interface WritingFullTestRun {
+  id: string;
+  user_id: string;
+  task1_submission_id: string | null;
+  task2_submission_id: string | null;
+  task1_question_id: string | null;
+  task2_question_id: string | null;
+  total_time_used_seconds: number | null;
+  started_at: string;
+  submitted_at: string | null;
+  status: WritingFullTestStatus;
+  overall_band: number | null;
+}
+
+export interface WritingFullTestSummary {
+  id: string;
+  status: WritingFullTestStatus;
+  started_at: string;
+  submitted_at: string | null;
+  total_time_used_seconds: number | null;
+  overall_band: number | null;
+  task1_submission_id: string | null;
+  task2_submission_id: string | null;
+  task1_band: number | null;
+  task2_band: number | null;
+}
+
+export interface WritingFullTestDetail {
+  full_test: WritingFullTestRun;
+  task1_submission: WritingSubmission | null;
+  task2_submission: WritingSubmission | null;
+  overall_band: number | null;
+  per_criteria_avg: {
+    task: number;
+    coherence: number;
+    lexical: number;
+    grammar: number;
+  } | null;
+}
+
+export type WritingTrendRange = '7d' | '30d' | '90d';
+export type WritingTrendBreakdown = 'overall' | 'criteria' | 'by_task';
+
+export interface WritingTrendPoint {
+  date: string;
+  overall_band?: number | null;
+  task_achievement?: number | null;
+  coherence?: number | null;
+  lexical?: number | null;
+  grammar?: number | null;
+  task1_band?: number | null;
+  task2_band?: number | null;
+}
+
+export interface WritingTrendResponse {
+  range: WritingTrendRange;
+  breakdown: WritingTrendBreakdown;
+  days: number;
+  points: WritingTrendPoint[];
+}
+
+export interface WritingSelfCompare {
+  current_month_avg: number | null;
+  previous_month_avg: number | null;
+  delta: number | null;
+  submission_count_current: number;
+  submission_count_previous: number;
+}
+
 export type ParagraphIconType =
   | 'coherence'
   | 'band_upgrade'

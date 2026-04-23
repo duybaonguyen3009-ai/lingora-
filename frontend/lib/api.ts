@@ -974,7 +974,7 @@ export async function logoutUser(): Promise<void> {
 // IELTS Writing
 // ---------------------------------------------------------------------------
 
-import type { WritingSubmission, WritingSubmissionSummary, WritingTaskType, WritingQuestionListItem, WritingQuestionDetail, WritingDifficulty, WritingProgressContext, UserFeedback, FeedbackActivityType, FeedbackRating } from "./types";
+import type { WritingSubmission, WritingSubmissionSummary, WritingTaskType, WritingQuestionListItem, WritingQuestionDetail, WritingDifficulty, WritingProgressContext, WritingFullTestDetail, WritingFullTestSummary, WritingTrendRange, WritingTrendBreakdown, WritingTrendResponse, WritingSelfCompare, UserFeedback, FeedbackActivityType, FeedbackRating } from "./types";
 
 /** POST /writing/submit — submit an essay for AI scoring */
 export async function submitWritingEssay(body: {
@@ -1044,11 +1044,77 @@ export async function recordWritingAttempt(id: string): Promise<{ id: string }> 
   return apiPostAuth<{ id: string }>(`/writing/questions/${id}/attempt`, {});
 }
 
-/** GET /writing/full-test/start — auto-assigned Task 1 + Task 2 pair */
-export async function startWritingFullTest(): Promise<{ task1: WritingQuestionDetail; task2: WritingQuestionDetail }> {
-  return apiFetchAuth<{ task1: WritingQuestionDetail; task2: WritingQuestionDetail }>(
-    `/writing/full-test/start`
+/** GET /writing/full-test/start — create a run + auto-assigned prompts */
+export async function startWritingFullTest(): Promise<{
+  full_test_id: string;
+  task1: WritingQuestionDetail;
+  task2: WritingQuestionDetail;
+  started_at: string;
+}> {
+  return apiFetchAuth<{
+    full_test_id: string;
+    task1: WritingQuestionDetail;
+    task2: WritingQuestionDetail;
+    started_at: string;
+  }>(`/writing/full-test/start`);
+}
+
+/** POST /writing/full-test/:id/submit-task — score one task of the run */
+export async function submitWritingFullTestTask(
+  fullTestId: string,
+  body: {
+    taskType: WritingTaskType;
+    questionText: string;
+    essayText: string;
+    writingQuestionId?: string;
+  }
+): Promise<{
+  submissionId: string;
+  status: string;
+  full_test: { id: string; status: string };
+  finalized: boolean;
+}> {
+  return apiPostAuth<{
+    submissionId: string;
+    status: string;
+    full_test: { id: string; status: string };
+    finalized: boolean;
+  }>(`/writing/full-test/${fullTestId}/submit-task`, body);
+}
+
+/** POST /writing/full-test/:id/finalize — idempotent weighted-band finalize */
+export async function finalizeWritingFullTest(fullTestId: string): Promise<{ full_test: { id: string; status: string } }> {
+  return apiPostAuth<{ full_test: { id: string; status: string } }>(
+    `/writing/full-test/${fullTestId}/finalize`,
+    {}
   );
+}
+
+/** GET /writing/full-tests/:id — aggregate run detail */
+export async function getWritingFullTest(fullTestId: string): Promise<WritingFullTestDetail> {
+  return apiFetchAuth<WritingFullTestDetail>(`/writing/full-tests/${fullTestId}`);
+}
+
+/** GET /writing/full-tests — paginated list of past runs */
+export async function listWritingFullTests(page = 1, limit = 10): Promise<{ runs: WritingFullTestSummary[]; page: number; limit: number }> {
+  return apiFetchAuth<{ runs: WritingFullTestSummary[]; page: number; limit: number }>(
+    `/writing/full-tests?page=${page}&limit=${limit}`
+  );
+}
+
+/** GET /writing/analytics/trend */
+export async function getWritingTrend(
+  range: WritingTrendRange = "30d",
+  breakdown: WritingTrendBreakdown = "overall"
+): Promise<WritingTrendResponse> {
+  return apiFetchAuth<WritingTrendResponse>(
+    `/writing/analytics/trend?range=${range}&breakdown=${breakdown}`
+  );
+}
+
+/** GET /writing/analytics/self-compare */
+export async function getWritingSelfCompare(): Promise<WritingSelfCompare> {
+  return apiFetchAuth<WritingSelfCompare>(`/writing/analytics/self-compare`);
 }
 
 // ---------------------------------------------------------------------------
