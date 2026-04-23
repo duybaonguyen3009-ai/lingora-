@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { submitWritingEssay } from "@/lib/api";
+import { submitWritingEssay, startWritingFullTest } from "@/lib/api";
 import { useWritingResult } from "@/hooks/useWritingResult";
 import { useDailyLimits } from "@/hooks/useDailyLimits";
 import UpgradeTrigger from "@/components/Pro/UpgradeTrigger";
@@ -19,7 +19,8 @@ import WritingResult from "./WritingResult";
 import WritingHistory from "./WritingHistory";
 import WritingTimerBar from "./WritingTimerBar";
 import WritingNotesModal from "./WritingNotesModal";
-import type { WritingTaskType } from "@/lib/types";
+import WritingPromptSelector from "./WritingPromptSelector";
+import type { WritingTaskType, WritingQuestionDetail } from "@/lib/types";
 
 interface WritingTabProps {
   onClose: () => void;
@@ -55,12 +56,15 @@ export default function WritingTab({ onClose }: WritingTabProps) {
 
   // Editor state — per-task buffers so the user can freely switch without losing work.
   const [taskType, setTaskType] = useState<WritingTaskType>("task2");
-  const [questionTexts, setQuestionTexts] = useState<Record<WritingTaskType, string>>(EMPTY_TASK_BUFFERS);
+  const [prompts, setPrompts] = useState<Record<WritingTaskType, WritingQuestionDetail | null>>({ task1: null, task2: null });
   const [essayTexts, setEssayTexts] = useState<Record<WritingTaskType, string>>(EMPTY_TASK_BUFFERS);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fullTestLoading, setFullTestLoading] = useState(false);
+  const [fullTestError, setFullTestError] = useState<string | null>(null);
 
-  const questionText = questionTexts[taskType];
+  const activePrompt = prompts[taskType];
+  const questionText = activePrompt?.question_text ?? "";
   const essayText = essayTexts[taskType];
 
   // Timer state
@@ -151,14 +155,6 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setNotesOpen(false);
   }, []);
 
-  const handleQuestionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const next = e.target.value;
-      setQuestionTexts((prev) => ({ ...prev, [taskType]: next }));
-    },
-    [taskType]
-  );
-
   // Essay change — starts the combined 60-min pool on first keystroke in either task.
   const handleEssayChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -227,11 +223,37 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     setPhase("result");
   }, []);
 
+  // User selected a prompt from the PromptSelector — hydrate the current task slot.
+  const handlePromptSelect = useCallback((prompt: WritingQuestionDetail) => {
+    setPrompts((prev) => ({ ...prev, [prompt.task_type]: prompt }));
+    if (prompt.task_type !== taskType) setTaskType(prompt.task_type);
+  }, [taskType]);
+
+  const handleChangePrompt = useCallback(() => {
+    setPrompts((prev) => ({ ...prev, [taskType]: null }));
+    setEssayTexts((prev) => ({ ...prev, [taskType]: "" }));
+  }, [taskType]);
+
+  const handleStartFullTest = useCallback(async () => {
+    if (fullTestLoading) return;
+    setFullTestLoading(true);
+    setFullTestError(null);
+    try {
+      const pair = await startWritingFullTest();
+      setPrompts({ task1: pair.task1, task2: pair.task2 });
+      setTaskType("task1");
+    } catch (err) {
+      setFullTestError(err instanceof Error ? err.message : "Không tải được Full Test");
+    } finally {
+      setFullTestLoading(false);
+    }
+  }, [fullTestLoading]);
+
   // Reset to editor — wipes both task buffers and the combined timer.
   const handleNewEssay = useCallback(() => {
     setPhase("editor");
     setEssayTexts(EMPTY_TASK_BUFFERS);
-    setQuestionTexts(EMPTY_TASK_BUFFERS);
+    setPrompts({ task1: null, task2: null });
     setNotes(EMPTY_TASK_BUFFERS);
     setActiveSubmissionId(null);
     setSubmitError(null);
@@ -411,26 +433,86 @@ export default function WritingTab({ onClose }: WritingTabProps) {
               ))}
             </div>
 
-            {/* Split view: prompt panel (left) + answer panel (right) */}
+            {/* Entry state — pick a prompt (Practice) or launch Full Test pair */}
+            {!activePrompt && mode === "practice" && (
+              <WritingPromptSelector onSelect={handlePromptSelect} />
+            )}
+
+            {!activePrompt && mode === "full_test" && (
+              <div
+                className="rounded-xl p-6 flex flex-col items-center gap-4 text-center"
+                style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
+              >
+                <div className="text-3xl">🎯</div>
+                <div>
+                  <p className="text-base font-semibold" style={{ color: "var(--color-text)" }}>
+                    Full Test — 60 phút, cả Task 1 và Task 2
+                  </p>
+                  <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                    Hệ thống tự chọn một đề Task 1 và một đề Task 2. Không pause, không cảnh báo thời gian.
+                  </p>
+                </div>
+                {fullTestError && (
+                  <div className="text-sm" style={{ color: "#EF4444" }}>{fullTestError}</div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void handleStartFullTest()}
+                  disabled={fullTestLoading}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer disabled:opacity-60"
+                  style={{ background: "#1B2B4B" }}
+                >
+                  {fullTestLoading ? "Đang tải đề..." : "Bắt đầu Full Test"}
+                </button>
+              </div>
+            )}
+
+            {/* Split view: prompt panel (left) + answer panel (right) — only when a prompt is loaded */}
+            {activePrompt && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* ── PROMPT PANEL (left) ── */}
               <div
                 className="rounded-xl p-5 flex flex-col gap-3"
                 style={{ background: "var(--surface-primary)", border: "1px solid var(--surface-border)", boxShadow: "var(--surface-shadow)" }}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="block text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-text-tertiary)" }}>
                     Question / Prompt
                   </label>
-                  <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                    style={{ background: "rgba(0,168,150,0.08)", color: "#00A896" }}
-                  >
-                    {taskType === "task1" ? "Task 1" : "Task 2"}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ background: "rgba(0,168,150,0.08)", color: "#00A896" }}
+                    >
+                      {taskType === "task1" ? "Task 1" : "Task 2"}
+                    </span>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+                    >
+                      {activePrompt.topic}
+                    </span>
+                    {mode === "practice" && !timerStarted && (
+                      <button
+                        type="button"
+                        onClick={handleChangePrompt}
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider cursor-pointer"
+                        style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+                        title="Chọn đề khác"
+                      >
+                        Đổi đề
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Task 1 chart placeholder — real chart wired in Item 4 of rework plan */}
+                {activePrompt.title && (
+                  <p className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>
+                    {activePrompt.title}
+                  </p>
+                )}
+
+                {/* Task 1 chart placeholder — real chart rendering arrives in Item 4 */}
                 {taskType === "task1" && (
                   <div
                     className="rounded-lg flex flex-col items-center justify-center gap-2 py-8"
@@ -449,25 +531,17 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                   </div>
                 )}
 
-                <textarea
-                  value={questionText}
-                  onChange={handleQuestionChange}
-                  placeholder={
-                    taskType === "task1"
-                      ? "Paste or type the Task 1 question here (e.g., describe the chart)..."
-                      : "Paste or type the Task 2 essay question here..."
-                  }
-                  rows={taskType === "task1" ? 4 : 8}
-                  className="w-full rounded-lg px-4 py-3 text-sm resize-none transition-colors focus:outline-none flex-1"
+                <div
+                  className="rounded-lg px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap flex-1 overflow-auto"
                   style={{
                     background: "var(--color-bg-secondary)",
                     border: "1px solid var(--color-border)",
                     color: "var(--color-text)",
                     minHeight: "120px",
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "#00A896"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,168,150,0.1)"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.boxShadow = "none"; }}
-                />
+                >
+                  {questionText}
+                </div>
               </div>
 
               {/* ── ANSWER PANEL (right) ── */}
@@ -558,9 +632,10 @@ export default function WritingTab({ onClose }: WritingTabProps) {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Submit Error */}
-            {submitError && (
+            {activePrompt && submitError && (
               <div
                 className="rounded-xl px-4 py-3 text-sm flex items-center gap-2"
                 style={{ background: "rgba(239,68,68,0.08)", color: "#EF4444", border: "1px solid rgba(239,68,68,0.2)" }}
@@ -573,25 +648,27 @@ export default function WritingTab({ onClose }: WritingTabProps) {
             )}
 
             {/* Submit Button — Full Test with time remaining asks for confirmation first */}
-            <button
-              onClick={() => {
-                if (mode === "full_test" && timerStarted && timeLeft !== null && timeLeft > 0) {
-                  setSubmitConfirmOpen(true);
-                } else {
-                  void handleSubmit();
-                }
-              }}
-              disabled={!isValid || submitting}
-              className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
-              style={{
-                background: isValid ? "linear-gradient(135deg, #00A896, #00C4B0)" : "var(--surface-primary)",
-                color: isValid ? "#fff" : "var(--color-text-tertiary)",
-                border: isValid ? "none" : "1px solid var(--surface-border)",
-                boxShadow: isValid ? "0 4px 16px rgba(0,168,150,0.25)" : "var(--surface-shadow)",
-              }}
-            >
-              {submitting ? "Đang nộp..." : `Nộp bài chấm điểm (${wordCount} từ)`}
-            </button>
+            {activePrompt && (
+              <button
+                onClick={() => {
+                  if (mode === "full_test" && timerStarted && timeLeft !== null && timeLeft > 0) {
+                    setSubmitConfirmOpen(true);
+                  } else {
+                    void handleSubmit();
+                  }
+                }}
+                disabled={!isValid || submitting}
+                className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] cursor-pointer"
+                style={{
+                  background: isValid ? "linear-gradient(135deg, #00A896, #00C4B0)" : "var(--surface-primary)",
+                  color: isValid ? "#fff" : "var(--color-text-tertiary)",
+                  border: isValid ? "none" : "1px solid var(--surface-border)",
+                  boxShadow: isValid ? "0 4px 16px rgba(0,168,150,0.25)" : "var(--surface-shadow)",
+                }}
+              >
+                {submitting ? "Đang nộp..." : `Nộp bài chấm điểm (${wordCount} từ)`}
+              </button>
+            )}
           </div>
         )}
 
