@@ -28,6 +28,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.0",
+    "node-cron": "^4.2.1",
     "node-pg-migrate": "^8.0.4",
     "openai": "^6.31.0",
     "passport": "^0.7.0",

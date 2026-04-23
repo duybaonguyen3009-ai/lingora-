@@ -149,6 +149,13 @@ function createApp() {
   // Expose interval ID for graceful shutdown
   app._battleExpiryInterval = battleExpiryInterval;
 
+  // ── Writing scoring-cache LRU eviction (daily, 03:00 VN / 20:00 UTC) ──
+  // Skipped under Jest so the scheduler doesn't keep test runs alive.
+  if (process.env.NODE_ENV !== "test") {
+    const { scheduleEviction } = require("./jobs/scoringCacheEviction");
+    app._scoringCacheEvictionTask = scheduleEviction();
+  }
+
   // ── Mock storage route (development only) ──
   // When using the mock storage provider, the frontend PUTs audio blobs to
   // /mock-storage/:key.  This route accepts the binary body and stores it
