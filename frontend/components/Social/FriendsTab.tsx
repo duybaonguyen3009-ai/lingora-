@@ -158,8 +158,10 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
             <button key={t} onClick={() => onSubTabChange(t)}
               className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer"
               style={{
-                background: subTab === t ? "var(--color-accent)" : "var(--surface-subtle)",
-                color: subTab === t ? "#fff" : "var(--color-text-secondary)",
+                // PR4a B3 — --color-tab-active-{bg,text} dims the teal in dark mode
+                // while keeping the original solid teal pill in light.
+                background: subTab === t ? "var(--color-tab-active-bg)" : "var(--surface-subtle)",
+                color: subTab === t ? "var(--color-tab-active-text)" : "var(--color-text-secondary)",
                 border: subTab === t ? "none" : "1px solid var(--color-border)",
               }}>
               {t === "chat" ? "Chat" : t === "friends" ? "Friends" : t === "requests" ? "Requests" : t === "add" ? "Add" : "Rooms"}

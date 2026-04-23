@@ -118,6 +118,26 @@
   --ielts-dot-color: #00A896;
   --ielts-placeholder-color: #9CA3AF;
   --ielts-score-track: rgba(0, 0, 0, 0.04);
+
+  /* ── Canonical palette (PR4a — for PR5 Mode Selection + future sweep) ──
+     Additive only. Existing tokens (--color-text, --color-bg, --color-primary-soft,
+     --sidebar-bg, --dash-*) are left untouched to avoid cascading breakage. */
+  --color-bg-page:           #F7F4EC;
+  --color-bg-surface:        #FFFFFF;
+  --color-bg-navy:           #1B2B4B;
+  --color-bg-teal-surface:   #FFFFFF;
+  --color-text-primary:      #1B2B4B;
+  --color-teal-accent:       #0F6E56;
+  --color-teal-meta:         #0F6E56;
+  --color-amber:             #F59E0B;
+  --color-border-teal:       rgba(29, 158, 117, 0.2);
+  --color-sidebar-bg:        #FFFFFF;
+  --color-avatar-from:       #1B2B4B;
+  --color-avatar-to:         #2D4A7A;
+  --color-avatar-ring:       #00A896;
+  --color-icon-muted:        rgba(27, 43, 75, 0.6);
+  --color-tab-active-bg:     var(--color-accent);   /* solid teal in light */
+  --color-tab-active-text:   #FFFFFF;
 }
 
 /* ── Dark theme ── */
@@ -161,14 +181,17 @@
 
   /* ── Dashboard card tokens (dark) ── */
   --dash-card-bg: rgba(255,255,255,0.03);
-  --dash-card-border: rgba(255,255,255,0.06);
+  /* PR4a B4 — bumped from 0.06 to 0.14 so Home greeting + stat card borders
+     remain visible against the dark navy page bg. Below 0.14 the edge read
+     as merged with the surrounding blob gradient. */
+  --dash-card-border: rgba(255,255,255,0.14);
   --dash-card-shadow: none;
   --dash-hero-bg: linear-gradient(135deg, rgba(27,43,75,0.6) 0%, rgba(15,30,51,0.8) 100%);
-  --dash-hero-border: rgba(255,255,255,0.06);
+  --dash-hero-border: rgba(255,255,255,0.14);
   --dash-hero-text: #FFFFFF;
   --dash-hero-sub: rgba(255,255,255,0.45);
   --dash-stat-bg: rgba(255,255,255,0.03);
-  --dash-stat-border: rgba(255,255,255,0.06);
+  --dash-stat-border: rgba(255,255,255,0.14);
 
   /* ── IELTS Exam Room (dark) ── */
   --ielts-bg: linear-gradient(160deg, #0A1325 0%, #0F1E33 40%, #162740 70%, #0A1325 100%);
@@ -211,6 +234,24 @@
   --ielts-dot-color: #00C4B0;
   --ielts-placeholder-color: rgba(255,255,255,0.2);
   --ielts-score-track: rgba(255,255,255,0.05);
+
+  /* ── Canonical palette (PR4a) — dark counterparts ── */
+  --color-bg-page:           #0E1A35;
+  --color-bg-surface:        #122443;
+  --color-bg-navy:           #1B2B4B;
+  --color-bg-teal-surface:   #0F2E26;
+  --color-text-primary:      #F7F4EC;
+  --color-teal-accent:       #2BC99D;
+  --color-teal-meta:         #5DCAA5;
+  --color-amber:             #F59E0B;
+  --color-border-teal:       rgba(45, 201, 157, 0.22);
+  --color-sidebar-bg:        #0A1426;
+  --color-avatar-from:       #2D4A7A;
+  --color-avatar-to:         #4A6BA0;
+  --color-avatar-ring:       rgba(45, 201, 157, 0.4);
+  --color-icon-muted:        rgba(247, 244, 236, 0.6);
+  --color-tab-active-bg:     rgba(29, 158, 117, 0.18);
+  --color-tab-active-text:   #2BC99D;
 }
 
 /* ── Safari tap highlight fix ── */
@@ -974,7 +1015,10 @@ body {
 
 /* ── Sidebar tokens — Dark: glassmorphism ── */
 .dark {
-  --sidebar-bg: rgba(255, 255, 255, 0.03);
+  /* PR4a fix #3 — solid dark sidebar bg. Previous rgba(255,255,255,0.03)
+     relied on .bg-deep-gradient ancestor; overlays (Writing/Reading) break
+     that chain, leaving the sidebar near-transparent in dark mode. */
+  --sidebar-bg: #0A1426;
   --sidebar-border: rgba(255, 255, 255, 0.06);
   --sidebar-item-hover: rgba(255, 255, 255, 0.05);
   --sidebar-item-active-bg: rgba(0, 196, 176, 0.10);

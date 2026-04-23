@@ -240,7 +240,7 @@ Color is part of exam fidelity, not decoration.
 | Practice Mode | **Brand-soft** (brand + subtle cream) | Brand fonts | Transition toward exam feel |
 | **Full Test, Battle Ranked** | **IELTS-authentic** (cream `#F5EFDC` + navy + yellow highlight) | Georgia + Arial | User must get comfortable with the real exam interface |
 
-Authentic palette variables live in `frontend/styles/exam-authentic.css`. Switching is done by a theme provider that reads `EXAM_UX[mode].palette`.
+Authentic palette will live in the IELTS exam-room CSS var block in `app/globals.css` (see `--ielts-*` tokens). A dedicated `exam-authentic.css` is no longer planned — tokens live alongside the rest of the design system. Switching is driven by a theme provider that reads `EXAM_UX[mode].palette`.
 
 ---
 
@@ -361,7 +361,7 @@ frontend/
   components/       UI components (PascalCase)
   hooks/            Data-fetching hooks (use-prefix)
   lib/              api.ts, types.ts, domain/ielts/ mirror, stores/
-  styles/           brand.css, exam-authentic.css
+  config/           nav.ts and other static config
   providers/        Client-side providers (Auth, Theme)
 
 backend/

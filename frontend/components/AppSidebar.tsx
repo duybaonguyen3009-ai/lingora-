@@ -353,7 +353,7 @@ export default function AppSidebar({ active, onChange, gamification, rankTier = 
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-xs text-white cursor-pointer"
             style={{
-              background: "linear-gradient(135deg, #1B2B4B, #2D4A7A)",
+              background: "linear-gradient(135deg, var(--color-avatar-from), var(--color-avatar-to))",
               border: "2px solid rgba(0,168,150,0.3)",
             }}
             onClick={() => onChange("profile")}

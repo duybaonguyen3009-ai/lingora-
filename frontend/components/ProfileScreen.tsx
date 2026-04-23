@@ -97,7 +97,7 @@ function EditProfileModal({ stats, onClose, onSaved }: { stats: ProfileStats; on
         <div className="flex justify-center">
           <button onClick={() => fileRef.current?.click()} className="relative group">
             <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center font-bold text-xl"
-              style={{ background: "linear-gradient(135deg, #1B2B4B, #2D4A7A)", border: "3px solid #00A896", color: "#fff" }}>
+              style={{ background: "linear-gradient(135deg, var(--color-avatar-from), var(--color-avatar-to))", border: "3px solid var(--color-avatar-ring)", color: "#fff" }}>
               {avatarPreview || stats.user.avatar_url
                 ? <img src={avatarPreview || stats.user.avatar_url!} alt="" className="w-full h-full object-cover" />
                 : stats.user.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}

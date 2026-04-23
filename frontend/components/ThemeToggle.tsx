@@ -19,8 +19,11 @@ export default function ThemeToggle() {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
       style={{
-        backgroundColor: "var(--color-primary-soft)",
-        color: "var(--color-text-secondary)",
+        // PR4a fix #2 — --color-primary-soft was semantically inconsistent
+        // (near-black tint in light vs teal tint in dark). --color-icon-muted
+        // is a symmetric muted-foreground tone across both modes.
+        backgroundColor: "transparent",
+        color: "var(--color-icon-muted)",
       }}
       aria-label="Toggle theme"
     >
