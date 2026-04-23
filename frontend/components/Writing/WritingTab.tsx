@@ -185,6 +185,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
         taskType,
         questionText: questionText.trim(),
         essayText: essayText.trim(),
+        writingQuestionId: activePrompt?.id,
       });
       setActiveSubmissionId(result.submissionId);
       setPhase("pending");
@@ -204,7 +205,7 @@ export default function WritingTab({ onClose }: WritingTabProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [isValid, submitting, taskType, questionText, essayText, limits]);
+  }, [isValid, submitting, taskType, questionText, essayText, activePrompt, limits]);
 
   // Timer reaching 0 — Practice shows a toast, Full Test auto-submits once.
   useEffect(() => {

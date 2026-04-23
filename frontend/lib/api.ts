@@ -981,6 +981,7 @@ export async function submitWritingEssay(body: {
   taskType: WritingTaskType;
   questionText: string;
   essayText: string;
+  writingQuestionId?: string;
 }): Promise<{ submissionId: string; status: string }> {
   return apiPostAuth<{ submissionId: string; status: string }>("/writing/submit", body);
 }
