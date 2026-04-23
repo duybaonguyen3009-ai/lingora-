@@ -252,6 +252,27 @@ describe("analyzeEssay — cache + multi-sampling", () => {
     expect(cacheStub.insertEntry).not.toHaveBeenCalled();
   });
 
+  it("stale cache_version is treated as a miss so new fields get filled", async () => {
+    cacheStub.findByCacheKey.mockResolvedValueOnce({
+      scoring_result: {
+        overall_band: 7,
+        cache_version: 1, // one behind current WRITING_CACHE_VERSION
+      },
+      sample_count: 3,
+      hit_count: 1,
+    });
+    createMock
+      .mockResolvedValueOnce(mkResponse(7))
+      .mockResolvedValueOnce(mkResponse(7))
+      .mockResolvedValueOnce(mkResponse(7));
+
+    const result = await analyzeEssay(TASK_TYPE, QUESTION, ESSAY);
+    // Stale hit should NOT short-circuit — we expect a fresh miss + 3 API calls.
+    expect(createMock).toHaveBeenCalledTimes(3);
+    expect(result._meta.cached).toBe(false);
+    expect(result.cache_version).toBeGreaterThanOrEqual(2);
+  });
+
   it("corrupted cached row falls through to the miss path without crashing", async () => {
     cacheStub.findByCacheKey.mockResolvedValueOnce({
       // scoring_result is wrong shape — handler treats as miss.

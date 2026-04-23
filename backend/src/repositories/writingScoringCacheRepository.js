@@ -82,6 +82,24 @@ async function deleteOldest(count) {
   return result.rowCount;
 }
 
+/**
+ * Delete every row whose stored scoring_result.cache_version is lower than
+ * the current version. Rows with no cache_version field default to v1.
+ * Called by the eviction cron before the LRU pass so stale shapes leave
+ * first regardless of last_hit_at.
+ *
+ * @param {number} currentVersion
+ * @returns {Promise<number>} – rows deleted
+ */
+async function deleteStaleVersions(currentVersion) {
+  const result = await query(
+    `DELETE FROM writing_scoring_cache
+      WHERE COALESCE((scoring_result->>'cache_version')::int, 1) < $1`,
+    [currentVersion]
+  );
+  return result.rowCount;
+}
+
 /** Total row count — used by the eviction cron before deciding to trim. */
 async function countEntries() {
   const result = await query(`SELECT COUNT(*)::int AS c FROM writing_scoring_cache`);
@@ -101,6 +119,7 @@ module.exports = {
   findByCacheKey,
   insertEntry,
   deleteOldest,
+  deleteStaleVersions,
   countEntries,
   getOldestLastHit,
 };

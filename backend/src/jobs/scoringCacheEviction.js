@@ -18,6 +18,7 @@
 
 const cron = require("node-cron");
 const defaultRepo = require("../repositories/writingScoringCacheRepository");
+const { WRITING_CACHE_VERSION } = require("../providers/ai/writingAnalyzer");
 
 const DEFAULT_MAX_ROWS = 50_000;
 const DEFAULT_BATCH_SIZE = 10_000;
@@ -44,27 +45,42 @@ function readConfig() {
  * @returns {Promise<{totalRows: number, deletedCount: number, oldestKeptLastHit: (Date|null)}>}
  */
 async function runEviction(opts = {}) {
-  const { maxRows = DEFAULT_MAX_ROWS, batchSize = DEFAULT_BATCH_SIZE, repo = defaultRepo } = opts;
+  const {
+    maxRows = DEFAULT_MAX_ROWS,
+    batchSize = DEFAULT_BATCH_SIZE,
+    currentVersion = WRITING_CACHE_VERSION,
+    repo = defaultRepo,
+  } = opts;
+
+  // Purge stale-shape rows first — they'd be refetched anyway on next hit,
+  // so deleting them up-front buys headroom without touching warm entries.
+  const staleDeleted = repo.deleteStaleVersions
+    ? await repo.deleteStaleVersions(currentVersion)
+    : 0;
 
   const totalRows = await repo.countEntries();
-  let deletedCount = 0;
+  let lruDeleted = 0;
   if (totalRows > maxRows) {
-    deletedCount = await repo.deleteOldest(batchSize);
+    lruDeleted = await repo.deleteOldest(batchSize);
   }
   const oldestKeptLastHit = await repo.getOldestLastHit();
+  const deletedCount = staleDeleted + lruDeleted;
 
   console.log(
     JSON.stringify({
       event: "cache_eviction_run",
       total_rows: totalRows,
       deleted_count: deletedCount,
+      stale_deleted: staleDeleted,
+      lru_deleted: lruDeleted,
       oldest_kept_last_hit: oldestKeptLastHit,
       max_rows: maxRows,
       batch_size: batchSize,
+      cache_version: currentVersion,
     })
   );
 
-  return { totalRows, deletedCount, oldestKeptLastHit };
+  return { totalRows, deletedCount, staleDeleted, lruDeleted, oldestKeptLastHit };
 }
 
 /**

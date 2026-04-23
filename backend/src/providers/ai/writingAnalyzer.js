@@ -25,6 +25,12 @@ const SAMPLE_COUNT = 3;           // three parallel scorings → median
 const MIN_SAMPLES_FOR_RESULT = 2; // fall back to 2 if exactly one call fails
 const MAX_TOTAL_API_CALLS = 4;    // hard cap: initial 3 + at most 1 retry
 
+// Bump whenever the AI response shape changes. Cached rows with a lower
+// version number are treated as misses so the new fields get filled.
+//   v1 → Items 1-5 baseline
+//   v2 → Item 7: band_context + pro_version + essay_type + paraphrase_suggestions
+const WRITING_CACHE_VERSION = 2;
+
 const SYSTEM_PROMPT = `You are a certified IELTS Writing examiner.
 Evaluate the student's essay based on official IELTS band descriptors.
 
@@ -47,6 +53,9 @@ RULES:
 - Keep top_3_priorities actionable and specific to THIS essay
 - For every sentence_corrections entry, tag error_type as one of: grammar (tense, agreement, articles, word form), vocabulary (wrong word choice, repetition, awkward collocation), coherence (transitions, referencing, paragraph flow)
 - For each paragraph, include 0-3 icons chosen from: coherence (transition/flow issue), band_upgrade (specific lift to push band up), good_structure (the paragraph is well-organised), task_response (directly addresses the task prompt), lexical_highlight (notable vocabulary use or misuse). One short note per icon.
+- For every sentence_corrections entry also provide band_context (anchor the error to the specific criterion + band using IELTS descriptors) and pro_version (rewrite at band 8+ lexical/grammar standard, not just the minimal fix).
+- Set essay_type only for Task 2 essays; otherwise null. Choose the single type that best matches the prompt's question form.
+- Provide 3-5 paraphrase_suggestions for words/phrases the student overused or could vary — each with 2-3 academic alternatives and a short context note on when to pick which.
 
 OUTPUT: Valid JSON only, no markdown, no extra text.
 {
@@ -66,7 +75,17 @@ OUTPUT: Valid JSON only, no markdown, no extra text.
       "original": "string (the exact sentence from the essay)",
       "corrected": "string",
       "explanation": "string",
-      "error_type": "grammar | vocabulary | coherence"
+      "error_type": "grammar | vocabulary | coherence",
+      "band_context": "string — 'This issue keeps {criterion} at band {N}. Band {N+1} needs: {official descriptor}.' Use IELTS public-band descriptors.",
+      "pro_version": "string — the same sentence rewritten at band 8+ lexical/grammar level, not merely fixed"
+    }
+  ],
+  "essay_type": "opinion | discussion | problem_solution | advantages_disadvantages | two_part_question | null (null for Task 1 or if not Task 2, or when genuinely unclear)",
+  "paraphrase_suggestions": [
+    {
+      "phrase": "string — 1-4 word phrase the student overused or could vary",
+      "alternatives": ["string", "string", "string"],
+      "context": "string — when to use which alternative"
     }
   ],
   "sample_essay": "string",
@@ -273,18 +292,33 @@ async function analyzeEssay(taskType, questionText, essayText, opts = {}) {
   try {
     const hit = await writingScoringCacheRepository.findByCacheKey(cacheKey);
     if (hit && hit.scoring_result && typeof hit.scoring_result === "object") {
-      console.log(
-        JSON.stringify({
-          event: "scoring_cache_hit",
-          user_id: userId,
-          cache_key: cacheKey,
-          hit_count: hit.hit_count,
-          sample_count: hit.sample_count,
-        })
-      );
-      const cached = hit.scoring_result;
-      cached._meta = { sample_count: hit.sample_count, api_calls: 0, cached: true };
-      return cached;
+      const storedVersion = Number(hit.scoring_result.cache_version) || 1;
+      if (storedVersion < WRITING_CACHE_VERSION) {
+        // Stale shape — fall through to the miss path so new fields get filled.
+        console.log(
+          JSON.stringify({
+            event: "scoring_cache_stale",
+            user_id: userId,
+            cache_key: cacheKey,
+            stored_version: storedVersion,
+            current_version: WRITING_CACHE_VERSION,
+          })
+        );
+      } else {
+        console.log(
+          JSON.stringify({
+            event: "scoring_cache_hit",
+            user_id: userId,
+            cache_key: cacheKey,
+            hit_count: hit.hit_count,
+            sample_count: hit.sample_count,
+            cache_version: storedVersion,
+          })
+        );
+        const cached = hit.scoring_result;
+        cached._meta = { sample_count: hit.sample_count, api_calls: 0, cached: true };
+        return cached;
+      }
     }
   } catch (err) {
     // Corrupt row / DB hiccup → fall through to miss path; never crash the user.
@@ -344,6 +378,7 @@ async function analyzeEssay(taskType, questionText, essayText, opts = {}) {
   }
 
   const aggregated = aggregateSamples(successes);
+  aggregated.cache_version = WRITING_CACHE_VERSION;
   console.log(
     `[writing-ai] status: OK — band ${aggregated.overall_band} from ${successes.length}/${apiCalls} samples`
   );
@@ -376,4 +411,4 @@ async function analyzeEssay(taskType, questionText, essayText, opts = {}) {
   return aggregated;
 }
 
-module.exports = { analyzeEssay };
+module.exports = { analyzeEssay, WRITING_CACHE_VERSION };
