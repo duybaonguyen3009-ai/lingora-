@@ -78,6 +78,36 @@ describe("writingScoringMedian.aggregateSamples", () => {
     const out = aggregateSamples([s1, s2]);
     expect(out.sentence_corrections).toHaveLength(1);
   });
+
+  it("sentence_corrections merged use the most-common error_type per sentence", () => {
+    const mk = (overall, errorType) => {
+      const s = mkSample(overall, overall);
+      s.sentence_corrections = [
+        { original: "SAME SENTENCE", corrected: "fix", explanation: "", error_type: errorType },
+      ];
+      return s;
+    };
+    // 2x grammar, 1x vocabulary → grammar wins.
+    const out = aggregateSamples([mk(6, "grammar"), mk(7, "grammar"), mk(8, "vocabulary")]);
+    expect(out.sentence_corrections).toHaveLength(1);
+    expect(out.sentence_corrections[0].error_type).toBe("grammar");
+  });
+
+  it("paragraph_analysis icons are unioned across samples and deduped by type", () => {
+    const mkPara = (...iconTypes) => ({
+      paragraph_number: 1,
+      type: "body",
+      score: "adequate",
+      feedback: "pp",
+      icons: iconTypes.map((t) => ({ type: t, note: `${t}-note` })),
+    });
+    const s1 = { ...mkSample(7, 7), paragraph_analysis: [mkPara("coherence", "band_upgrade")] };
+    const s2 = { ...mkSample(7, 7), paragraph_analysis: [mkPara("band_upgrade", "task_response")] };
+    const s3 = { ...mkSample(7, 7), paragraph_analysis: [mkPara("lexical_highlight")] };
+    const out = aggregateSamples([s1, s2, s3]);
+    const types = out.paragraph_analysis[0].icons.map((i) => i.type).sort();
+    expect(types).toEqual(["band_upgrade", "coherence", "lexical_highlight", "task_response"]);
+  });
 });
 
 // ---------------------------------------------------------------------------
