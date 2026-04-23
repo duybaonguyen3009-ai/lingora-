@@ -12,12 +12,16 @@
 "use strict";
 
 const OpenAI = require("openai");
+const { aggregateSamples } = require("./writingScoringMedian");
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const OPENAI_TIMEOUT_MS = 30_000; // 30s — writing analysis produces longer responses
+const SAMPLE_COUNT = 3;           // three parallel scorings → median
+const MIN_SAMPLES_FOR_RESULT = 2; // fall back to 2 if exactly one call fails
+const MAX_TOTAL_API_CALLS = 4;    // hard cap: initial 3 + at most 1 retry
 
 const SYSTEM_PROMPT = `You are a certified IELTS Writing examiner.
 Evaluate the student's essay based on official IELTS band descriptors.
@@ -157,24 +161,13 @@ function validateResult(parsed) {
 // ---------------------------------------------------------------------------
 
 /**
- * Analyze an IELTS essay and return structured scoring.
- *
- * @param {string} taskType – 'task1' | 'task2'
- * @param {string} questionText
- * @param {string} essayText
- * @returns {Promise<object>} – validated scoring object
- * @throws {Error} – if OpenAI is unavailable, times out, or returns invalid JSON
+ * Run ONE scoring call against OpenAI. Throws on timeout, empty response,
+ * unparseable JSON, or invalid shape. Never retries — the orchestrator
+ * decides whether to.
  */
-async function analyzeEssay(taskType, questionText, essayText) {
-  const client = getClient();
-  if (!client) {
-    throw new Error("OpenAI API key not configured — cannot analyze essay");
-  }
-
+async function runSingleScoring(client, taskType, questionText, essayText) {
   const taskLabel = taskType === "task1" ? "IELTS Writing Task 1" : "IELTS Writing Task 2";
   const userMessage = `${taskLabel}\nQuestion: ${questionText}\n\nEssay:\n${essayText}`;
-
-  console.log(`[writing-ai] analyzing ${taskType} essay (${essayText.split(/\s+/).length} words)`);
 
   const response = await withTimeout(
     client.chat.completions.create({
@@ -209,8 +202,75 @@ async function analyzeEssay(taskType, questionText, essayText) {
     throw new Error("OpenAI returned invalid scoring structure");
   }
 
-  console.log(`[writing-ai] status: OK — band ${parsed.overall_band}`);
   return parsed;
+}
+
+/**
+ * Analyze an IELTS essay and return stable scoring.
+ *
+ * Runs {@link SAMPLE_COUNT} (3) scoring calls in parallel and aggregates
+ * them via median on every numeric band. Falls back to 2 samples if one
+ * call fails and retries up to one failed call to stay at ≥2. Returns an
+ * error only when fewer than 2 successful samples remain.
+ *
+ * @param {string} taskType – 'task1' | 'task2'
+ * @param {string} questionText
+ * @param {string} essayText
+ * @returns {Promise<object>} – validated scoring object (median-aggregated)
+ * @throws {Error} – if OpenAI is unavailable or <2 samples succeed
+ */
+async function analyzeEssay(taskType, questionText, essayText) {
+  const client = getClient();
+  if (!client) {
+    throw new Error("OpenAI API key not configured — cannot analyze essay");
+  }
+
+  const wordCount = essayText.split(/\s+/).filter(Boolean).length;
+  console.log(`[writing-ai] scoring ${taskType} essay (${wordCount} words) — ${SAMPLE_COUNT}x sampling`);
+
+  // Fire all N scorings in parallel. allSettled so one failure doesn't abort the rest.
+  let apiCalls = SAMPLE_COUNT;
+  const initial = await Promise.allSettled(
+    Array.from({ length: SAMPLE_COUNT }, () =>
+      runSingleScoring(client, taskType, questionText, essayText)
+    )
+  );
+
+  const successes = initial.filter((r) => r.status === "fulfilled").map((r) => r.value);
+  const failures = initial.filter((r) => r.status === "rejected");
+
+  // If we can still reach the minimum by retrying ONE failed call, do it.
+  // Hard-capped by MAX_TOTAL_API_CALLS so a flaky key never loops.
+  if (
+    successes.length < MIN_SAMPLES_FOR_RESULT &&
+    failures.length > 0 &&
+    apiCalls < MAX_TOTAL_API_CALLS
+  ) {
+    apiCalls += 1;
+    console.warn(
+      `[writing-ai] only ${successes.length}/${SAMPLE_COUNT} samples succeeded — retrying one failed call`
+    );
+    try {
+      const retry = await runSingleScoring(client, taskType, questionText, essayText);
+      successes.push(retry);
+    } catch (err) {
+      console.warn(`[writing-ai] retry also failed: ${err.message}`);
+    }
+  }
+
+  if (successes.length < MIN_SAMPLES_FOR_RESULT) {
+    throw new Error(
+      `Writing scoring failed — only ${successes.length}/${apiCalls} samples succeeded`
+    );
+  }
+
+  const aggregated = aggregateSamples(successes);
+  console.log(
+    `[writing-ai] status: OK — band ${aggregated.overall_band} from ${successes.length}/${apiCalls} samples`
+  );
+  // Attach the sample count so the caller (service/cache writer) can record it.
+  aggregated._meta = { sample_count: successes.length, api_calls: apiCalls };
+  return aggregated;
 }
 
 module.exports = { analyzeEssay };
