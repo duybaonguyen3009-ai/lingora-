@@ -112,6 +112,24 @@ async function getUserSubmissions(userId, limit = 10, offset = 0) {
 }
 
 /**
+ * Fetch the user's most recent N COMPLETED submissions with feedback_json
+ * attached. Used by the progress-context service to walk error patterns.
+ */
+async function getRecentCompletedWithFeedback(userId, limit = 30) {
+  const result = await query(
+    `SELECT id, task_type, overall_band, feedback_json, created_at
+       FROM writing_submissions
+      WHERE user_id = $1
+        AND status = 'completed'
+        AND feedback_json IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT $2`,
+    [userId, limit]
+  );
+  return result.rows;
+}
+
+/**
  * Find an existing non-failed submission for this user + task type today.
  * Used for idempotency — prevents duplicate submissions on double-click.
  */
@@ -167,6 +185,7 @@ module.exports = {
   updateSubmissionResult,
   getSubmissionById,
   getUserSubmissions,
+  getRecentCompletedWithFeedback,
   findTodaySubmission,
   getTodayUsageCount,
   incrementUsageCount,

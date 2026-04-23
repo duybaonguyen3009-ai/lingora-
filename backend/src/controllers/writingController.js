@@ -7,6 +7,8 @@
 
 const writingService = require("../services/writingService");
 const writingQuestionsService = require("../services/writingQuestionsService");
+const writingProgressService = require("../services/writingProgressService");
+const writingRepository = require("../repositories/writingRepository");
 const { sendSuccess, sendError } = require("../response");
 
 // UUID v4 pattern
@@ -217,6 +219,41 @@ async function startFullTest(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// GET /api/v1/writing/submissions/:id/progress-context
+// ---------------------------------------------------------------------------
+
+/**
+ * Style F (progress-aware) feedback source. Owner-checks the submission
+ * then scans the user's last 30 completed submissions for recurring
+ * error patterns.
+ */
+async function getProgressContext(req, res, next) {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    if (!UUID_RE.test(id)) {
+      return sendError(res, { status: 400, message: "Valid submissionId (UUID) is required" });
+    }
+
+    const submission = await writingRepository.getSubmissionById(id);
+    if (!submission) {
+      return sendError(res, { status: 404, message: "Submission not found" });
+    }
+    if (submission.user_id !== userId) {
+      return sendError(res, { status: 403, message: "You do not own this submission" });
+    }
+
+    const context = await writingProgressService.getProgressContext(userId);
+
+    // Per-user progress changes slowly — 1h private cache is safe.
+    res.set("Cache-Control", "private, max-age=3600");
+    return sendSuccess(res, { data: context });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   submitEssay,
   getResult,
@@ -226,4 +263,5 @@ module.exports = {
   getQuestion,
   recordAttempt,
   startFullTest,
+  getProgressContext,
 };

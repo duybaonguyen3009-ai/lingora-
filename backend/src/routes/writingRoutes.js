@@ -40,4 +40,7 @@ router.post("/questions/:id/attempt", verifyToken, writingController.recordAttem
 // GET /api/v1/writing/full-test/start — auto-assigned Task 1 + Task 2 pair
 router.get("/full-test/start", verifyToken, writingController.startFullTest);
 
+// GET /api/v1/writing/submissions/:id/progress-context — Style F feedback source
+router.get("/submissions/:id/progress-context", verifyToken, writingController.getProgressContext);
+
 module.exports = router;
