@@ -2,6 +2,11 @@
 #
 # Docs: https://docs.railway.com/reference/config-as-code
 #
+# Lives at REPO ROOT (not backend/) — Railway only reads railway.toml from the
+# repo root, even when the service Root Directory is a subfolder. The
+# previous location backend/railway.toml was silently ignored, which caused
+# migrations 0037–0039 to skip prod until a manual catch-up on 2026-04-24.
+#
 # Key design:
 #   - releaseCommand runs node-pg-migrate BEFORE traffic is shifted to the new
 #     deployment, so the DB schema is always ahead of the running code.
@@ -12,10 +17,10 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand    = "npm start"
+startCommand    = "cd backend && npm start"
 # Run migrations before the new instance receives traffic.
 # node-pg-migrate reads DATABASE_URL from the environment automatically.
-releaseCommand  = "npx node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL"
+releaseCommand  = "cd backend && npx node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL"
 healthcheckPath = "/health"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
