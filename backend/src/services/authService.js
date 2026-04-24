@@ -350,10 +350,59 @@ async function googleAuth({ googleId, email, name, avatarUrl }) {
   };
 }
 
+/**
+ * Change password for the authenticated user.
+ *
+ * Four cases based on (currentPassword provided?) x (user has password_hash?):
+ *   - has pass + provides current → verify then update
+ *   - has pass + no current       → 400 "current required"
+ *   - no pass + provides current  → 400 "account has no password yet"
+ *   - no pass + no current        → set initial password (SSO user adding local pass)
+ *
+ * @param {string} userId
+ * @param {string|null} currentPassword
+ * @param {string} newPassword
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    throw httpError("Mật khẩu mới phải có ít nhất 8 ký tự", 400);
+  }
+
+  const { query } = require("../config/db");
+  const userResult = await query(
+    `SELECT password_hash FROM users WHERE id = $1 AND deleted_at IS NULL`,
+    [userId]
+  );
+  if (!userResult.rows[0]) throw httpError("User not found", 404);
+
+  const existingHash = userResult.rows[0].password_hash;
+  const hasPassword = existingHash !== null;
+
+  if (hasPassword && !currentPassword) {
+    throw httpError("Cần nhập mật khẩu hiện tại", 400);
+  }
+  if (!hasPassword && currentPassword) {
+    throw httpError("Tài khoản chưa có mật khẩu, không cần điền mật khẩu hiện tại", 400);
+  }
+  if (hasPassword && currentPassword) {
+    const ok = await bcrypt.compare(currentPassword, existingHash);
+    if (!ok) throw httpError("Mật khẩu hiện tại không đúng", 401);
+  }
+
+  const newHash = await hashPassword(newPassword);
+  await query(
+    `UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1`,
+    [userId, newHash]
+  );
+
+  return { success: true };
+}
+
 module.exports = {
   register,
   login,
   refreshTokens,
   logout,
   googleAuth,
+  changePassword,
 };

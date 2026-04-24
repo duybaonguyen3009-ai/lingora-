@@ -120,6 +120,12 @@ function createApp() {
   // Friend chat: conversations, messages, voice notes
   app.use("/api/v1/chat", require("./routes/chatRoutes"));
 
+  // Subscription (GET status, toggle auto-renew, apply promo)
+  app.use("/api/v1/users/subscription", require("./routes/subscriptionRoutes"));
+
+  // User preferences (GET, PATCH — target_band, exam_date, daily_xp_goal, notifications)
+  app.use("/api/v1/users/preferences", require("./routes/userPreferencesRoutes"));
+
   // User feedback: post-activity rating + comments
   app.use("/api/v1/feedback", require("./routes/feedbackRoutes"));
 

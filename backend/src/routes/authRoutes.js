@@ -15,6 +15,7 @@
 const { Router }    = require("express");
 const rateLimit     = require("express-rate-limit");
 const authController = require("../controllers/authController");
+const { verifyToken } = require("../middleware/auth");
 
 const router = Router();
 
@@ -50,6 +51,10 @@ router.post("/refresh",  authController.refresh);
 
 /** Revoke the refresh token and clear the cookie */
 router.post("/logout",   authController.logout);
+
+/** Change password (authenticated). Handles both SSO-only users setting
+ *  initial pass and existing-pass users rotating. */
+router.post("/change-password", verifyToken, authController.handleChangePassword);
 
 // ─── Google OAuth ────────────────────────────────────────────────────────────
 

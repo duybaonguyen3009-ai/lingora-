@@ -16,7 +16,7 @@
  */
 
 const authService   = require("../services/authService");
-const { sendSuccess } = require("../response");
+const { sendSuccess, sendError } = require("../response");
 const config          = require("../config");
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
@@ -247,4 +247,26 @@ async function logout(req, res, next) {
   }
 }
 
-module.exports = { register, login, refresh, logout };
+/**
+ * POST /api/v1/auth/change-password (authenticated)
+ * Body: { current_password?: string, new_password: string }
+ */
+async function handleChangePassword(req, res, next) {
+  try {
+    const { current_password, new_password } = req.body || {};
+    if (typeof new_password !== "string") {
+      return sendError(res, { status: 400, message: "new_password required" });
+    }
+    const result = await authService.changePassword(
+      req.user.id,
+      current_password ?? null,
+      new_password
+    );
+    return sendSuccess(res, { data: result, message: "Password updated" });
+  } catch (err) {
+    if (err && err.status) return sendError(res, { status: err.status, message: err.message });
+    next(err);
+  }
+}
+
+module.exports = { register, login, refresh, logout, handleChangePassword };
