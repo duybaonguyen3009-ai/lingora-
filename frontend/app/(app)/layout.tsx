@@ -67,6 +67,11 @@ function AppShellInner({ children }: { children: ReactNode }) {
   const activeTab = matchActiveNavId(pathname ?? "/home", searchParams);
 
   const handleTabChange = (id: string) => {
+    // Sidebar footer gear emits "settings" — route to the PR6 Settings page.
+    if (id === "settings") {
+      router.push("/settings");
+      return;
+    }
     const item = findNavItem(id);
     if (!item) {
       router.push("/home");

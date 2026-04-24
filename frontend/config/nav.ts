@@ -143,6 +143,7 @@ export function matchActiveNavId(
   if (pathname === "/friends" || pathname.startsWith("/friends/")) return "friends";
   if (pathname === "/profile" || pathname.startsWith("/profile/")) return "profile";
   if (pathname.startsWith("/writing/progress")) return "home";
+  if (pathname === "/settings" || pathname.startsWith("/settings/")) return "settings";
 
   // Nested (app) routes
   if (pathname.startsWith("/exam/speaking"))  return "exam.speaking";
