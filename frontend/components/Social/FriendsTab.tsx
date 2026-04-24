@@ -150,26 +150,10 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header with sub-tab pills */}
+      {/* PR7.1 — horizontal sub-tab bar removed; FriendsShell kebab menu replaces it. */}
       <div className="px-4 pt-4 pb-2 shrink-0">
-        <h2 className="text-lg font-display font-bold mb-3" style={{ color: "var(--color-text)" }}>Friends</h2>
-        <div className="flex gap-1.5 mb-3 overflow-x-auto">
-          {(["chat", "friends", "requests", "add", "rooms"] as SubTab[]).map(t => (
-            <button key={t} onClick={() => onSubTabChange(t)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer"
-              style={{
-                // PR4a B3 — --color-tab-active-{bg,text} dims the teal in dark mode
-                // while keeping the original solid teal pill in light.
-                background: subTab === t ? "var(--color-tab-active-bg)" : "var(--surface-subtle)",
-                color: subTab === t ? "var(--color-tab-active-text)" : "var(--color-text-secondary)",
-                border: subTab === t ? "none" : "1px solid var(--color-border)",
-              }}>
-              {t === "chat" ? "Chat" : t === "friends" ? "Friends" : t === "requests" ? "Requests" : t === "add" ? "Add" : "Rooms"}
-            </button>
-          ))}
-        </div>
         {subTab === "chat" && (
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search chats..."
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm kiếm tin nhắn…"
             className="w-full rounded-lg px-3 py-2 text-sm"
             style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)", color: "var(--color-text)" }} />
         )}
@@ -525,8 +509,18 @@ function AddFriend() {
 // Main FriendsTab
 // ---------------------------------------------------------------------------
 
-export default function FriendsTab() {
-  const [subTab, setSubTab] = useState<SubTab>("chat");
+interface FriendsTabProps {
+  /** PR7.1 — initial sub-tab controlled by route. Defaults to "chat" for back-compat. */
+  activeSubTab?: SubTab;
+}
+
+export default function FriendsTab({ activeSubTab }: FriendsTabProps = {}) {
+  const [subTab, setSubTab] = useState<SubTab>(activeSubTab ?? "chat");
+  useEffect(() => {
+    if (activeSubTab && activeSubTab !== subTab) setSubTab(activeSubTab);
+    // Only sync when route-driven prop changes. Local clicks still update state freely.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSubTab]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [convLoading, setConvLoading] = useState(true);
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -562,22 +556,7 @@ export default function FriendsTab() {
 
   const mobileLayout = (
     <div className="md:hidden flex flex-col gap-5">
-      <div>
-        <h2 className="text-2xl font-display font-bold" style={{ color: "var(--color-text)" }}>Friends</h2>
-        <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>Practice together, stay accountable</p>
-      </div>
-
-      <div className="flex rounded-lg overflow-hidden"
-        style={{ background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)" }}>
-        {(["chat", "friends", "requests", "add", "rooms"] as SubTab[]).map((t) => (
-          <button key={t} onClick={() => setSubTab(t)}
-            className="flex-1 py-2.5 text-sm font-medium transition-all cursor-pointer"
-            style={{ background: subTab === t ? "var(--color-accent)" : "transparent", color: subTab === t ? "#fff" : "var(--color-text-secondary)" }}>
-            {t === "chat" ? "Chat" : t === "friends" ? "Friends" : t === "requests" ? "Requests" : t === "add" ? "Add" : "Rooms"}
-          </button>
-        ))}
-      </div>
-
+      {/* PR7.1 — mobile horizontal tab bar removed; kebab menu in FriendsShell replaces it. */}
       {subTab === "chat" && <ChatTab />}
       {subTab === "friends" && <FriendsList />}
       {subTab === "requests" && <RequestsList />}
