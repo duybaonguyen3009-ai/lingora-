@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Mascot from "@/components/ui/Mascot";
 import { getChatConversations, getChatMessages, sendChatMessage, sendVoiceNote, markChatSeen } from "@/lib/api";
+import { extractWaveform, validatePeaks, fallbackPeaks } from "@/lib/audio-waveform";
 import { useAuthStore } from "@/lib/stores/authStore";
 import Skeleton from "@/components/ui/Skeleton";
 import type { ChatMessage, Conversation } from "@/lib/types";
@@ -318,6 +319,10 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         const duration = recordTime;
 
+        // PR7.3 — extract waveform client-side before the upload. Falls back
+        // to a uniform array on decode failure so we never block the send.
+        const peaks = validatePeaks(await extractWaveform(blob));
+
         // PR7.2 — optimistic voice bubble. Preview plays from a local object URL
         // while the upload runs; replaced by the server row (with the CDN
         // audio_url) on success.
@@ -335,6 +340,7 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
           seen_at: null, created_at: new Date().toISOString(),
           pending: true,
           local_audio_url: localUrl,
+          waveform_peaks: peaks.length > 0 ? peaks : null,
         };
         setMessages((prev) => [...prev, optimistic]);
         seenCidsRef.current.add(clientMessageId);
@@ -342,7 +348,13 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         const reader = new FileReader();
         reader.onload = async () => {
           try {
-            const real = await sendVoiceNote(friendId, reader.result as string, duration, clientMessageId);
+            const real = await sendVoiceNote(
+              friendId,
+              reader.result as string,
+              duration,
+              clientMessageId,
+              peaks.length > 0 ? peaks : undefined,
+            );
             URL.revokeObjectURL(localUrl);
             setMessages((prev) => prev.map((m) =>
               m.client_message_id === clientMessageId
@@ -439,17 +451,50 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
                       borderBottomLeftRadius: isMine ? 16 : 6,
                     }}>
                     {msg.type === "voice" ? (
-                      <div className="flex items-center gap-2 min-w-[140px]">
-                        <span className="text-lg">🎤</span>
-                        <div className="flex-1 flex items-center gap-0.5">
-                          {[...Array(8)].map((_, i) => (
-                            <div key={i} className="w-1 rounded-full" style={{ height: `${8 + Math.random() * 12}px`, background: isMine ? "rgba(255,255,255,0.5)" : "var(--color-accent)" }} />
-                          ))}
-                        </div>
-                        <span className="text-xs font-mono" style={{ color: isMine ? "rgba(255,255,255,0.7)" : "var(--color-text-tertiary)" }}>
-                          0:{String(msg.audio_duration_seconds || 0).padStart(2, "0")}
-                        </span>
-                      </div>
+                      (() => {
+                        // PR7.3 — data-driven waveform. 64 bars from the peaks
+                        // array (downsample if server sent more). Legacy rows
+                        // with null peaks fall back to uniform bars so the
+                        // bubble never empties out.
+                        const BARS = 64;
+                        const raw = Array.isArray(msg.waveform_peaks) && msg.waveform_peaks.length > 0
+                          ? msg.waveform_peaks
+                          : fallbackPeaks(BARS);
+                        const stride = raw.length > BARS ? raw.length / BARS : 1;
+                        const bars: number[] = [];
+                        for (let i = 0; i < BARS; i++) {
+                          const idx = Math.min(raw.length - 1, Math.floor(i * stride));
+                          bars.push(raw[idx] ?? 0);
+                        }
+                        const durSec = msg.audio_duration_seconds ?? 0;
+                        return (
+                          <div className="flex items-center gap-2 min-w-[180px]">
+                            <span className="text-lg" aria-hidden>🎤</span>
+                            <div
+                              className="flex-1 flex items-center gap-[2px]"
+                              role="img"
+                              aria-label={`Tin nhắn thoại ${durSec} giây`}
+                            >
+                              {bars.map((peak, i) => (
+                                <span
+                                  key={i}
+                                  aria-hidden
+                                  className="rounded-full"
+                                  style={{
+                                    width: 2,
+                                    height: `${Math.max(3, peak * 28)}px`,
+                                    background: isMine ? "rgba(255,255,255,0.7)" : "var(--color-accent)",
+                                    display: "inline-block",
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-mono" style={{ color: isMine ? "rgba(255,255,255,0.7)" : "var(--color-text-tertiary)" }}>
+                              0:{String(durSec).padStart(2, "0")}
+                            </span>
+                          </div>
+                        );
+                      })()
                     ) : (
                       msg.content
                     )}

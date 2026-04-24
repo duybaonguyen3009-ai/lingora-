@@ -722,6 +722,9 @@ export interface ChatMessage {
   /** PR7.2 — server echoes the client-generated UUID so optimistic bubbles can
    *  be deduped / replaced when the delta poll returns the persisted row. */
   client_message_id?: string | null;
+  /** PR7.3 — pre-computed waveform (client-side Web Audio decode, 1-512
+   *  buckets, values [0,1]). Null for legacy voice rows pre-migration. */
+  waveform_peaks?: number[] | null;
 }
 
 // ---------------------------------------------------------------------------

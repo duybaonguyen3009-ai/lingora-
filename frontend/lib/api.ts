@@ -622,9 +622,14 @@ export async function sendVoiceNote(
   audio: string,
   duration: number,
   clientMessageId?: string,
+  waveformPeaks?: number[],
 ): Promise<ChatMessage> {
   const body: Record<string, unknown> = { audio, duration };
   if (clientMessageId) body.client_message_id = clientMessageId;
+  // PR7.3 — snake_case preserved. Backend validates length 1-512 and
+  // values [0,1]; `validatePeaks()` in lib/audio-waveform.ts enforces
+  // both before the call lands here.
+  if (waveformPeaks && waveformPeaks.length > 0) body.waveform_peaks = waveformPeaks;
   return apiPostAuth<ChatMessage>(`/chat/voice/${friendId}`, body);
 }
 
