@@ -719,6 +719,9 @@ export interface ChatMessage {
   audio_duration_seconds: number | null;
   seen_at: string | null;
   created_at: string;
+  /** PR7.2 — server echoes the client-generated UUID so optimistic bubbles can
+   *  be deduped / replaced when the delta poll returns the persisted row. */
+  client_message_id?: string | null;
 }
 
 export interface Conversation {

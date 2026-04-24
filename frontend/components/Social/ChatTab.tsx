@@ -18,6 +18,59 @@ import type { ChatMessage, Conversation } from "@/lib/types";
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * PR7.2 — merge delta-poll results into the existing message list.
+ *
+ * Three cases per incoming row:
+ *   1. Row has a client_message_id we've already merged → drop (dedup).
+ *   2. Row has a client_message_id that matches a pending/failed optimistic
+ *      bubble → replace the optimistic bubble with the server row in place.
+ *   3. Otherwise → append to the end.
+ *
+ * `seenCidsRef` is mutated so subsequent polls don't re-append the same row.
+ * (ChatMessageUI augmentation is local to ChatTab.)
+ */
+function mergeDelta<T extends { id: string; client_message_id?: string | null }>(
+  current: T[],
+  delta: T[],
+  seenCidsRef: { current: Set<string> },
+): T[] {
+  if (delta.length === 0) return current;
+
+  let next = current;
+  for (const row of delta) {
+    const cid = row.client_message_id ?? null;
+
+    if (cid) {
+      // (1) already merged — skip
+      if (seenCidsRef.current.has(cid)) {
+        // But if a matching optimistic bubble exists and still says pending,
+        // fall through to replace it (happens when the initial echo raced the optimistic render).
+        const optIdx = next.findIndex(
+          (m) => m.client_message_id === cid && (m as T & { pending?: boolean }).pending,
+        );
+        if (optIdx === -1) continue;
+        next = [...next.slice(0, optIdx), row, ...next.slice(optIdx + 1)];
+        continue;
+      }
+
+      // (2) optimistic bubble match — replace in place
+      const optIdx = next.findIndex((m) => m.client_message_id === cid);
+      if (optIdx !== -1) {
+        next = [...next.slice(0, optIdx), row, ...next.slice(optIdx + 1)];
+        seenCidsRef.current.add(cid);
+        continue;
+      }
+
+      seenCidsRef.current.add(cid);
+    }
+
+    // (3) genuinely new — append
+    next = [...next, row];
+  }
+  return next;
+}
+
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "";
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -113,9 +166,19 @@ function ConversationList({ conversations, activeId, onSelect, loading }: {
 // Chat Window
 // ---------------------------------------------------------------------------
 
+// PR7.2 — local UI augmentation of ChatMessage. Server-side fields are
+// unchanged; `pending`/`failed` are client-only hints while an optimistic
+// bubble is in flight, and `local_audio_url` lets us preview voice blobs
+// before the upload round-trip completes.
+type ChatMessageUI = ChatMessage & {
+  pending?: boolean;
+  failed?: boolean;
+  local_audio_url?: string;
+};
+
 function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBack: () => void }) {
   const userId = useAuthStore((s) => s.user?.id);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [input, setInput] = useState("");
@@ -126,16 +189,23 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  // PR7.2 — dedup tracker for delta polling. Holds every client_message_id
+  // we've seen so a server row arriving via ?after= can be matched back
+  // to its optimistic bubble and merged in place.
+  const seenCidsRef = useRef<Set<string>>(new Set());
 
   const friendId = conversation.friend_id;
 
-  // Load messages
+  // Load messages — most recent 50.
   const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getChatMessages(friendId);
+      const data = await getChatMessages(friendId, { limit: 50 });
       setMessages(data.messages);
       setHasMore(data.hasMore);
+      const cids = new Set<string>();
+      data.messages.forEach((m) => { if (m.client_message_id) cids.add(m.client_message_id); });
+      seenCidsRef.current = cids;
     } catch { /* silent */ }
     setLoading(false);
   }, [friendId]);
@@ -147,12 +217,26 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Poll for new messages (fallback — Socket.IO primary)
+  // PR7.2 — delta polling. Fetch only messages created after our newest row.
+  // Dedupe by client_message_id so our own optimistic bubbles don't duplicate
+  // when the server echo lands in the next tick. Interval preserved at 5s.
   useEffect(() => {
     const poll = setInterval(async () => {
       try {
-        const data = await getChatMessages(friendId);
-        setMessages(data.messages);
+        setMessages((prev) => {
+          // Derive cursor from committed (non-pending) messages only.
+          const committed = prev.filter((m) => !m.pending && !m.failed);
+          const lastAt = committed.length > 0 ? committed[committed.length - 1].created_at : undefined;
+          // Kick off the delta fetch asynchronously; updater below handles merge.
+          (async () => {
+            try {
+              const data = await getChatMessages(friendId, lastAt ? { after: lastAt } : { limit: 50 });
+              if (!data.messages || data.messages.length === 0) return;
+              setMessages((curr) => mergeDelta(curr, data.messages, seenCidsRef));
+            } catch { /* silent */ }
+          })();
+          return prev;
+        });
       } catch { /* silent */ }
     }, 5000);
     return () => clearInterval(poll);
@@ -163,28 +247,62 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
     markChatSeen(friendId).catch(() => {});
   }, [friendId]);
 
-  // Send text
+  // PR7.2 — Send text with client-generated UUID for idempotency.
+  // Optimistic bubble gets `pending: true`; on failure we mark `failed: true`
+  // and keep the CID so the retry button can resend with the same id
+  // (backend returns 200 with the existing row instead of creating a dupe).
+  const sendTextWithCid = async (text: string, clientMessageId: string) => {
+    try {
+      const real = await sendChatMessage(friendId, text, clientMessageId);
+      seenCidsRef.current.add(clientMessageId);
+      setMessages((prev) => prev.map((m) =>
+        m.client_message_id === clientMessageId
+          ? { ...real, client_message_id: clientMessageId }
+          : m,
+      ));
+    } catch {
+      setMessages((prev) => prev.map((m) =>
+        m.client_message_id === clientMessageId
+          ? { ...m, pending: false, failed: true }
+          : m,
+      ));
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || sending) return;
     const text = input.trim();
     setInput("");
     setSending(true);
 
-    // Optimistic add
-    const optimistic: ChatMessage = {
-      id: `temp-${Date.now()}`, sender_id: userId!, receiver_id: friendId,
+    const clientMessageId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+      ? crypto.randomUUID()
+      : `cid-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const optimistic: ChatMessageUI = {
+      id: `temp-${clientMessageId}`,
+      client_message_id: clientMessageId,
+      sender_id: userId!, receiver_id: friendId,
       type: "text", content: text, audio_url: null, audio_duration_seconds: null,
       seen_at: null, created_at: new Date().toISOString(),
+      pending: true,
     };
     setMessages((prev) => [...prev, optimistic]);
+    seenCidsRef.current.add(clientMessageId);
 
-    try {
-      const real = await sendChatMessage(friendId, text);
-      setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? real : m)));
-    } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-    }
+    await sendTextWithCid(text, clientMessageId);
     setSending(false);
+  };
+
+  // Retry a failed text bubble with the same CID (idempotent on backend).
+  const handleRetry = async (msg: ChatMessageUI) => {
+    if (!msg.client_message_id || !msg.content) return;
+    setMessages((prev) => prev.map((m) =>
+      m.client_message_id === msg.client_message_id
+        ? { ...m, pending: true, failed: false }
+        : m,
+    ));
+    await sendTextWithCid(msg.content, msg.client_message_id);
   };
 
   // Voice recording
@@ -198,12 +316,46 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         stream.getTracks().forEach((t) => t.stop());
         if (chunksRef.current.length === 0) return;
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const duration = recordTime;
+
+        // PR7.2 — optimistic voice bubble. Preview plays from a local object URL
+        // while the upload runs; replaced by the server row (with the CDN
+        // audio_url) on success.
+        const clientMessageId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+          ? crypto.randomUUID()
+          : `cid-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const localUrl = URL.createObjectURL(blob);
+        const optimistic: ChatMessageUI = {
+          id: `temp-${clientMessageId}`,
+          client_message_id: clientMessageId,
+          sender_id: userId!, receiver_id: friendId,
+          type: "voice", content: null,
+          audio_url: null,
+          audio_duration_seconds: duration,
+          seen_at: null, created_at: new Date().toISOString(),
+          pending: true,
+          local_audio_url: localUrl,
+        };
+        setMessages((prev) => [...prev, optimistic]);
+        seenCidsRef.current.add(clientMessageId);
+
         const reader = new FileReader();
         reader.onload = async () => {
           try {
-            const real = await sendVoiceNote(friendId, reader.result as string, recordTime);
-            setMessages((prev) => [...prev, real]);
-          } catch { /* silent */ }
+            const real = await sendVoiceNote(friendId, reader.result as string, duration, clientMessageId);
+            URL.revokeObjectURL(localUrl);
+            setMessages((prev) => prev.map((m) =>
+              m.client_message_id === clientMessageId
+                ? { ...real, client_message_id: clientMessageId }
+                : m,
+            ));
+          } catch {
+            setMessages((prev) => prev.map((m) =>
+              m.client_message_id === clientMessageId
+                ? { ...m, pending: false, failed: true }
+                : m,
+            ));
+          }
         };
         reader.readAsDataURL(blob);
       };
@@ -227,11 +379,12 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
     mediaRef.current = null;
   };
 
-  // Load more (scroll to top)
+  // Load more (scroll to top) — PR7.2 now uses explicit options object.
   const handleLoadMore = async () => {
     if (!hasMore || messages.length === 0) return;
     try {
-      const data = await getChatMessages(friendId, messages[0].created_at);
+      const data = await getChatMessages(friendId, { before: messages[0].created_at, limit: 50 });
+      data.messages.forEach((m) => { if (m.client_message_id) seenCidsRef.current.add(m.client_message_id); });
       setMessages((prev) => [...data.messages, ...prev]);
       setHasMore(data.hasMore);
     } catch { /* silent */ }
@@ -272,14 +425,16 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         ) : (
           messages.map((msg) => {
             const isMine = msg.sender_id === userId;
+            const pending = !!msg.pending;
+            const failed = !!msg.failed;
             return (
               <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                <div className="max-w-[75%]">
+                <div className="max-w-[75%]" style={{ opacity: pending || failed ? 0.65 : 1 }}>
                   <div className="px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
                     style={{
                       background: isMine ? "linear-gradient(135deg, #00A896, #00C4B0)" : "var(--color-bg-card)",
                       color: isMine ? "#fff" : "var(--color-text)",
-                      border: isMine ? "none" : "1px solid var(--color-border)",
+                      border: failed ? "1px solid var(--color-amber)" : isMine ? "none" : "1px solid var(--color-border)",
                       borderBottomRightRadius: isMine ? 6 : 16,
                       borderBottomLeftRadius: isMine ? 16 : 6,
                     }}>
@@ -301,10 +456,24 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
                   </div>
                   <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMine ? "justify-end" : "justify-start"}`}>
                     <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>{timeAgo(msg.created_at)}</span>
-                    {isMine && (
+                    {isMine && !pending && !failed && (
                       <span className="text-xs" style={{ color: msg.seen_at ? "#00A896" : "var(--color-text-tertiary)" }}>
                         {msg.seen_at ? "✓✓" : "✓"}
                       </span>
+                    )}
+                    {isMine && pending && (
+                      <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>Đang gửi…</span>
+                    )}
+                    {isMine && failed && msg.type === "text" && (
+                      <button
+                        type="button"
+                        onClick={() => handleRetry(msg)}
+                        className="text-xs font-medium underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                        style={{ color: "var(--color-amber)" }}
+                        aria-label="Thử lại gửi tin nhắn"
+                      >
+                        Bấm để thử lại
+                      </button>
                     )}
                   </div>
                 </div>

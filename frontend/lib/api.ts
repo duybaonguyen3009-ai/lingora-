@@ -529,17 +529,39 @@ export async function getChatConversations(): Promise<{ conversations: Conversat
   return apiFetchAuth<{ conversations: Conversation[] }>("/chat/conversations");
 }
 
-export async function getChatMessages(friendId: string, before?: string): Promise<{ messages: ChatMessage[]; hasMore: boolean }> {
-  const params = before ? `?before=${before}` : "";
-  return apiFetchAuth<{ messages: ChatMessage[]; hasMore: boolean }>(`/chat/messages/${friendId}${params}`);
+// PR7.2 — delta polling via `after` + idempotent send via `client_message_id`.
+// Backend contract: `before` + `after` mutually exclusive; snake_case preserved.
+export async function getChatMessages(
+  friendId: string,
+  opts?: { limit?: number; before?: string; after?: string },
+): Promise<{ messages: ChatMessage[]; hasMore: boolean }> {
+  const qs = new URLSearchParams();
+  if (opts?.limit != null) qs.set("limit", String(opts.limit));
+  if (opts?.before) qs.set("before", opts.before);
+  if (opts?.after)  qs.set("after",  opts.after);
+  const tail = qs.toString() ? `?${qs.toString()}` : "";
+  return apiFetchAuth<{ messages: ChatMessage[]; hasMore: boolean }>(`/chat/messages/${friendId}${tail}`);
 }
 
-export async function sendChatMessage(friendId: string, content: string): Promise<ChatMessage> {
-  return apiPostAuth<ChatMessage>(`/chat/messages/${friendId}`, { content });
+export async function sendChatMessage(
+  friendId: string,
+  content: string,
+  clientMessageId?: string,
+): Promise<ChatMessage> {
+  const body: Record<string, unknown> = { content };
+  if (clientMessageId) body.client_message_id = clientMessageId;
+  return apiPostAuth<ChatMessage>(`/chat/messages/${friendId}`, body);
 }
 
-export async function sendVoiceNote(friendId: string, audio: string, duration: number): Promise<ChatMessage> {
-  return apiPostAuth<ChatMessage>(`/chat/voice/${friendId}`, { audio, duration });
+export async function sendVoiceNote(
+  friendId: string,
+  audio: string,
+  duration: number,
+  clientMessageId?: string,
+): Promise<ChatMessage> {
+  const body: Record<string, unknown> = { audio, duration };
+  if (clientMessageId) body.client_message_id = clientMessageId;
+  return apiPostAuth<ChatMessage>(`/chat/voice/${friendId}`, body);
 }
 
 export async function markChatSeen(friendId: string): Promise<unknown> {
