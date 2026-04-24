@@ -9,25 +9,50 @@
 const chatRepo = require("../repositories/chatRepository");
 const { isFriend } = require("../repositories/socialRepository");
 
+const MAX_PEAKS = 512;
+
+function httpError(status, message) {
+  const err = new Error(message);
+  err.status = status;
+  return err;
+}
+
+function validateWaveformPeaks(peaks) {
+  if (!Array.isArray(peaks)) {
+    throw httpError(400, "waveform_peaks must be array");
+  }
+  if (peaks.length === 0 || peaks.length > MAX_PEAKS) {
+    throw httpError(400, `waveform_peaks length must be 1-${MAX_PEAKS}`);
+  }
+  for (const v of peaks) {
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > 1) {
+      throw httpError(400, "waveform_peaks values must be finite numbers in [0, 1]");
+    }
+  }
+}
+
 async function getConversations(userId) {
   return chatRepo.getConversations(userId);
 }
 
 async function sendMessage(
   senderId, receiverId,
-  { type, content, audioUrl, audioDuration, clientMessageId = null }
+  { type, content, audioUrl, audioDuration, clientMessageId = null, waveformPeaks = null }
 ) {
   // Verify friendship
   if (!(await isFriend(senderId, receiverId))) {
-    const err = new Error("Can only message friends");
-    err.status = 403;
-    throw err;
+    throw httpError(403, "Can only message friends");
   }
 
   if (type === "text" && (!content || !content.trim())) {
-    const err = new Error("Message content required");
-    err.status = 400;
-    throw err;
+    throw httpError(400, "Message content required");
+  }
+
+  if (waveformPeaks !== null && type !== "voice") {
+    throw httpError(400, "waveform_peaks chỉ áp dụng cho voice message");
+  }
+  if (waveformPeaks !== null) {
+    validateWaveformPeaks(waveformPeaks);
   }
 
   return chatRepo.createMessage(
@@ -35,7 +60,8 @@ async function sendMessage(
     type === "text" ? content.trim() : null,
     audioUrl || null,
     audioDuration || null,
-    clientMessageId
+    clientMessageId,
+    waveformPeaks
   );
 }
 

@@ -67,14 +67,20 @@ async function getMessages(userId, friendId, limit = 50, before = null, after = 
 }
 
 async function createMessage(
-  senderId, receiverId, type, content, audioUrl, audioDuration, clientMessageId = null
+  senderId, receiverId, type, content, audioUrl, audioDuration,
+  clientMessageId = null, waveformPeaks = null
 ) {
   try {
     const result = await query(
       `INSERT INTO messages
-         (sender_id, receiver_id, type, content, audio_url, audio_duration_seconds, client_message_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [senderId, receiverId, type, content || null, audioUrl || null, audioDuration || null, clientMessageId]
+         (sender_id, receiver_id, type, content, audio_url, audio_duration_seconds,
+          client_message_id, waveform_peaks)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [
+        senderId, receiverId, type, content || null, audioUrl || null,
+        audioDuration || null, clientMessageId,
+        waveformPeaks ? JSON.stringify(waveformPeaks) : null,
+      ]
     );
     return { message: result.rows[0], created: true };
   } catch (err) {

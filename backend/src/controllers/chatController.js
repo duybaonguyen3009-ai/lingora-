@@ -73,13 +73,15 @@ async function sendVoiceMessage(req, res, next) {
   try {
     const { friendId } = req.params;
     if (!UUID_RE.test(friendId)) return sendError(res, { status: 400, message: "Valid friendId required" });
-    const { audio, duration, client_message_id, clientMessageId } = req.body;
+    const { audio, duration, client_message_id, clientMessageId, waveform_peaks, waveformPeaks } = req.body;
     if (!audio) return sendError(res, { status: 400, message: "audio (base64) required" });
 
     const cid = client_message_id || clientMessageId || null;
     if (cid && !UUID_RE.test(cid)) {
       return sendError(res, { status: 400, message: "Invalid client_message_id" });
     }
+
+    const peaks = waveform_peaks ?? waveformPeaks ?? null;
 
     // Save voice note
     const voiceDir = path.join(__dirname, "..", "..", "public", "voice-notes");
@@ -92,7 +94,7 @@ async function sendVoiceMessage(req, res, next) {
 
     const audioUrl = `/voice-notes/${filename}`;
     const { message, created } = await chatService.sendMessage(req.user.id, friendId, {
-      type: "voice", audioUrl, audioDuration: duration || 0, clientMessageId: cid,
+      type: "voice", audioUrl, audioDuration: duration || 0, clientMessageId: cid, waveformPeaks: peaks,
     });
 
     if (created) {

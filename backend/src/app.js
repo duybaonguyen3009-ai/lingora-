@@ -48,8 +48,10 @@ function createApp() {
   // -------------------------------------------------------------------------
   // Request parsing
   // -------------------------------------------------------------------------
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Voice messages POST base64 audio in JSON body (~120KB for 30s opus).
+  // Default 100kb would 413 — 5mb covers 60s + waveform_peaks payload.
+  app.use(express.json({ limit: "5mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "5mb" }));
   app.use(cookieParser());   // populates req.cookies — needed for refresh token
 
   // -------------------------------------------------------------------------
