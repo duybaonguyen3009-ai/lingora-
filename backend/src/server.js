@@ -18,6 +18,13 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const config = require("./config");
 const createApp = require("./app");
+const presenceTracker = require("./socket/presenceTracker");
+const events = require("./socket/events");
+const socialRepository = require("./repositories/socialRepository");
+
+// NOTE: Socket.IO runs single-instance. Migrate to @socket.io/redis-adapter
+// when DAU > 2k or Railway horizontal scale (2+ replicas) needed.
+// Presence tracker currently in-memory (socket/presenceTracker.js).
 
 const PORT = process.env.PORT || 4000;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -54,21 +61,50 @@ io.use((socket, next) => {
   }
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const userId = socket.userId;
+  console.log(`[socket] ${userId} connected (${socket.id})`);
+
   socket.join(`user:${userId}`);
-  console.log(`[socket] ${userId} connected`);
 
-  socket.on("typing_start", ({ receiverId }) => {
-    io.to(`user:${receiverId}`).emit("typing", { userId, typing: true });
+  let friendIds = [];
+  try {
+    friendIds = await socialRepository.getFriendIds(userId);
+  } catch (err) {
+    console.error(`[socket] Failed to load friends for ${userId}:`, err.message);
+    // Continue — user can still chat, they just won't see friend presence.
+  }
+
+  // Join own friends-of room (so our friends broadcasting to this room reach us)
+  // plus every friend's friends-of room (so when a friend connects we receive
+  // their user_online on their own room — symmetric).
+  socket.join(`friends-of:${userId}`);
+  for (const fid of friendIds) socket.join(`friends-of:${fid}`);
+
+  // First socket for this user → broadcast user_online to all friends.
+  const wasFirst = presenceTracker.addConnection(userId, socket.id);
+  if (wasFirst) {
+    io.to(`friends-of:${userId}`).emit(events.USER_ONLINE, { userId });
+  }
+
+  // Initial presence sync for this socket: which of my friends are online right now.
+  const onlineFriends = presenceTracker.filterOnline(friendIds);
+  socket.emit(events.PRESENCE_SYNC, { online: onlineFriends });
+
+  socket.on(events.TYPING_START, ({ receiverId }) => {
+    // TODO: server-side throttle 1/sec per (userId, receiverId) if abuse shows up.
+    io.to(`user:${receiverId}`).emit(events.TYPING, { userId, typing: true });
   });
-
-  socket.on("typing_stop", ({ receiverId }) => {
-    io.to(`user:${receiverId}`).emit("typing", { userId, typing: false });
+  socket.on(events.TYPING_STOP, ({ receiverId }) => {
+    io.to(`user:${receiverId}`).emit(events.TYPING, { userId, typing: false });
   });
 
   socket.on("disconnect", () => {
-    console.log(`[socket] ${userId} disconnected`);
+    console.log(`[socket] ${userId} disconnected (${socket.id})`);
+    const wasLast = presenceTracker.removeConnection(userId, socket.id);
+    if (wasLast) {
+      io.to(`friends-of:${userId}`).emit(events.USER_OFFLINE, { userId });
+    }
   });
 });
 

@@ -193,6 +193,23 @@ async function isFriend(userAId, userBId) {
   return result.rowCount > 0;
 }
 
+/**
+ * Return array of friend user IDs. Used by the Socket.IO presence layer to
+ * join "friends-of:<id>" rooms and broadcast user_online / user_offline.
+ *
+ * @param {string} userId
+ * @returns {Promise<string[]>}
+ */
+async function getFriendIds(userId) {
+  const result = await query(
+    `SELECT CASE WHEN user_low_id = $1 THEN user_high_id ELSE user_low_id END AS friend_id
+     FROM friendships
+     WHERE user_low_id = $1 OR user_high_id = $1`,
+    [userId]
+  );
+  return result.rows.map((r) => r.friend_id);
+}
+
 async function getFriendCount(userId) {
   const result = await query(
     `SELECT friend_count FROM users WHERE id = $1`,
@@ -304,6 +321,7 @@ module.exports = {
   deleteFriendship,
   getFriends,
   isFriend,
+  getFriendIds,
   getFriendCount,
   createNotification,
   getNotifications,

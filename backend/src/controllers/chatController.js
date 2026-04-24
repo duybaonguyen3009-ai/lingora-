@@ -6,6 +6,7 @@
 
 const chatService = require("../services/chatService");
 const { sendSuccess, sendError } = require("../response");
+const events = require("../socket/events");
 const path = require("path");
 const fs = require("fs");
 
@@ -62,6 +63,11 @@ async function sendTextMessage(req, res, next) {
       const io = req.app.get("io");
       if (io) {
         io.to(`user:${friendId}`).emit("new_message", message);
+        // Sync sender's other devices (multi-device dedup of optimistic bubble).
+        io.to(`user:${req.user.id}`).emit(events.MESSAGE_DELIVERED, {
+          message_id: message.id,
+          client_message_id: message.client_message_id,
+        });
       }
     }
 
@@ -101,6 +107,10 @@ async function sendVoiceMessage(req, res, next) {
       const io = req.app.get("io");
       if (io) {
         io.to(`user:${friendId}`).emit("new_message", message);
+        io.to(`user:${req.user.id}`).emit(events.MESSAGE_DELIVERED, {
+          message_id: message.id,
+          client_message_id: message.client_message_id,
+        });
       }
     }
 
