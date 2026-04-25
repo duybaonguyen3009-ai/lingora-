@@ -12,6 +12,9 @@ import Mascot from "@/components/ui/Mascot";
 import { getChatConversations, getChatMessages, sendChatMessage, sendVoiceNote, markChatSeen } from "@/lib/api";
 import { extractWaveform, validatePeaks, fallbackPeaks } from "@/lib/audio-waveform";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useSocket } from "@/contexts/SocketContext";
+import { usePresence } from "@/contexts/PresenceContext";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import Skeleton from "@/components/ui/Skeleton";
 import type { ChatMessage, Conversation } from "@/lib/types";
 
@@ -85,12 +88,34 @@ function timeAgo(dateStr: string | null): string {
   return `${days}d`;
 }
 
-function Avatar({ name, avatar, size = 40 }: { name: string; avatar?: string | null; size?: number }) {
+function Avatar({ name, avatar, size = 40, online }: {
+  name: string;
+  avatar?: string | null;
+  size?: number;
+  /** PR9 — render a green presence dot at bottom-right when true. */
+  online?: boolean;
+}) {
   const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <div className="rounded-full flex items-center justify-center font-semibold text-xs shrink-0 overflow-hidden"
-      style={{ width: size, height: size, background: "linear-gradient(135deg, #1B2B4B, #2D4A7A)", color: "#fff" }}>
-      {avatar ? <img src={avatar} alt={name} className="w-full h-full object-cover" /> : initials}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <div className="rounded-full w-full h-full flex items-center justify-center font-semibold text-xs overflow-hidden"
+        style={{ background: "linear-gradient(135deg, var(--color-avatar-from), var(--color-avatar-to))", color: "#fff" }}>
+        {avatar ? <img src={avatar} alt={name} className="w-full h-full object-cover" /> : initials}
+      </div>
+      {online && (
+        <span
+          aria-hidden
+          className="absolute rounded-full"
+          style={{
+            width: Math.max(9, Math.round(size * 0.28)),
+            height: Math.max(9, Math.round(size * 0.28)),
+            bottom: 0,
+            right: 0,
+            background: "#5DCAA5",
+            border: "2px solid var(--color-bg-page)",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -194,8 +219,16 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
   // we've seen so a server row arriving via ?after= can be matched back
   // to its optimistic bubble and merged in place.
   const seenCidsRef = useRef<Set<string>>(new Set());
+  // PR9 — server message IDs already rendered. Shields against socket + delta
+  // poll delivering the same row twice (friend-origin messages have no CID).
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   const friendId = conversation.friend_id;
+
+  // PR9 — realtime plumbing for this conversation.
+  const { socket } = useSocket();
+  const { isOnline } = usePresence();
+  const { friendIsTyping, notifyTyping, notifyStop } = useTypingIndicator(friendId);
 
   // Load messages — most recent 50.
   const loadMessages = useCallback(async () => {
@@ -205,8 +238,13 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
       setMessages(data.messages);
       setHasMore(data.hasMore);
       const cids = new Set<string>();
-      data.messages.forEach((m) => { if (m.client_message_id) cids.add(m.client_message_id); });
+      const ids = new Set<string>();
+      data.messages.forEach((m) => {
+        if (m.client_message_id) cids.add(m.client_message_id);
+        if (m.id) ids.add(m.id);
+      });
       seenCidsRef.current = cids;
+      seenIdsRef.current = ids;
     } catch { /* silent */ }
     setLoading(false);
   }, [friendId]);
@@ -248,6 +286,64 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
     markChatSeen(friendId).catch(() => {});
   }, [friendId]);
 
+  // PR9 — realtime listeners. Polling stays active as fallback; dedup via
+  // seenCidsRef (our own optimistic sends) + seenIdsRef (server ids).
+  useEffect(() => {
+    if (!socket) return;
+
+    const onNewMessage = (msg: ChatMessage) => {
+      const involvesThisThread =
+        (msg.sender_id === friendId && msg.receiver_id === userId) ||
+        (msg.sender_id === userId && msg.receiver_id === friendId);
+      if (!involvesThisThread) return;
+
+      // Dedup 1 — same client_message_id already merged.
+      if (msg.client_message_id && seenCidsRef.current.has(msg.client_message_id)) {
+        // Still swap if an optimistic bubble is waiting for confirmation.
+        setMessages((prev) => prev.map((m) =>
+          m.client_message_id === msg.client_message_id && (m as ChatMessageUI).pending
+            ? { ...msg, client_message_id: msg.client_message_id }
+            : m,
+        ));
+        return;
+      }
+      // Dedup 2 — same server id already rendered.
+      if (seenIdsRef.current.has(msg.id)) return;
+
+      if (msg.client_message_id) seenCidsRef.current.add(msg.client_message_id);
+      seenIdsRef.current.add(msg.id);
+      setMessages((prev) => [...prev, msg]);
+    };
+
+    const onDelivered = (payload: { message_id?: string; client_message_id?: string }) => {
+      if (!payload?.client_message_id) return;
+      setMessages((prev) => prev.map((m) =>
+        m.client_message_id === payload.client_message_id
+          ? { ...m, id: payload.message_id ?? m.id, pending: false }
+          : m,
+      ));
+      if (payload.message_id) seenIdsRef.current.add(payload.message_id);
+    };
+
+    const onSeen = (payload: { userId?: string }) => {
+      if (payload?.userId !== friendId) return;
+      const nowIso = new Date().toISOString();
+      setMessages((prev) => prev.map((m) =>
+        m.sender_id === userId && !m.seen_at ? { ...m, seen_at: nowIso } : m,
+      ));
+    };
+
+    socket.on("new_message", onNewMessage);
+    socket.on("message_delivered", onDelivered);
+    socket.on("messages_seen", onSeen);
+
+    return () => {
+      socket.off("new_message", onNewMessage);
+      socket.off("message_delivered", onDelivered);
+      socket.off("messages_seen", onSeen);
+    };
+  }, [socket, friendId, userId]);
+
   // PR7.2 — Send text with client-generated UUID for idempotency.
   // Optimistic bubble gets `pending: true`; on failure we mark `failed: true`
   // and keep the CID so the retry button can resend with the same id
@@ -275,6 +371,7 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
     const text = input.trim();
     setInput("");
     setSending(true);
+    notifyStop(); // PR9 — tell the friend we've stopped typing now that we've sent.
 
     const clientMessageId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
       ? crypto.randomUUID()
@@ -409,12 +506,14 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         <button onClick={onBack} className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--color-bg-secondary)" }}>
           <span style={{ color: "var(--color-text)" }}>←</span>
         </button>
-        <Avatar name={conversation.friend_name} avatar={conversation.friend_avatar} size={36} />
+        <Avatar name={conversation.friend_name} avatar={conversation.friend_avatar} size={36} online={isOnline(friendId)} />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate" style={{ color: "var(--color-text)" }}>{conversation.friend_name}</div>
-          {conversation.friend_username && (
-            <div className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>@{conversation.friend_username}</div>
-          )}
+          <div className="text-xs" style={{ color: isOnline(friendId) ? "var(--color-teal-meta)" : "var(--color-text-tertiary)" }}>
+            {isOnline(friendId)
+              ? "Đang hoạt động"
+              : conversation.friend_username ? `@${conversation.friend_username}` : ""}
+          </div>
         </div>
       </div>
 
@@ -528,6 +627,33 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
         )}
       </div>
 
+      {/* PR9 — typing indicator bubble, shown just above the composer.
+          Bars animate via transform only (baseline-ui: no layout props). */}
+      {friendIsTyping && (
+        <div className="px-4 pb-1 shrink-0 flex items-center gap-2" aria-live="polite">
+          <Avatar name={conversation.friend_name} avatar={conversation.friend_avatar} size={22} />
+          <div
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-2xl"
+            style={{ background: "var(--color-bg-card)", border: "1px solid var(--color-border)" }}
+          >
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                aria-hidden
+                className="inline-block rounded-full"
+                style={{
+                  width: 6,
+                  height: 6,
+                  background: "var(--color-text-tertiary)",
+                  animation: `typingDot 1.2s ease-in-out ${i * 150}ms infinite`,
+                }}
+              />
+            ))}
+          </div>
+          <span className="sr-only">{conversation.friend_name} đang gõ tin nhắn</span>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="px-3 py-2 shrink-0 flex items-end gap-2" style={{ background: "var(--color-bg-card)", borderTop: "1px solid var(--color-border)" }}>
         {recording ? (
@@ -551,7 +677,18 @@ function ChatWindow({ conversation, onBack }: { conversation: Conversation; onBa
               style={{ background: "var(--color-bg-secondary)", color: "var(--color-text-secondary)" }}>
               🎤
             </button>
-            <textarea value={input} onChange={(e) => setInput(e.target.value)}
+            <textarea
+              value={input}
+              onChange={(e) => {
+                const v = e.target.value;
+                setInput(v);
+                // PR9 — debounced typing notifier. Empty input stops immediately
+                // so a cleared draft doesn't keep the bubble showing on the
+                // friend's side.
+                if (v.length > 0) notifyTyping();
+                else notifyStop();
+              }}
+              onBlur={notifyStop}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               placeholder="Message..."
               rows={1}

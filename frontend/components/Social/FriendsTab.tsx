@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Mascot from "@/components/ui/Mascot";
+import { usePresence } from "@/contexts/PresenceContext";
 import {
   getFriends,
   removeFriend,
@@ -40,12 +41,28 @@ type SubTab = "chat" | "friends" | "requests" | "add" | "rooms";
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+function Avatar({ name, size = 40, online }: { name: string; size?: number; online?: boolean }) {
   const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <div className="rounded-full flex items-center justify-center font-semibold text-xs shrink-0"
-      style={{ width: size, height: size, background: "linear-gradient(135deg, #1B2B4B, #2D4A7A)", color: "#fff" }}>
-      {initials}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <div className="rounded-full w-full h-full flex items-center justify-center font-semibold text-xs"
+        style={{ background: "linear-gradient(135deg, var(--color-avatar-from), var(--color-avatar-to))", color: "#fff" }}>
+        {initials}
+      </div>
+      {online && (
+        <span
+          aria-hidden
+          className="absolute rounded-full"
+          style={{
+            width: Math.max(9, Math.round(size * 0.28)),
+            height: Math.max(9, Math.round(size * 0.28)),
+            bottom: 0,
+            right: 0,
+            background: "#5DCAA5",
+            border: "2px solid var(--color-bg-page)",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -143,6 +160,8 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
   onSubTabChange: (t: SubTab) => void;
 }) {
   const [search, setSearch] = useState("");
+  // PR9 — presence map for the green dot overlay.
+  const { isOnline: friendIsOnline } = usePresence();
 
   const filtered = search.trim()
     ? conversations.filter((c) => c.friend_name.toLowerCase().includes(search.toLowerCase()) || c.friend_username?.toLowerCase().includes(search.toLowerCase()))
@@ -186,7 +205,7 @@ function ConversationSidebar({ conversations, activeId, onSelect, loading, subTa
                 borderLeft: activeId === c.friend_id ? "3px solid #00A896" : "3px solid transparent",
               }}>
               <div className="relative">
-                <Avatar name={c.friend_name} size={40} />
+                <Avatar name={c.friend_name} size={40} online={friendIsOnline(c.friend_id)} />
                 {c.unread_count > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold"
                     style={{ background: "#00A896", color: "#fff" }}>{c.unread_count > 9 ? "9+" : c.unread_count}</span>

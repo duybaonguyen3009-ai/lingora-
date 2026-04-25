@@ -29,6 +29,8 @@ import dynamic from "next/dynamic";
 import AppShell from "@/components/AppShell";
 import { AppDataProvider, useAppData } from "@/contexts/AppDataContext";
 import { RewardProvider } from "@/contexts/RewardContext";
+import { SocketProvider } from "@/contexts/SocketContext";
+import { PresenceProvider } from "@/contexts/PresenceContext";
 import RewardOverlay from "@/components/Rewards/RewardOverlay";
 import StreakMilestoneHandler from "@/components/Rewards/StreakMilestoneHandler";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -133,10 +135,14 @@ export default function AppGroupLayout({ children }: { children: ReactNode }) {
   return (
     <RewardProvider>
       <AppDataProvider>
-        <Suspense>
-          <AppShellInner>{children}</AppShellInner>
-        </Suspense>
-        <RewardOverlay />
+        <SocketProvider>
+          <PresenceProvider>
+            <Suspense>
+              <AppShellInner>{children}</AppShellInner>
+            </Suspense>
+            <RewardOverlay />
+          </PresenceProvider>
+        </SocketProvider>
       </AppDataProvider>
     </RewardProvider>
   );
