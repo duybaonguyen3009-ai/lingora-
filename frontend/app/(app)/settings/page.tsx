@@ -35,6 +35,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import Topbar from "@/components/Topbar";
 import Toggle from "@/components/ui/Toggle";
 import ProUpgradeModal from "@/components/Pro/ProUpgradeModal";
+import ChangePasswordModal from "@/components/Settings/ChangePasswordModal";
 import { useAppData } from "@/contexts/AppDataContext";
 import type { UserSubscription, UserPreferences } from "@/lib/types";
 
@@ -326,6 +327,7 @@ export default function SettingsPage() {
   const [showPro, setShowPro] = useState(false);
   const [info, setInfo] = useState<{ title: string; body: string } | null>(null);
   const [confirmRenew, setConfirmRenew] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   // PR8a — derived prefs + notification helpers (replaces old learning/notif split).
@@ -376,14 +378,19 @@ export default function SettingsPage() {
             Đổi email
           </button>
         </Row>
-        <Row label="Mật khẩu" value="Cập nhật lần cuối: —">
+        <Row
+          label="Mật khẩu"
+          value={user?.has_password === true
+            ? "Đổi mật khẩu để bảo mật tài khoản"
+            : "Đặt mật khẩu để đăng nhập bằng email + mật khẩu"}
+        >
           <button
             type="button"
-            onClick={() => openSupportInfo("Đổi mật khẩu", "Đổi mật khẩu đang hoàn thiện.")}
+            onClick={() => setShowChangePassword(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-full"
             style={{ color: "var(--color-teal-accent)", border: "1px solid var(--color-border-teal)" }}
           >
-            Đổi mật khẩu
+            {user?.has_password === true ? "Đổi mật khẩu" : "Đặt mật khẩu"}
           </button>
         </Row>
         <Row label="Giới thiệu (bio)" value="Cập nhật qua trang Hồ sơ">
@@ -733,6 +740,7 @@ export default function SettingsPage() {
       </div>
 
       <ProUpgradeModal isOpen={showPro} onClose={() => setShowPro(false)} onUpgraded={() => setShowPro(false)} />
+      <ChangePasswordModal isOpen={showChangePassword} onClose={() => setShowChangePassword(false)} />
       <InfoModal open={!!info} title={info?.title ?? ""} body={info?.body ?? ""} onClose={() => setInfo(null)} />
 
       {/* PR8a — confirm auto-renew toggle. Wording flips based on current state. */}

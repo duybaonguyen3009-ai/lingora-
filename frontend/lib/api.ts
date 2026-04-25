@@ -1024,6 +1024,52 @@ export async function registerUser(payload: ApiRegisterPayload): Promise<ApiRegi
 }
 
 /**
+ * PR8b — change password. Uses raw fetch (not apiPostAuth) because the
+ * 401 response from this endpoint means "wrong current password", NOT
+ * "session expired" — we must NOT trigger the silent-refresh-then-retry
+ * path that apiPostAuth runs, and callers need the structured error code
+ * to route the message to the right inline field.
+ *
+ * Success: resolves undefined.
+ * Failure: rejects with ApiError carrying { status, code, message }.
+ */
+export class ApiError extends Error {
+  status: number;
+  code: string;
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.name = "ApiError";
+  }
+}
+
+export async function changePassword(params: {
+  current_password: string | null;
+  new_password: string;
+}): Promise<void> {
+  const token = useAuthStore.getState().accessToken;
+  const res = await fetch(`${BASE_URL}/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(params),
+    credentials: "include",
+  });
+  if (res.ok) return;
+
+  let body: { code?: string; message?: string } = {};
+  try { body = await res.json(); } catch {}
+  throw new ApiError(
+    res.status,
+    body.code ?? "UNKNOWN",
+    body.message ?? "Có lỗi xảy ra, vui lòng thử lại.",
+  );
+}
+
+/**
  * POST /api/v1/auth/refresh
  * Called by AuthProvider on mount to restore a session from the httpOnly cookie.
  * On success, updates the store.  Throws on failure (expected for guests).

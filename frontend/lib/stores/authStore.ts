@@ -26,6 +26,11 @@ export interface AuthUser {
   role:       "kid" | "teacher" | "parent" | "admin";
   avatar_url: string | null;
   created_at: string;
+  /** PR8b — true when the user has set a password; false for SSO-only
+   *  accounts (Google) that haven't set one yet. Optional on the type so
+   *  Zustand-persist caches pre-dating this field don't crash; consumers
+   *  should treat `undefined` as `false` (safer default — show SSO UX). */
+  has_password?: boolean;
 }
 
 interface AuthState {
