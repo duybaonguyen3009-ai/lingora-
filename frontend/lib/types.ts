@@ -1101,6 +1101,145 @@ export interface ReadingFullTestResult {
 }
 
 // ---------------------------------------------------------------------------
+// Listening types
+// ---------------------------------------------------------------------------
+
+export type ListeningMode = 'practice_strict' | 'practice_loose' | 'exam';
+
+export type ListeningQuestionType =
+  | 'form_completion'
+  | 'note_completion'
+  | 'sentence_completion'
+  | 'multiple_choice'
+  | 'multiple_choice_multi'
+  | 'matching'
+  | 'map_labelling'
+  | 'plan_diagram_labelling'
+  | 'short_answer'
+  | 'flow_chart_completion';
+
+/** Form / note / flow-chart layout: ordered fields, each rendered as label + blank. */
+export interface FormCompletionMetadata {
+  formTitle?: string;
+  fields: Array<{
+    label: string;
+    questionNumber: number;
+    /** "ONE WORD AND/OR A NUMBER" word-cap for renderer-side hints. */
+    maxWords?: number;
+  }>;
+}
+
+/** Note-completion shares the form layout shape. */
+export type NoteCompletionMetadata = FormCompletionMetadata;
+export type FlowChartCompletionMetadata = FormCompletionMetadata;
+
+/** MCQ (single or multi) shares an option list per question. */
+export interface MultipleChoiceMetadata {
+  /** When 'multi', candidates pick exactly `pickCount` letters. */
+  pickCount?: number;
+  optionsByQuestion: Record<string, Array<{ letter: string; text: string }>>;
+}
+
+/** Matching: one box of options reused across the question range. */
+export interface MatchingMetadata {
+  options: Array<{ letter: string; text: string }>;
+  /** Optional: 'unique' = each letter used once; 'reusable' = letters can repeat. */
+  reuse?: 'unique' | 'reusable';
+}
+
+/** Map / plan / diagram labelling: image + letter pins. */
+export interface MapLabellingMetadata {
+  /** Presigned download URL for the map/plan image (R2-hosted). */
+  imageUrl: string;
+  options: Array<{ letter: string; label?: string }>;
+}
+
+export type PlanDiagramLabellingMetadata = MapLabellingMetadata;
+
+/** Short-answer / sentence-completion need only the word cap. */
+export interface ShortAnswerMetadata {
+  maxWords?: number;
+}
+
+export type SentenceCompletionMetadata = ShortAnswerMetadata;
+
+/** Discriminated union — narrow on the parent group's `questionType`. */
+export type ListeningGroupMetadata =
+  | FormCompletionMetadata
+  | NoteCompletionMetadata
+  | FlowChartCompletionMetadata
+  | MultipleChoiceMetadata
+  | MatchingMetadata
+  | MapLabellingMetadata
+  | PlanDiagramLabellingMetadata
+  | ShortAnswerMetadata
+  | SentenceCompletionMetadata
+  | Record<string, unknown>;
+
+export interface ListeningQuestion {
+  id: string;
+  groupId: string;
+  questionNumber: number;
+  questionText: string | null;
+  correctAnswer: string;
+  acceptableAnswers: string[];
+  transcriptQuote: string | null;
+  audioSegmentStartSeconds: number | null;
+  audioSegmentEndSeconds: number | null;
+  displayOrder: number;
+}
+
+export interface ListeningQuestionGroup {
+  id: string;
+  partId: string;
+  questionType: ListeningQuestionType;
+  instructions: string;
+  displayOrder: number;
+  metadata: ListeningGroupMetadata;
+  questions: ListeningQuestion[];
+}
+
+export interface ListeningPart {
+  id: string;
+  testId: string;
+  partNumber: 1 | 2 | 3 | 4;
+  topic: string | null;
+  description: string | null;
+  /** Presigned download URL — NOT the R2 key. Backend signs at request time. */
+  audioUrl: string;
+  audioDurationSeconds: number;
+  transcript: string;
+  groups: ListeningQuestionGroup[];
+}
+
+export interface ListeningTest {
+  id: string;
+  cambridgeBook: number;
+  testNumber: number;
+  mode: 'practice' | 'exam';
+  totalDurationSeconds: number | null;
+  parts?: ListeningPart[];
+  createdAt: string;
+}
+
+export interface ListeningAttempt {
+  id: string;
+  userId: string;
+  testId: string;
+  mode: ListeningMode;
+  partId: string | null;
+  status: 'in_progress' | 'submitted' | 'abandoned';
+  answers: Record<string, string>;
+  correctCount: number | null;
+  totalCount: number | null;
+  bandScore: number | null;
+  timeSpentSeconds: number | null;
+  pauseUsed: boolean;
+  startedAt: string;
+  submittedAt: string | null;
+}
+
+// ---------------------------------------------------------------------------
 // Battle types
 // ---------------------------------------------------------------------------
 

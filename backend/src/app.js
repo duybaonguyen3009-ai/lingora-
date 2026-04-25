@@ -106,6 +106,9 @@ function createApp() {
   // IELTS Reading: practice + full test
   app.use("/api/v1/reading", require("./routes/readingRoutes"));
 
+  // IELTS Listening: practice (Cam 1–6, per-Part) + exam (Cam 7–14, full test)
+  app.use("/api/v1/listening", require("./routes/listeningRoutes"));
+
   // Pro subscription: status, trial, upgrade
   app.use("/api/v1/users", require("./routes/proRoutes"));
 

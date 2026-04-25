@@ -21,7 +21,12 @@
  *   npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
  */
 
-const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 // ---------------------------------------------------------------------------
@@ -114,8 +119,35 @@ async function deleteObject(key) {
   await client.send(command);
 }
 
+/**
+ * Upload a buffer / typed array / readable stream directly to R2 from the
+ * server. Used by seed scripts and back-office tooling (e.g. Listening seed)
+ * where we don't want to round-trip a presigned URL through a browser.
+ *
+ * Keys are stored verbatim — callers are responsible for the prefix
+ * convention (e.g. "listening/cam07/test3/part1.mp3").
+ *
+ * @param {string} key
+ * @param {Buffer|Uint8Array|import("stream").Readable} body
+ * @param {string} contentType
+ * @returns {Promise<{ key: string }>}
+ */
+async function uploadObject(key, body, contentType) {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  });
+
+  await client.send(command);
+
+  return { key };
+}
+
 module.exports = {
   generateUploadUrl,
   generateDownloadUrl,
   deleteObject,
+  uploadObject,
 };
