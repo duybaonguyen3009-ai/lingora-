@@ -65,32 +65,37 @@ async function submitPractice(userId, passageId, answers, timeSeconds) {
 
   // ── Gamification: Award XP + update streak on reading completion ──
   // xp_ledger has no lesson_id column — we use the passageId as ref_id.
-  // updateStreak is idempotent for same-day calls (no double-counting).
+  // awardXp is idempotent on (user, reason, passageId) — replay → awarded:false.
+  // On replay, skip the streak/badge cascade (already fired on first submit).
+  let xpAwarded = false;
   try {
-    await awardXp(userId, XP_REWARD_READING_PASSAGE, "reading_practice_complete", passageId);
+    const result = await awardXp(userId, XP_REWARD_READING_PASSAGE, "reading_practice_complete", passageId);
+    xpAwarded = result.awarded;
   } catch (err) {
     // Non-fatal: XP award failure should not break practice scoring
     console.error(`[reading] XP award failed for user ${userId}:`, err.message);
   }
 
-  try {
-    await updateStreak(userId);
-  } catch (err) {
-    // Non-fatal: streak update failure should not break practice scoring
-    console.error(`[reading] streak update failed for user ${userId}:`, err.message);
-  }
+  if (xpAwarded) {
+    try {
+      await updateStreak(userId);
+    } catch (err) {
+      // Non-fatal: streak update failure should not break practice scoring
+      console.error(`[reading] streak update failed for user ${userId}:`, err.message);
+    }
 
-  // Fire-and-forget: check reading achievements (log errors, don't swallow)
-  try {
-    const { checkReadingBadges } = require("./badgeService");
-    const countRow = await require("../config/db").query(
-      `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
-    );
-    checkReadingBadges(userId, countRow.rows[0]?.c ?? correct).catch((err) => {
-      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
-    });
-  } catch (err) {
-    console.error(`[reading] badge module load failed:`, err.message);
+    // Fire-and-forget: check reading achievements (log errors, don't swallow)
+    try {
+      const { checkReadingBadges } = require("./badgeService");
+      const countRow = await require("../config/db").query(
+        `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
+      );
+      checkReadingBadges(userId, countRow.rows[0]?.c ?? correct).catch((err) => {
+        console.error(`[reading] badge check failed for user ${userId}:`, err.message);
+      });
+    } catch (err) {
+      console.error(`[reading] badge module load failed:`, err.message);
+    }
   }
 
   return { score: correct, total, band_estimate: bandEstimate, time_seconds: timeSeconds, per_question_results: results };
@@ -174,29 +179,37 @@ async function submitFullTest(userId, passageResults, timeSeconds, { startedAt =
   } catch { /* silent */ }
 
   // ── Gamification: Award XP + update streak on full-test completion ──
+  // NOTE: refId is NULL because there is no full_test_attempt id (per Audit
+  // Wave 2 backlog). The partial UNIQUE on xp_ledger exempts NULL — Full
+  // Test XP is NOT replay-protected at the xp_ledger level. Caller-level
+  // replay protection requires a `reading_full_test_sessions` row first.
+  let xpAwarded = false;
   try {
-    await awardXp(userId, XP_REWARD_READING_FULL_TEST, "reading_full_test_complete", null);
+    const result = await awardXp(userId, XP_REWARD_READING_FULL_TEST, "reading_full_test_complete", null);
+    xpAwarded = result.awarded;
   } catch (err) {
     console.error(`[reading] XP award failed for user ${userId}:`, err.message);
   }
 
-  try {
-    await updateStreak(userId);
-  } catch (err) {
-    console.error(`[reading] streak update failed for user ${userId}:`, err.message);
-  }
+  if (xpAwarded) {
+    try {
+      await updateStreak(userId);
+    } catch (err) {
+      console.error(`[reading] streak update failed for user ${userId}:`, err.message);
+    }
 
-  // Fire-and-forget: check reading achievements (log errors, don't swallow)
-  try {
-    const { checkReadingBadges } = require("./badgeService");
-    const countRow = await require("../config/db").query(
-      `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
-    );
-    checkReadingBadges(userId, countRow.rows[0]?.c ?? totalCorrect).catch((err) => {
-      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
-    });
-  } catch (err) {
-    console.error(`[reading] badge module load failed:`, err.message);
+    // Fire-and-forget: check reading achievements (log errors, don't swallow)
+    try {
+      const { checkReadingBadges } = require("./badgeService");
+      const countRow = await require("../config/db").query(
+        `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
+      );
+      checkReadingBadges(userId, countRow.rows[0]?.c ?? totalCorrect).catch((err) => {
+        console.error(`[reading] badge check failed for user ${userId}:`, err.message);
+      });
+    } catch (err) {
+      console.error(`[reading] badge module load failed:`, err.message);
+    }
   }
 
   // Lateness: server-trusted check against startedAt when present.

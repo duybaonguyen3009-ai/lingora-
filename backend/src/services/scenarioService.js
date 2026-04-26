@@ -1328,21 +1328,26 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
   // ── Gamification: Award XP + update streak on scenario completion ──
   // xp_ledger has no lesson_id column — we use the sessionId as ref_id.
   // learning_events is NOT written here (that table requires lesson_id).
-  // updateStreak is idempotent for same-day calls (no double-counting).
+  // awardXp is idempotent on (user, reason, sessionId) — replay → awarded:false
+  // (e.g. retried endSession after transient error); skip the streak cascade.
+  let xpAwarded = false;
   try {
     const xpReward = isIelts ? XP_REWARD_IELTS : XP_REWARD_SCENARIO;
     const reason   = isIelts ? "ielts_session_complete" : "scenario_session_complete";
-    await awardXp(userId, xpReward, reason, sessionId);
+    const xpResult = await awardXp(userId, xpReward, reason, sessionId);
+    xpAwarded = xpResult.awarded;
   } catch (err) {
     // Non-fatal: XP award failure should not break session scoring
     console.error(`[scenario] XP award failed for user ${userId}:`, err.message);
   }
 
-  try {
-    await updateStreak(userId);
-  } catch (err) {
-    // Non-fatal: streak update failure should not break session scoring
-    console.error(`[scenario] streak update failed for user ${userId}:`, err.message);
+  if (xpAwarded) {
+    try {
+      await updateStreak(userId);
+    } catch (err) {
+      // Non-fatal: streak update failure should not break session scoring
+      console.error(`[scenario] streak update failed for user ${userId}:`, err.message);
+    }
   }
 
   // ── Audio Intelligence: Build speech insights for frontend ──

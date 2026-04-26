@@ -50,28 +50,32 @@ async function userHasBadge(userId, badgeId) {
 /**
  * awardBadge
  *
- * Inserts a user_badges row.  ON CONFLICT DO NOTHING is the safety net;
- * callers should still check userHasBadge first to avoid unnecessary work.
- * Returns the full badge definition after insert.
+ * Inserts a user_badges row. Returns the badge definition ONLY if a new row
+ * was actually inserted; returns null if the row already existed (idempotent
+ * skip). Callers MUST treat null as "do not award XP / achievement_score" —
+ * this closes the badge-race double-grant vector (Audit Wave 1).
  *
  * @param {string} userId
  * @param {string} badgeId
- * @returns {Promise<object>} the badge definition row
+ * @returns {Promise<object|null>} badge definition if inserted, null on conflict
  */
 async function awardBadge(userId, badgeId) {
-  await query(
+  const insertResult = await query(
     `INSERT INTO user_badges (user_id, badge_id)
      VALUES ($1, $2)
-     ON CONFLICT DO NOTHING`,
+     ON CONFLICT DO NOTHING
+     RETURNING badge_id`,
     [userId, badgeId],
   );
-  const result = await query(
+  if (insertResult.rowCount === 0) return null;
+
+  const detail = await query(
     `SELECT id, slug, name, description, icon_url, xp_reward
      FROM   badges
      WHERE  id = $1`,
     [badgeId],
   );
-  return result.rows[0];
+  return detail.rows[0] ?? null;
 }
 
 /**

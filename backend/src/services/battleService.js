@@ -235,11 +235,17 @@ async function resolveMatch(matchId, match, participants) {
       });
     }
 
-    // Award XP via xpService (fire-and-forget)
+    // Award XP via xpService — idempotent on (user, "battle_result", matchId)
+    // so a concurrent double-resolve cannot double-grant XP.
     try {
       const xpService = require("./xpService");
-      await xpService.awardXp(p.user_id, xpReward, "battle_result", matchId);
-    } catch { /* silent */ }
+      const xpResult = await xpService.awardXp(p.user_id, xpReward, "battle_result", matchId);
+      if (!xpResult.awarded) {
+        console.warn(`[battle] duplicate xp award skipped match=${matchId} user=${p.user_id}`);
+      }
+    } catch (err) {
+      console.error(`[battle] xp award failed match=${matchId} user=${p.user_id}:`, err.message);
+    }
   }
 
   await repo.updateMatchStatus(matchId, "completed", {
@@ -450,11 +456,17 @@ async function expireOverdueMatches() {
           wins: ((await repo.getPlayerProfile(winner.user_id))?.wins || 0) + 1,
         });
 
-        // Award XP
+        // Award XP — idempotent: if normal resolve already awarded XP for
+        // this match (same matchId ref), expiry winner-path will be skipped.
         try {
           const xpService = require("./xpService");
-          await xpService.awardXp(winner.user_id, XP_WIN, "battle_result", matchId);
-        } catch { /* silent */ }
+          const xpResult = await xpService.awardXp(winner.user_id, XP_WIN, "battle_result", matchId);
+          if (!xpResult.awarded) {
+            console.warn(`[battle] duplicate xp award skipped (expiry) match=${matchId} user=${winner.user_id}`);
+          }
+        } catch (err) {
+          console.error(`[battle] xp award failed (expiry) match=${matchId}:`, err.message);
+        }
       }
 
       await repo.updateMatchStatus(matchId, "expired", { completedAt: new Date(), winnerUserId });

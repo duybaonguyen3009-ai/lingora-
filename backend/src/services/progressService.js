@@ -63,8 +63,11 @@ async function completeLesson(userId, lessonId, score, timeTakenMs) {
   const isFirstLesson  = completedCount === 1;
 
   // ── Gamification side-effects ─────────────────────────────────────────────
-  // Award XP + log learning event concurrently.
-  await Promise.all([
+  // Award XP + log learning event concurrently. awardXp is idempotent on
+  // (user, "lesson_complete", lessonId) — replay (re-submitting same lesson)
+  // returns awarded:false; downstream we report xpEarned=0 to avoid the UX
+  // lie of "+N XP" toast on a replay.
+  const [xpResult] = await Promise.all([
     xpReward > 0
       ? awardXp(userId, xpReward, 'lesson_complete', lessonId)
       : Promise.resolve(null),
@@ -74,6 +77,7 @@ async function completeLesson(userId, lessonId, score, timeTakenMs) {
       time_taken_ms: timeTakenMs ?? null,
     }),
   ]);
+  const actualXpEarned = (xpReward > 0 && xpResult?.awarded) ? xpReward : 0;
 
   // Streak update must happen before badge check (badge needs currentStreak).
   const streakResult = await updateStreak(userId);
@@ -93,7 +97,8 @@ async function completeLesson(userId, lessonId, score, timeTakenMs) {
   const { totalXp, level, xpInLevel, xpToNextLevel } = xpSummary;
 
   // Detect level-up: compare level before this lesson's XP was added.
-  const xpBefore               = Math.max(0, totalXp - xpReward);
+  // On replay (actualXpEarned=0) levelBefore === level → leveledUp=false.
+  const xpBefore               = Math.max(0, totalXp - actualXpEarned);
   const { level: levelBefore } = computeLevel(xpBefore); // computeLevel is a pure fn — no DB call
   const leveledUp              = level > levelBefore;
 
@@ -112,8 +117,8 @@ async function completeLesson(userId, lessonId, score, timeTakenMs) {
     completed:    row.completed,
     completedAt:  row.completed_at,
 
-    // Gamification enrichment
-    xpEarned:     xpReward,
+    // Gamification enrichment (xpEarned reflects ACTUAL ledger insert, 0 on replay)
+    xpEarned:     actualXpEarned,
     totalXp,
     level,
     xpInLevel,

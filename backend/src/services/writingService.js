@@ -155,33 +155,37 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
       } catch { /* module load safety */ }
 
       // ── Gamification: Award XP + update streak on writing completion ──
-      // xp_ledger has no lesson_id column — we use the submissionId as ref_id.
-      // updateStreak is idempotent for same-day calls (no double-counting).
+      // awardXp is idempotent on (user, reason, submissionId) — replay (e.g.
+      // scoring re-run for the same submission) → awarded:false; skip cascade.
+      let xpAwarded = false;
       try {
-        await awardXp(userId, XP_REWARD_WRITING, "writing_submission_complete", submissionId);
+        const xpResult = await awardXp(userId, XP_REWARD_WRITING, "writing_submission_complete", submissionId);
+        xpAwarded = xpResult.awarded;
       } catch (xpErr) {
         // Non-fatal: XP award failure should not break submission scoring
         console.error(`[writing] XP award failed for user ${userId}:`, xpErr.message);
       }
 
-      try {
-        await updateStreak(userId);
-      } catch (streakErr) {
-        // Non-fatal: streak update failure should not break submission scoring
-        console.error(`[writing] streak update failed for user ${userId}:`, streakErr.message);
-      }
+      if (xpAwarded) {
+        try {
+          await updateStreak(userId);
+        } catch (streakErr) {
+          // Non-fatal: streak update failure should not break submission scoring
+          console.error(`[writing] streak update failed for user ${userId}:`, streakErr.message);
+        }
 
-      // Fire-and-forget: check writing achievements (log errors, don't swallow)
-      try {
-        const { checkWritingBadges } = require("./badgeService");
-        const countRow = await require("../config/db").query(
-          `SELECT COUNT(*)::int AS c FROM writing_submissions WHERE user_id = $1 AND status = 'completed'`, [userId]
-        );
-        checkWritingBadges(userId, countRow.rows[0]?.c ?? 0, result.overall_band).catch((badgeErr) => {
-          console.error(`[writing] badge check failed for user ${userId}:`, badgeErr.message);
-        });
-      } catch (badgeLoadErr) {
-        console.error(`[writing] badge module load failed:`, badgeLoadErr.message);
+        // Fire-and-forget: check writing achievements (log errors, don't swallow)
+        try {
+          const { checkWritingBadges } = require("./badgeService");
+          const countRow = await require("../config/db").query(
+            `SELECT COUNT(*)::int AS c FROM writing_submissions WHERE user_id = $1 AND status = 'completed'`, [userId]
+          );
+          checkWritingBadges(userId, countRow.rows[0]?.c ?? 0, result.overall_band).catch((badgeErr) => {
+            console.error(`[writing] badge check failed for user ${userId}:`, badgeErr.message);
+          });
+        } catch (badgeLoadErr) {
+          console.error(`[writing] badge module load failed:`, badgeLoadErr.message);
+        }
       }
     } catch (err) {
       console.error(`[writing] Submission ${submissionId} failed:`, err.message);

@@ -57,13 +57,16 @@ function computeLevel(totalXp) {
 /**
  * awardXp
  *
- * Appends one XP event to the ledger and returns the inserted row.
+ * Appends one XP event to the ledger. Idempotent on (user_id, reason, ref_id)
+ * when refId is non-null (migration 0041): a duplicate call returns
+ * `{ awarded: false, delta: 0, ledgerId: null, ... }` and the caller MUST
+ * skip downstream gamification cascade (streak, badges) on replay.
  *
  * @param {string}      userId
  * @param {number}      delta
  * @param {string}      reason
  * @param {string|null} [refId]
- * @returns {Promise<object>}
+ * @returns {Promise<import('../repositories/xpRepository').XpAwardResult>}
  */
 async function awardXp(userId, delta, reason, refId = null) {
   return insertXpEvent(userId, delta, reason, refId);

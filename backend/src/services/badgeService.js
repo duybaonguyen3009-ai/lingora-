@@ -17,16 +17,20 @@ async function tryAwardBadge(userId, slug) {
   const badge = await getBadgeBySlug(slug);
   if (!badge) return null;
 
+  // Fast-path early-out: skips a write when we know the user already has it.
+  // The authoritative gate is awardBadge's INSERT ... ON CONFLICT below —
+  // it closes the race where two concurrent calls both pass userHasBadge.
   const alreadyHas = await userHasBadge(userId, badge.id);
   if (alreadyHas) return null;
 
-  await awardBadge(userId, badge.id);
+  const inserted = await awardBadge(userId, badge.id);
+  if (!inserted) return null; // race lost — peer call already awarded
 
   if (badge.xp_reward > 0) {
     await awardXp(userId, badge.xp_reward, "badge_award", badge.id);
   }
 
-  // Update achievement score
+  // Update achievement score (gated on actual insert above)
   if (badge.achievement_points > 0) {
     await query(`UPDATE users SET achievement_score = achievement_score + $2 WHERE id = $1`, [userId, badge.achievement_points]);
   }
