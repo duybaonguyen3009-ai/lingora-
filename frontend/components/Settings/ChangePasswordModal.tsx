@@ -14,8 +14,9 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { changePassword, refreshSession, ApiError } from "@/lib/api";
+import { changePassword, ApiError } from "@/lib/api";
 
 interface Props {
   isOpen: boolean;
@@ -26,7 +27,9 @@ interface Props {
 type FieldKey = "current_password" | "new_password" | "confirm_password" | "form";
 
 export default function ChangePasswordModal({ isOpen, onClose, onSuccess }: Props) {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const isSSO = user?.has_password !== true; // undefined → treat as SSO (safer default)
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -94,15 +97,16 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }: Prop
         new_password: newPassword,
       });
 
-      // Refresh the session so has_password flips to true for SSO users.
-      // Silent — change-password already succeeded; a refresh hiccup is benign.
-      await refreshSession().catch(() => {});
-
+      // Wave 1.3: backend revokes ALL refresh tokens + bumps password_version.
+      // Local access token is now invalid; we must clear and redirect to /login
+      // so the user re-authenticates from a clean slate.
       setSuccess(true);
       onSuccess?.();
       setTimeout(() => {
         reset();
         onClose();
+        clearAuth();
+        router.push("/login?reason=password_changed");
       }, 1500);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -176,6 +180,9 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }: Prop
             }}
           >
             ✓ Mật khẩu đã được {isSSO ? "đặt" : "cập nhật"} thành công.
+            <span style={{ display: "block", marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+              Đang chuyển sang trang đăng nhập…
+            </span>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3" noValidate>

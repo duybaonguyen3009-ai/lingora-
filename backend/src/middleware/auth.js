@@ -20,6 +20,7 @@
 
 const jwt    = require("jsonwebtoken");
 const config = require("../config");
+const authRepository = require("../repositories/authRepository");
 
 /**
  * Extract the Bearer token from an Authorization header.
@@ -37,14 +38,25 @@ function extractBearerToken(authHeader) {
  * verifyToken middleware
  *
  * Reads the Authorization: Bearer <token> header, verifies the JWT
- * signature and expiry, and attaches the decoded payload to req.user:
+ * signature and expiry, then re-checks the embedded password_version
+ * claim against the live users.password_version. Mismatch → 401
+ * TOKEN_INVALIDATED, which signals the FE to clear local session and
+ * redirect to /login.
  *
+ * Backward compat (migration 0042 grace window): tokens minted BEFORE
+ * deploy carry no `pv` claim. We treat `pv === undefined` as a match
+ * so existing logged-in users are not kicked out on the day of deploy.
+ * After config.jwt.refreshTtlDays (~30d) every legacy access token
+ * will have rotated; the grace branch can then be removed.
+ *
+ * Adds 1 cheap DB lookup per authenticated request. Acceptable at
+ * Lingora scale; can layer an in-memory LRU later if profiling shows
+ * pressure.
+ *
+ * Attaches:
  *   req.user = { id, role, name }
- *
- * Responds 401 when the token is absent, invalid, or expired.
- * Responds 500 on unexpected errors.
  */
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
   try {
     const token = extractBearerToken(req.headers.authorization);
 
@@ -67,6 +79,40 @@ function verifyToken(req, res, next) {
       );
       err.status = 401;
       return next(err);
+    }
+
+    // password_version binding — invalidates every outstanding access JWT
+    // when the user changes their password (or future password reset).
+    // Legacy tokens (pre-0042 deploy) have payload.pv === undefined; we
+    // grace-match those for the refresh TTL window.
+    if (payload.pv !== undefined) {
+      let dbVersion;
+      try {
+        dbVersion = await authRepository.getPasswordVersion(payload.sub);
+      } catch (dbErr) {
+        // Fail-closed: if the DB is unreachable we cannot safely confirm
+        // the token is still valid. 503 is the more honest signal but
+        // FE handles 401 → /login better, and the user would be unable
+        // to do anything anyway.
+        console.error(`[auth] password_version check failed for sub=${payload.sub}:`, dbErr.message);
+        const err  = new Error("Authentication temporarily unavailable. Please retry.");
+        err.status = 503;
+        err.code   = "AUTH_DB_UNAVAILABLE";
+        return next(err);
+      }
+      if (dbVersion === null) {
+        const err  = new Error("Account no longer exists.");
+        err.status = 401;
+        err.code   = "USER_NOT_FOUND";
+        return next(err);
+      }
+      if (dbVersion !== payload.pv) {
+        console.log(`[auth] 401 — password_version mismatch sub=${payload.sub} token=${payload.pv} db=${dbVersion} | ${req.method} ${req.originalUrl}`);
+        const err  = new Error("Token invalidated by password change. Please log in again.");
+        err.status = 401;
+        err.code   = "TOKEN_INVALIDATED";
+        return next(err);
+      }
     }
 
     // Attach a clean user object — never expose the full raw JWT payload

@@ -67,13 +67,22 @@ async function hashPassword(password) {
 
 /**
  * Sign a JWT access token for the given user.
- * Payload: { sub, role, name }
- * @param {{ id: string, role: string, name: string }} user
+ *
+ * Payload: { sub, role, name, pv }
+ *   pv = password_version — bumped by changePassword + future password reset.
+ *        Middleware re-checks against DB on every request; mismatch → 401.
+ *
+ * @param {{ id: string, role: string, name: string, password_version?: number }} user
  * @returns {string}
  */
 function generateAccessToken(user) {
   return jwt.sign(
-    { sub: user.id, role: user.role, name: user.name },
+    {
+      sub:  user.id,
+      role: user.role,
+      name: user.name,
+      pv:   user.password_version ?? 1, // legacy users default to 1
+    },
     config.jwt.accessSecret,
     { expiresIn: config.jwt.accessExpiresIn }
   );
@@ -332,7 +341,7 @@ async function googleAuth({ googleId, email, name, avatarUrl }) {
       const { rows } = await db.query(
         `INSERT INTO users (email, name, google_id, avatar_url, role)
          VALUES ($1, $2, $3, $4, 'kid')
-         RETURNING id, email, name, role, avatar_url, password_hash, created_at`,
+         RETURNING id, email, name, role, avatar_url, password_hash, password_version, created_at`,
         [email, name, googleId, avatarUrl || null]
       );
       userRow = rows[0];
@@ -406,12 +415,23 @@ async function changePassword(userId, currentPassword, newPassword) {
   }
 
   const newHash = await hashPassword(newPassword);
-  await query(
-    `UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1`,
-    [userId, newHash]
+
+  // Atomic: bump password_version (invalidates outstanding access JWTs) +
+  // revoke every active refresh_tokens row for this user. Stolen refresh
+  // cookie issued before the change is now useless: it will hit the
+  // revoke-detection path on /auth/refresh.
+  const { newVersion, revokedTokens } = await authRepository.rotatePasswordAndRevokeSessions(
+    userId,
+    newHash,
   );
 
-  return { success: true };
+  return {
+    success: true,
+    password_version: newVersion,
+    revoked_sessions: revokedTokens,
+    // Signal to FE: caller MUST clear local session and prompt re-login.
+    requires_relogin: true,
+  };
 }
 
 module.exports = {
