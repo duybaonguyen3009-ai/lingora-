@@ -1,17 +1,22 @@
 "use client";
 
 /**
- * OnboardingFlow.tsx — 6-screen cinematic onboarding diagnostic.
+ * OnboardingFlow.tsx — 4-screen onboarding (Wave 2.6).
  *
  * Screen 1: Target band selection
  * Screen 2: Set expectation
- * Screen 3: Speaking diagnostic (30s recording)
- * Screen 4: Analyzing animation
- * Screen 5: Band result
- * Screen 6: Transition to app
+ * Screen 3: Self-report current IELTS band (replaces the fake-Math.random
+ *           "speaking diagnostic" — Soul §1: never display a fake stat)
+ * Screen 4: Transition to app
+ *
+ * History: Pre-Wave 2.6 there was a 30s mic recording + animated "AI is
+ * analyzing…" screens followed by a band scored as
+ *   recordTime >= 20 ? 5.5 + Math.random()*1.5 : 4.5 + Math.random()*1.0.
+ * That number was never persisted — purely a vanity display. Replaced
+ * with an honest self-report dropdown; "Chưa biết" stores NULL.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { completeOnboarding, skipOnboarding } from "@/lib/api";
 import { analytics } from "@/lib/analytics";
 import Mascot from "@/components/ui/Mascot";
@@ -20,34 +25,28 @@ interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-const BAND_OPTIONS = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5];
-const PROMPTS = [
-  "Describe your hometown. What do you like most about it?",
-  "What do you usually do in your free time?",
-  "Do you prefer studying alone or with others? Why?",
-];
-const ANALYZING_TEXTS = [
-  "Đang phân tích độ trôi chảy…",
-  "Đang đánh giá từ vựng…",
-  "Đang kiểm tra ngữ pháp…",
-  "Đang ước tính band…",
-];
+const TARGET_BAND_OPTIONS = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5];
 
-type Screen = 1 | 2 | 3 | 4 | 5 | 6;
+// 13 half-bands [3.0, 9.0] — anchors at "extremely limited" (3) and
+// "expert" (9). Below 3 the user should pick "Chưa biết" — keeping the
+// dropdown short avoids paralysis and matches band-descriptor reality.
+const SELF_REPORT_BAND_OPTIONS: number[] = [];
+for (let b = 3.0; b <= 9.0 + 1e-9; b += 0.5) {
+  SELF_REPORT_BAND_OPTIONS.push(Math.round(b * 2) / 2);
+}
+
+const UNKNOWN = "unknown" as const;
+
+type Screen = 1 | 2 | 3 | 4;
 
 export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [screen, setScreen] = useState<Screen>(1);
   const [targetBand, setTargetBand] = useState<number | null>(null);
-  const [recording, setRecording] = useState(false);
-  const [recordingDone, setRecordingDone] = useState(false);
-  const [recordTime, setRecordTime] = useState(0);
-  const [analyzingIdx, setAnalyzingIdx] = useState(0);
-  const [estimatedBand, setEstimatedBand] = useState(5.5);
+  // null = "Chưa biết" (default). number = the band the user picked.
+  const [selfReportedBand, setSelfReportedBand] = useState<number | null>(null);
   const [fade, setFade] = useState(true);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [prompt] = useState(() => PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Smooth screen transition
   const goTo = useCallback((s: Screen) => {
     setFade(false);
     setTimeout(() => { setScreen(s); setFade(true); }, 300);
@@ -58,72 +57,28 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     onComplete();
   }, [onComplete]);
 
-  // Screen 3: recording timer
-  useEffect(() => {
-    if (!recording) return;
-    timerRef.current = setInterval(() => {
-      setRecordTime((t) => {
-        if (t >= 29) {
-          // Auto-stop at 30s
-          setRecording(false);
-          setRecordingDone(true);
-          if (timerRef.current) clearInterval(timerRef.current);
-          return 30;
-        }
-        return t + 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [recording]);
+  const handleComplete = useCallback(async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try { await completeOnboarding(targetBand, selfReportedBand); } catch { /* silent */ }
+    analytics.onboardingComplete(targetBand, selfReportedBand);
+    setSubmitting(false);
+    goTo(4);
+  }, [targetBand, selfReportedBand, goTo, submitting]);
 
-  // Auto-advance from recording done → analyzing
-  useEffect(() => {
-    if (recordingDone) {
-      const t = setTimeout(() => goTo(4), 800);
-      return () => clearTimeout(t);
-    }
-  }, [recordingDone, goTo]);
-
-  // Screen 4: cycling text + simulated analysis
+  // Screen 4: auto-transition into the app.
   useEffect(() => {
     if (screen !== 4) return;
-    const textTimer = setInterval(() => setAnalyzingIdx((i) => (i + 1) % ANALYZING_TEXTS.length), 800);
-    // Simulate scoring (2.5s min)
-    const doneTimer = setTimeout(() => {
-      // Generate a realistic band based on recording duration
-      const band = recordTime >= 20 ? 5.5 + Math.random() * 1.5 : 4.5 + Math.random() * 1.0;
-      setEstimatedBand(Math.round(band * 2) / 2);
-      goTo(5);
-    }, 2500);
-    return () => { clearInterval(textTimer); clearTimeout(doneTimer); };
-  }, [screen, recordTime, goTo]);
-
-  // Screen 5: complete onboarding
-  const handleComplete = useCallback(async () => {
-    try { await completeOnboarding(targetBand); } catch { /* silent */ }
-    analytics.onboardingComplete(targetBand, estimatedBand);
-    goTo(6);
-  }, [targetBand, estimatedBand, goTo]);
-
-  // Screen 6: auto-transition
-  useEffect(() => {
-    if (screen !== 6) return;
     const t = setTimeout(onComplete, 1500);
     return () => clearTimeout(t);
   }, [screen, onComplete]);
 
-  // ---------------------------------------------------------------------------
-  // Skip link component
-  // ---------------------------------------------------------------------------
   const SkipLink = () => (
     <button onClick={handleSkip} className="text-xs font-medium mt-4 transition-colors" style={{ color: "#475569" }}>
       Bỏ qua →
     </button>
   );
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
   return (
     <div className="fixed inset-0 z-splash flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0F172A, #020617)" }}>
       <div className={`w-full max-w-md px-6 flex flex-col items-center text-center transition-opacity duration-300 ${fade ? "opacity-100" : "opacity-0"}`}>
@@ -141,7 +96,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               Hầu hết học viên đặt mục tiêu 6.5+
             </p>
             <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-6">
-              {BAND_OPTIONS.map((b) => (
+              {TARGET_BAND_OPTIONS.map((b) => (
                 <button key={b} onClick={() => setTargetBand(b)}
                   className="py-3 rounded-xl text-base font-semibold transition-all"
                   style={{
@@ -167,126 +122,77 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         {/* SCREEN 2 — Set Expectation */}
         {screen === 2 && (
           <>
+            <div className="mb-6">
+              <Mascot size={48} />
+            </div>
             <h1 className="text-xl font-display font-bold mb-2" style={{ color: "#F8FAFC" }}>
-              Chúng tôi sẽ ước tính band hiện tại của bạn
+              Cho Lintopus biết bạn đang ở đâu nhé
             </h1>
             <p className="text-sm mb-8" style={{ color: "#94A3B8" }}>
-              Chỉ cần nói tự nhiên trong 30 giây — không có áp lực.
+              Lộ trình của bạn sẽ được cá nhân hóa theo điểm xuất phát thật. Không có áp lực — bạn có thể chọn &quot;Chưa biết&quot;.
             </p>
             <button onClick={() => goTo(3)}
               className="w-full max-w-xs py-4 rounded-xl text-base font-semibold transition-all active:scale-95"
               style={{ background: "linear-gradient(135deg, #8B71EA, #2DD4BF)", color: "#fff", boxShadow: "0 0 30px rgba(139,113,234,0.25)" }}>
-              Bắt đầu bài test nói 🎤
+              Tiếp tục
             </button>
             <SkipLink />
           </>
         )}
 
-        {/* SCREEN 3 — Speaking Diagnostic */}
+        {/* SCREEN 3 — Self-report current band */}
         {screen === 3 && (
           <>
-            <div className="rounded-xl p-4 mb-6 w-full" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <p className="text-sm italic" style={{ color: "#E2E8F0" }}>&ldquo;{prompt}&rdquo;</p>
+            <div className="mb-6">
+              <Mascot size={56} />
             </div>
+            <h1 className="text-xl font-display font-bold mb-2" style={{ color: "#F8FAFC" }}>
+              Trình độ IELTS hiện tại của bạn?
+            </h1>
+            <p className="text-xs mb-6" style={{ color: "#64748B" }}>
+              Bạn có thể đoán hoặc chọn &quot;Chưa biết&quot;
+            </p>
 
-            {!recording && !recordingDone && (
-              <>
-                <button onClick={() => { setRecording(true); setRecordTime(0); }}
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-3xl transition-all active:scale-90 mb-3"
-                  style={{ background: "linear-gradient(135deg, #8B71EA, #2DD4BF)", boxShadow: "0 0 40px rgba(139,113,234,0.3)" }}>
-                  🎤
-                </button>
-                <p className="text-xs" style={{ color: "#94A3B8" }}>Nhấn để bắt đầu</p>
-              </>
-            )}
+            <label className="w-full max-w-xs mb-6">
+              <span className="sr-only">Band hiện tại</span>
+              <select
+                value={selfReportedBand === null ? UNKNOWN : selfReportedBand.toFixed(1)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelfReportedBand(v === UNKNOWN ? null : Number(v));
+                }}
+                className="w-full py-3 px-4 rounded-xl text-base font-medium appearance-none cursor-pointer"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  color: "#F8FAFC",
+                  border: "2px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <option value={UNKNOWN}>Chưa biết</option>
+                {SELF_REPORT_BAND_OPTIONS.map((b) => (
+                  <option key={b} value={b.toFixed(1)}>Band {b.toFixed(1)}</option>
+                ))}
+              </select>
+            </label>
 
-            {recording && (
-              <>
-                <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl mb-3 relative"
-                  style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}>
-                  🎤
-                  <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(239,68,68,0.2)" }} />
-                </div>
-                {/* Sound wave bars */}
-                <div className="flex items-center gap-1 h-8 mb-3">
-                  {[...Array(12)].map((_, i) => (
-                    <div key={i} className="w-1 rounded-full" style={{
-                      background: "#8B71EA",
-                      height: `${12 + Math.random() * 20}px`,
-                      animation: `waveBar 0.5s ease-in-out ${i * 40}ms infinite alternate`,
-                    }} />
-                  ))}
-                </div>
-                <div className="text-lg font-mono font-bold mb-2" style={{ color: recordTime >= 25 ? "#F59E0B" : recordTime >= 27 ? "#EF4444" : "#E2E8F0" }}>
-                  0:{String(recordTime).padStart(2, "0")}
-                </div>
-                <button onClick={() => { setRecording(false); setRecordingDone(true); if (timerRef.current) clearInterval(timerRef.current); }}
-                  className="px-4 py-2 rounded-lg text-xs font-medium" style={{ background: "rgba(255,255,255,0.06)", color: "#94A3B8" }}>
-                  Dừng lại
-                </button>
-              </>
-            )}
-
-            {recordingDone && (
-              <>
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-3" style={{ background: "rgba(34,197,94,0.15)" }}>
-                  ✅
-                </div>
-                <p className="text-sm" style={{ color: "#94A3B8" }}>Xong! Đang phân tích...</p>
-              </>
-            )}
-
+            <button
+              onClick={handleComplete}
+              disabled={submitting}
+              className="w-full max-w-xs py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, #8B71EA, #2DD4BF)", color: "#fff", boxShadow: "0 0 20px rgba(139,113,234,0.3)" }}
+            >
+              {submitting ? "Đang lưu..." : "Bắt đầu cải thiện →"}
+            </button>
             <SkipLink />
           </>
         )}
 
-        {/* SCREEN 4 — Analyzing */}
+        {/* SCREEN 4 — Transition */}
         {screen === 4 && (
           <>
-            <div className="w-16 h-16 border-3 rounded-full animate-spin mb-6"
-              style={{ borderColor: "#8B71EA", borderTopColor: "transparent", borderWidth: "3px" }} />
-            <p className="text-base font-semibold mb-2" style={{ color: "#F8FAFC" }}>
-              Đang phân tích giọng nói của bạn...
-            </p>
-            <p className="text-sm transition-all" style={{ color: "#8B71EA" }}>
-              {ANALYZING_TEXTS[analyzingIdx]}
-            </p>
-          </>
-        )}
-
-        {/* SCREEN 5 — Result */}
-        {screen === 5 && (
-          <>
-            <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "#94A3B8" }}>Band hiện tại của bạn</p>
-            <div className="text-5xl font-display font-bold mb-3"
-              style={{ background: "linear-gradient(135deg, #8B71EA, #2DD4BF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", textShadow: "0 0 30px rgba(139,113,234,0.3)" }}>
-              {estimatedBand.toFixed(1)}
+            <div className="mb-6">
+              <Mascot size={64} />
             </div>
-            {targetBand && (
-              <div className="text-sm mb-1" style={{ color: "#A5B4FC" }}>
-                Mục tiêu của bạn: {targetBand.toFixed(1)} 🎯
-              </div>
-            )}
-            {targetBand && (
-              <div className="text-xs mb-4" style={{ color: "#64748B" }}>
-                Bạn cần cải thiện +{(targetBand - estimatedBand).toFixed(1)} band
-              </div>
-            )}
-            <div className="flex flex-col gap-1 mb-6 text-sm">
-              <span style={{ color: "#2DD4BF" }}>Điểm mạnh: Độ trôi chảy 👍</span>
-              <span style={{ color: "#F59E0B" }}>Cần cải thiện: Từ vựng</span>
-            </div>
-            <button onClick={handleComplete}
-              className="w-full max-w-xs py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
-              style={{ background: "linear-gradient(135deg, #8B71EA, #2DD4BF)", color: "#fff", boxShadow: "0 0 20px rgba(139,113,234,0.3)" }}>
-              Bắt đầu cải thiện →
-            </button>
-          </>
-        )}
-
-        {/* SCREEN 6 — Transition */}
-        {screen === 6 && (
-          <>
             <h1 className="text-xl font-display font-bold mb-2" style={{ color: "#F8FAFC" }}>
               Hãy cùng lên Band {targetBand?.toFixed(1) || "6.5"}.
             </h1>
@@ -301,13 +207,6 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </>
         )}
       </div>
-
-      <style>{`
-        @keyframes waveBar {
-          from { height: 8px; }
-          to { height: 28px; }
-        }
-      `}</style>
     </div>
   );
 }

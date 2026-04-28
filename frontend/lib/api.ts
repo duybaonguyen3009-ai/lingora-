@@ -705,8 +705,14 @@ export async function getOnboardingStatus(): Promise<OnboardingStatus> {
   return apiFetchAuth<OnboardingStatus>("/users/onboarding/status");
 }
 
-export async function completeOnboarding(targetBand: number | null): Promise<unknown> {
-  return apiPostAuth<unknown>("/users/onboarding/complete", { target_band: targetBand });
+export async function completeOnboarding(
+  targetBand: number | null,
+  selfReportedBand: number | null = null,
+): Promise<unknown> {
+  return apiPostAuth<unknown>("/users/onboarding/complete", {
+    target_band:         targetBand,
+    self_reported_band:  selfReportedBand,
+  });
 }
 
 export async function skipOnboarding(): Promise<unknown> {

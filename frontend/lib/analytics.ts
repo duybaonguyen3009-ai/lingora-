@@ -52,8 +52,8 @@ export const analytics = {
   signupComplete: (method: string) =>
     trackEvent("signup_complete", { method }),
 
-  onboardingComplete: (targetBand: number | null, estimatedBand: number) =>
-    trackEvent("onboarding_complete", { targetBand, estimatedBand }),
+  onboardingComplete: (targetBand: number | null, selfReportedBand: number | null) =>
+    trackEvent("onboarding_complete", { targetBand, selfReportedBand }),
 
   onboardingSkipped: () =>
     trackEvent("onboarding_skipped"),
