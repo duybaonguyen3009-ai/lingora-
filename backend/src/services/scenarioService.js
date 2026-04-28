@@ -1375,17 +1375,19 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     onUserCompletedActivity(userId, "speaking_sessions", 1).catch(() => {});
   } catch { /* module load safety */ }
 
-  // Fire-and-forget: check speaking achievements (log errors, don't swallow)
+  // Check speaking achievements + capture newly-unlocked badges so the FE
+  // can fire BadgeToast in real time (Wave 1.5b Fix 2). Awaiting adds
+  // ~50-200ms to the response — acceptable given endSession is already a
+  // multi-second AI call.
+  let newBadges = [];
   try {
     const { checkSpeakingBadges } = require("./badgeService");
     const countRow = await require("../config/db").query(
       `SELECT COUNT(*)::int AS c FROM scenario_sessions WHERE user_id = $1 AND status = 'completed'`, [userId]
     );
-    checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, bandScore).catch((err) => {
-      console.error(`[scenario] badge check failed for user ${userId}:`, err.message);
-    });
+    newBadges = await checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, bandScore);
   } catch (err) {
-    console.error(`[scenario] badge module load failed:`, err.message);
+    console.error(`[scenario] badge check failed for user ${userId}:`, err.message);
   }
 
   return {
@@ -1410,6 +1412,7 @@ async function endSession(sessionId, userId, durationMs, options = {}) {
     turnCount,
     wordCount,
     durationMs: durationMs || 0,
+    newBadges,
   };
 }
 

@@ -69,6 +69,7 @@ async function submitPractice(userId, passageId, answers, timeSeconds) {
   // awardXp is idempotent on (user, reason, passageId) — replay → awarded:false.
   // On replay, skip the streak/badge cascade (already fired on first submit).
   let xpAwarded = false;
+  let newBadges = []; // Wave 1.5b: surfaced in response for realtime FE toast.
   try {
     const result = await awardXp(userId, XP_REWARD_READING_PASSAGE, "reading_practice_complete", passageId);
     xpAwarded = result.awarded;
@@ -85,21 +86,20 @@ async function submitPractice(userId, passageId, answers, timeSeconds) {
       console.error(`[reading] streak update failed for user ${userId}:`, err.message);
     }
 
-    // Fire-and-forget: check reading achievements (log errors, don't swallow)
+    // Check reading achievements + capture newly-unlocked badges so the
+    // FE can fire BadgeToast in real time (Wave 1.5b Fix 2).
     try {
       const { checkReadingBadges } = require("./badgeService");
       const countRow = await require("../config/db").query(
         `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
       );
-      checkReadingBadges(userId, countRow.rows[0]?.c ?? correct).catch((err) => {
-        console.error(`[reading] badge check failed for user ${userId}:`, err.message);
-      });
+      newBadges = await checkReadingBadges(userId, countRow.rows[0]?.c ?? correct);
     } catch (err) {
-      console.error(`[reading] badge module load failed:`, err.message);
+      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
     }
   }
 
-  return { score: correct, total, band_estimate: bandEstimate, time_seconds: timeSeconds, per_question_results: results };
+  return { score: correct, total, band_estimate: bandEstimate, time_seconds: timeSeconds, per_question_results: results, newBadges };
 }
 
 // Strict 60-min budget for Full Test, with a 10-second grace window to
@@ -186,6 +186,7 @@ async function submitFullTest(userId, passageResults, timeSeconds, { startedAt =
   // Test XP is NOT replay-protected at the xp_ledger level. Caller-level
   // replay protection requires a `reading_full_test_sessions` row first.
   let xpAwarded = false;
+  let newBadges = []; // Wave 1.5b: surfaced in response for realtime FE toast.
   try {
     const result = await awardXp(userId, XP_REWARD_READING_FULL_TEST, "reading_full_test_complete", null);
     xpAwarded = result.awarded;
@@ -200,17 +201,16 @@ async function submitFullTest(userId, passageResults, timeSeconds, { startedAt =
       console.error(`[reading] streak update failed for user ${userId}:`, err.message);
     }
 
-    // Fire-and-forget: check reading achievements (log errors, don't swallow)
+    // Check reading achievements + capture newly-unlocked badges so the
+    // FE can fire BadgeToast in real time (Wave 1.5b Fix 2).
     try {
       const { checkReadingBadges } = require("./badgeService");
       const countRow = await require("../config/db").query(
         `SELECT COALESCE(SUM(score), 0)::int AS c FROM user_progress WHERE user_id = $1`, [userId]
       );
-      checkReadingBadges(userId, countRow.rows[0]?.c ?? totalCorrect).catch((err) => {
-        console.error(`[reading] badge check failed for user ${userId}:`, err.message);
-      });
+      newBadges = await checkReadingBadges(userId, countRow.rows[0]?.c ?? totalCorrect);
     } catch (err) {
-      console.error(`[reading] badge module load failed:`, err.message);
+      console.error(`[reading] badge check failed for user ${userId}:`, err.message);
     }
   }
 
@@ -234,6 +234,7 @@ async function submitFullTest(userId, passageResults, timeSeconds, { startedAt =
     time_seconds: actualSeconds,
     passage_breakdowns: breakdowns,
     late,
+    newBadges,
   };
 }
 

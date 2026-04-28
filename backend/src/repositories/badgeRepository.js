@@ -18,7 +18,7 @@ const { query } = require('../config/db');
  */
 async function getBadgeBySlug(slug) {
   const result = await query(
-    `SELECT id, slug, name, description, icon_url, xp_reward
+    `SELECT id, slug, name, description, icon_url, xp_reward, rarity, category
      FROM   badges
      WHERE  slug = $1`,
     [slug],
@@ -70,7 +70,7 @@ async function awardBadge(userId, badgeId) {
   if (insertResult.rowCount === 0) return null;
 
   const detail = await query(
-    `SELECT id, slug, name, description, icon_url, xp_reward
+    `SELECT id, slug, name, description, icon_url, xp_reward, rarity, category
      FROM   badges
      WHERE  id = $1`,
     [badgeId],

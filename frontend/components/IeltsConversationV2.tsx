@@ -42,6 +42,7 @@ import type {
 } from "@/lib/types";
 import IeltsDiagnosticReport from "./IeltsDiagnosticReport";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { useFireBadgesFromResponse, type BadgeResponse } from "@/hooks/useFireBadgesFromResponse";
 
 // ─── V2: Diagnostic data builder ────────────────────────────────────────────
 
@@ -299,6 +300,12 @@ export default function IeltsConversationV2({
   const [isProcessing, setIsProcessing] = useState(false);
   const [examinerSpeaking, setExaminerSpeaking] = useState(false);
   const [scores, setScores] = useState<EndSessionResult | null>(null);
+
+  // Wave 1.5b: fire BadgeToast for any newly-unlocked badges from
+  // endScenarioSession response. Idempotent — fires each slug once.
+  useFireBadgesFromResponse(
+    (scores as (EndSessionResult & { newBadges?: BadgeResponse[] }) | null)?.newBadges,
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [part2Nudge, setPart2Nudge] = useState<string | null>(null);
   // Scoring (/end) retry tracking — used by the "scoring_failed" phase UI.

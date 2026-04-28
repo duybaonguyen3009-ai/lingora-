@@ -78,6 +78,7 @@ async function assess(userId, lessonId, promptId, storageKey, audioDurationMs = 
   // attempt creates a fresh row, awarded:false here only fires on retry of
   // the same INSERT — extremely rare, but we still gate cascade.
   let xpAwarded = false;
+  let newBadges = []; // Wave 1.5b: surfaced in response for realtime FE toast.
   try {
     const xpResult = await awardXp(userId, XP_REWARD_PRONUNCIATION, "pronunciation_attempt", row.id);
     xpAwarded = xpResult.awarded;
@@ -94,19 +95,17 @@ async function assess(userId, lessonId, promptId, storageKey, audioDurationMs = 
       console.error(`[pronunciation] streak update failed for user ${userId}:`, err.message);
     }
 
-    // Fire-and-forget: check speaking achievements (pronunciation shares the
-    // "speaking_*" badge slug family with scenario sessions — count total
-    // pronunciation attempts + scenario completions for threshold checks).
+    // Check speaking achievements + capture newly-unlocked badges so the
+    // FE can fire BadgeToast in real time (Wave 1.5b Fix 2). Pronunciation
+    // shares the "speaking_*" slug family with scenario sessions.
     try {
       const { checkSpeakingBadges } = require("./badgeService");
       const countRow = await require("../config/db").query(
         `SELECT COUNT(*)::int AS c FROM pronunciation_attempts WHERE user_id = $1`, [userId]
       );
-      checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, null).catch((badgeErr) => {
-        console.error(`[pronunciation] badge check failed for user ${userId}:`, badgeErr.message);
-      });
-    } catch (badgeLoadErr) {
-      console.error(`[pronunciation] badge module load failed:`, badgeLoadErr.message);
+      newBadges = await checkSpeakingBadges(userId, countRow.rows[0]?.c ?? 0, null);
+    } catch (badgeErr) {
+      console.error(`[pronunciation] badge check failed for user ${userId}:`, badgeErr.message);
     }
   }
 
@@ -119,6 +118,7 @@ async function assess(userId, lessonId, promptId, storageKey, audioDurationMs = 
     completenessScore: result.completenessScore,
     pronunciationScore: result.pronunciationScore,
     words: result.words,
+    newBadges,
   };
 }
 

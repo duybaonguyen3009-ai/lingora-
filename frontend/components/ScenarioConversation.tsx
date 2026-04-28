@@ -28,6 +28,7 @@ import type {
   EndSessionResult,
 } from "@/lib/types";
 import ScenarioSummary from "./ScenarioSummary";
+import { useFireBadgesFromResponse, type BadgeResponse } from "@/hooks/useFireBadgesFromResponse";
 import Button from "@/components/ui/Button";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import useSound from "@/hooks/useSound";
@@ -72,6 +73,14 @@ export default function ScenarioConversation({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<EndSessionResult | null>(null);
+
+  // Wave 1.5b: fire BadgeToast for any newly-unlocked badges returned by
+  // endScenarioSession. Cast — BE adds `newBadges` to the EndSessionResult
+  // shape; type extension lives in lib/types.ts (kept loose here to avoid
+  // a wider rename).
+  useFireBadgesFromResponse(
+    (summary as (EndSessionResult & { newBadges?: BadgeResponse[] }) | null)?.newBadges,
+  );
   const [startTime] = useState(() => Date.now());
 
   // Upload pipeline state — shown while audio is being shipped to R2 and
