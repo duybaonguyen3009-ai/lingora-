@@ -875,6 +875,13 @@ export interface BandProgressData {
   week_delta: number;
   speaking_avg: number | null;
   writing_avg: number | null;
+  // Per-skill EMA estimates (migration 0044 + Wave 2.2). Optional — older
+  // BE responses may omit them and the listening field stays null until
+  // Phase 1B.2 ships.
+  band_estimate_reading?:   number | null;
+  band_estimate_writing?:   number | null;
+  band_estimate_speaking?:  number | null;
+  band_estimate_listening?: number | null;
 }
 
 // ---------------------------------------------------------------------------
