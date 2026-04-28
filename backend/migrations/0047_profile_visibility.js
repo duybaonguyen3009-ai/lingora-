@@ -27,13 +27,25 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
+  // node-pg-migrate quirk: a string `default` is dollar-quoted as a
+  // literal — `default: "'friends'"` would store the 8-char string
+  // `'friends'` (with quotes), which then violates an inline CHECK
+  // looking for the 7-char `friends`. The fix is twofold:
+  //   1. default value WITHOUT inner quotes — pgm wraps it correctly.
+  //   2. CHECK added separately via addConstraint (matches Wave 2.3
+  //      0045 pattern: pgm.addConstraint after addColumns). This also
+  //      avoids any ALTER-ADD-COLUMN ordering ambiguity around
+  //      DEFAULT vs CHECK validation.
   pgm.addColumns("users", {
     profile_visibility: {
       type: "varchar(10)",
       notNull: true,
-      default: "'friends'",
-      check: "profile_visibility IN ('public', 'friends', 'private')",
+      default: "friends",
     },
+  });
+
+  pgm.addConstraint("users", "users_profile_visibility_check", {
+    check: "profile_visibility IN ('public', 'friends', 'private')",
   });
 
   // Pin existing active users to 'public'. Excludes soft-deleted rows
@@ -47,5 +59,6 @@ exports.up = (pgm) => {
 };
 
 exports.down = (pgm) => {
+  pgm.dropConstraint("users", "users_profile_visibility_check", { ifExists: true });
   pgm.dropColumns("users", ["profile_visibility"]);
 };
