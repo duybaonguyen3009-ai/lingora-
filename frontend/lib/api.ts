@@ -605,9 +605,9 @@ export async function getPublicLimits(): Promise<import("./types").PublicLimits>
   return apiFetch<import("./types").PublicLimits>("/public/limits");
 }
 
-/** GET /battles/eligibility — does the user clear the 5-practice Battle gate? */
+/** GET /battle/eligibility — does the user clear the 5-practice Battle gate? */
 export async function getBattleEligibility(): Promise<import("./types").BattleEligibility> {
-  return apiFetchAuth<import("./types").BattleEligibility>("/battles/eligibility");
+  return apiFetchAuth<import("./types").BattleEligibility>("/battle/eligibility");
 }
 
 /** GET /users/achievements — all badges, earned, progress */
