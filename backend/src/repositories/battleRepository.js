@@ -258,6 +258,73 @@ async function getRecentMatches(userId, limit = 10) {
   return result.rows;
 }
 
+/**
+ * Paginated full Battle history for the authenticated user (Wave 2.9).
+ *
+ * Joins each match to the OPPOSING participant + their user row to
+ * surface opponent display info. LEFT JOIN to users so a deleted
+ * opponent (Wave 2.7 anonymized — name = 'Người dùng đã xóa') still
+ * appears in history with the anonymized name; we filter further to
+ * exclude the deleting USER's own anonymized friend list later if
+ * needed, but battle history retains the row by design (Wave 2.7
+ * lock B — keep aggregate).
+ *
+ * Result derived in SQL so the FE doesn't have to compare scores
+ * itself. Draws map to 'draw'; expired matches whose only submitter
+ * won are 'won'/'lost' relative to viewer.
+ *
+ * @returns {Promise<Array<{
+ *   id, played_at, status, result,
+ *   my_score, opponent_score, rank_delta, xp_earned,
+ *   opponent_username, opponent_avatar, opponent_name,
+ *   passage_title
+ * }>>}
+ */
+async function listUserHistory(userId, limit, offset) {
+  const result = await query(
+    `SELECT bm.id,
+            COALESCE(bm.completed_at, bm.created_at) AS played_at,
+            bm.status,
+            my.individual_score    AS my_score,
+            my.rank_delta,
+            my.xp_reward           AS xp_earned,
+            opp.individual_score   AS opponent_score,
+            u.username             AS opponent_username,
+            u.name                 AS opponent_name,
+            u.avatar_url           AS opponent_avatar,
+            rp.passage_title,
+            CASE
+              WHEN my.individual_score IS NULL OR opp.individual_score IS NULL
+                THEN 'pending'
+              WHEN my.individual_score > opp.individual_score THEN 'won'
+              WHEN my.individual_score < opp.individual_score THEN 'lost'
+              ELSE 'draw'
+            END                    AS result
+       FROM battle_matches bm
+       JOIN battle_match_participants my  ON my.match_id  = bm.id AND my.user_id  = $1
+       LEFT JOIN battle_match_participants opp ON opp.match_id = bm.id AND opp.user_id <> $1
+       LEFT JOIN users u                 ON u.id = opp.user_id
+       LEFT JOIN reading_passages rp     ON rp.id = bm.question_set_id
+      WHERE bm.status IN ('completed', 'expired')
+      ORDER BY COALESCE(bm.completed_at, bm.created_at) DESC NULLS LAST
+      LIMIT $2 OFFSET $3`,
+    [userId, limit, offset],
+  );
+  return result.rows;
+}
+
+async function countUserHistory(userId) {
+  const result = await query(
+    `SELECT COUNT(*)::int AS n
+       FROM battle_match_participants bmp
+       JOIN battle_matches bm ON bm.id = bmp.match_id
+      WHERE bmp.user_id = $1
+        AND bm.status IN ('completed', 'expired')`,
+    [userId],
+  );
+  return result.rows[0]?.n ?? 0;
+}
+
 // ---------------------------------------------------------------------------
 // Expiry — find overdue matches
 // ---------------------------------------------------------------------------
@@ -417,6 +484,8 @@ module.exports = {
   getBattleLeaderboard,
   getUserBattleRank,
   getRecentMatches,
+  listUserHistory,
+  countUserHistory,
   findOverdueMatches,
   getPassageForUser,
   getRandomPassage,

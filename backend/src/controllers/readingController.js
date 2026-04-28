@@ -73,4 +73,56 @@ async function submitFullTest(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { listPassages, getPassage, submitPractice, listFullTests, startFullTest, submitFullTest };
+/**
+ * GET /api/v1/reading/history?page=1&limit=20 (Wave 2.9, R1 scope)
+ *
+ * Owner-only paginated list. Per-attempt band/score is NOT available
+ * for Reading until R2 ships a `reading_attempts` table — until then
+ * each row carries timestamp, passage title, and XP earned only.
+ */
+async function getHistory(req, res, next) {
+  try {
+    const page  = parsePage(req.query.page);
+    const limit = parseLimit(req.query.limit);
+    if (page === null || limit === null) {
+      return sendError(res, {
+        status:  400,
+        message: "Invalid pagination — page must be ≥ 1, limit must be 1–50.",
+        code:    "INVALID_PAGINATION",
+      });
+    }
+
+    const repo = require("../repositories/readingRepository");
+    const offset = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      repo.listUserHistory(req.user.id, limit, offset),
+      repo.countUserHistory(req.user.id),
+    ]);
+
+    return sendSuccess(res, {
+      data: {
+        items,
+        total,
+        page,
+        limit,
+        hasMore: page * limit < total,
+      },
+      message: "Reading history",
+    });
+  } catch (err) { next(err); }
+}
+
+function parsePage(raw) {
+  if (raw === undefined) return 1;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+function parseLimit(raw) {
+  if (raw === undefined) return 20;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 50) return null;
+  return n;
+}
+
+module.exports = { listPassages, getPassage, submitPractice, listFullTests, startFullTest, submitFullTest, getHistory };

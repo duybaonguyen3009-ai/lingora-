@@ -14,6 +14,7 @@
  */
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { bandColor } from "@/lib/bandColors";
 import type { ReadingPracticeResult, ReadingQuestionResult, ReadingSubResult } from "@/lib/types";
 
@@ -70,6 +71,7 @@ function subKeyLabel(sub: ReadingSubResult): string {
 }
 
 export default function ReadingResult({ result, onPracticeAgain, onClose, sections, late }: ReadingResultProps) {
+  const router = useRouter();
   const [expandedQ, setExpandedQ] = useState<number | null>(null);
   const { score, total, band_estimate, per_question_results } = result;
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -179,6 +181,14 @@ export default function ReadingResult({ result, onPracticeAgain, onClose, sectio
           </button>
           <button onClick={onClose} className="w-full py-3 rounded-xl text-sm font-medium" style={{ background: "var(--color-bg-card)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}>
             Back to Reading
+          </button>
+          {/* Wave 2.9: history entry point — parity with Speaking. */}
+          <button
+            onClick={() => router.push("/reading/history")}
+            className="w-full py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+            style={{ background: "transparent", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+          >
+            Xem lịch sử Reading
           </button>
         </div>
       </div>

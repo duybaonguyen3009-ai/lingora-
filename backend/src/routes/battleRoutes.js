@@ -34,4 +34,7 @@ router.get("/home", verifyToken, c.getHome);
 // Eligibility — does this user clear the 5-practice gate? (Wave 2.5)
 router.get("/eligibility", verifyToken, c.getEligibility);
 
+// Wave 2.9: paginated owner-only Battle history.
+router.get("/history", verifyToken, c.getHistory);
+
 module.exports = router;

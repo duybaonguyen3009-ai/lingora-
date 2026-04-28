@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getBattleResult } from "@/lib/api";
 import Mascot from "@/components/ui/Mascot";
 import type { BattleResult as BattleResultType, BattleRankTier } from "@/lib/types";
@@ -23,6 +24,7 @@ const RANK_CONFIG: Record<BattleRankTier, { emoji: string; color: string }> = {
 };
 
 export default function BattleResultScreen({ matchId, onClose, onPlayAgain }: BattleResultProps) {
+  const router = useRouter();
   const [result, setResult] = useState<BattleResultType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -129,6 +131,14 @@ export default function BattleResultScreen({ matchId, onClose, onPlayAgain }: Ba
             style={{ background: "var(--color-bg-card)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
           >
             Back to Arena
+          </button>
+          {/* Wave 2.9: parity with Speaking's "Xem lịch sử" entry point. */}
+          <button
+            onClick={() => router.push("/battle/history")}
+            className="w-full py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+            style={{ background: "transparent", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+          >
+            Xem lịch sử Battle
           </button>
         </div>
       </div>

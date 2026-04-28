@@ -115,6 +115,53 @@ async function getReadingTestById(testId) {
   return rows[0] || null;
 }
 
+/**
+ * Per-attempt Reading practice history (Wave 2.9, R1 scope).
+ *
+ * Source: xp_ledger rows where reason='reading_practice_complete'.
+ * Each row corresponds to one passage completion (idempotent on
+ * (user_id, reason, ref_id) thanks to Wave 1 migration 0041 partial
+ * UNIQUE). LEFT JOIN to reading_passages exposes the title — left
+ * because a passage could be deleted/retired and we still want the
+ * row in history (with passage_title = null) rather than dropping it.
+ *
+ * KNOWN LIMITATION (R2 follow-up): per-attempt band/score is NOT
+ * persisted. submitPractice computes the score, returns it in the
+ * HTTP response, and writes only the XP-earned ledger row. Surfacing
+ * per-attempt band requires a new reading_attempts table + backfill,
+ * tracked separately.
+ *
+ * @returns {Promise<Array<{ id, attempted_at, xp_earned, passage_title, passage_id }>>}
+ */
+async function listUserHistory(userId, limit, offset) {
+  const result = await query(
+    `SELECT xl.id,
+            xl.created_at AS attempted_at,
+            xl.delta      AS xp_earned,
+            rp.passage_title,
+            xl.ref_id     AS passage_id
+       FROM xp_ledger xl
+       LEFT JOIN reading_passages rp ON rp.id = xl.ref_id
+      WHERE xl.user_id = $1
+        AND xl.reason  = 'reading_practice_complete'
+      ORDER BY xl.created_at DESC
+      LIMIT $2 OFFSET $3`,
+    [userId, limit, offset],
+  );
+  return result.rows;
+}
+
+async function countUserHistory(userId) {
+  const result = await query(
+    `SELECT COUNT(*)::int AS n
+       FROM xp_ledger
+      WHERE user_id = $1
+        AND reason  = 'reading_practice_complete'`,
+    [userId],
+  );
+  return result.rows[0]?.n ?? 0;
+}
+
 module.exports = {
   listPassages,
   getPassageWithQuestions,
@@ -123,4 +170,6 @@ module.exports = {
   scoreAnswers,
   listReadingTests,
   getReadingTestById,
+  listUserHistory,
+  countUserHistory,
 };

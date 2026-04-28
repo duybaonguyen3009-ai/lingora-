@@ -8,6 +8,7 @@
  */
 
 import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import FeedbackSheet from "@/components/FeedbackSheet";
 import WritingEssayHighlighted from "./WritingEssayHighlighted";
 import WritingCorrectionDrawer, { type WritingDrawerDetail } from "./WritingCorrectionDrawer";
@@ -82,6 +83,7 @@ function CriteriaCard({
 }
 
 export default function WritingResult({ submission, onBack }: WritingResultProps) {
+  const router = useRouter();
   const [showSample, setShowSample] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [activeTab, setActiveTab] = useState<ResultTab>("summary");
@@ -504,6 +506,15 @@ export default function WritingResult({ submission, onBack }: WritingResultProps
 
       </>
       )}
+
+      {/* Wave 2.9: history entry point — parity with Speaking. */}
+      <button
+        onClick={() => router.push("/writing/history")}
+        className="w-full py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+        style={{ background: "var(--color-bg-card)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)" }}
+      >
+        Xem lịch sử Writing
+      </button>
 
       <WritingCorrectionDrawer
         open={drawerDetail !== null}

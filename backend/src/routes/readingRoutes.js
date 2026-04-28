@@ -17,4 +17,7 @@ router.get("/full-tests", verifyToken, c.listFullTests);
 router.post("/full-test/start", verifyToken, c.startFullTest);
 router.post("/full-test/submit", verifyToken, c.submitFullTest);
 
+// Wave 2.9: paginated owner-only Reading history.
+router.get("/history", verifyToken, c.getHistory);
+
 module.exports = router;

@@ -109,8 +109,59 @@ async function getEligibility(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/**
+ * GET /api/v1/battle/history?page=1&limit=20 (Wave 2.9)
+ *
+ * Owner-only paginated list of past matches. Page 1-N, limit 1-50.
+ * Invalid params clamped + 400.
+ */
+async function getHistory(req, res, next) {
+  try {
+    const page  = parsePage(req.query.page);
+    const limit = parseLimit(req.query.limit);
+    if (page === null || limit === null) {
+      return sendError(res, {
+        status:  400,
+        message: "Invalid pagination — page must be ≥ 1, limit must be 1–50.",
+        code:    "INVALID_PAGINATION",
+      });
+    }
+
+    const repo = require("../repositories/battleRepository");
+    const offset = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      repo.listUserHistory(req.user.id, limit, offset),
+      repo.countUserHistory(req.user.id),
+    ]);
+
+    return sendSuccess(res, {
+      data: {
+        items,
+        total,
+        page,
+        limit,
+        hasMore: page * limit < total,
+      },
+      message: "Battle history",
+    });
+  } catch (err) { next(err); }
+}
+
+function parsePage(raw) {
+  if (raw === undefined) return 1;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+function parseLimit(raw) {
+  if (raw === undefined) return 20;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 50) return null;
+  return n;
+}
+
 module.exports = {
   joinQueue, leaveQueue, getMatch, submitMatch, getResult,
   getProfile, getLeaderboard, createChallenge, acceptChallenge, getHome,
-  getEligibility,
+  getEligibility, getHistory,
 };

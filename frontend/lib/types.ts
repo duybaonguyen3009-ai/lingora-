@@ -976,6 +976,38 @@ export interface DailyLimitsStatus {
   writing: { used: number; limit: number | null; allowed: boolean };
 }
 
+/** Wave 2.9 — paginated history endpoints (Reading + Battle). */
+export interface HistoryPage<T> {
+  items:   T[];
+  total:   number;
+  page:    number;
+  limit:   number;
+  hasMore: boolean;
+}
+
+export interface ReadingHistoryItem {
+  id:             string;
+  attempted_at:   string;
+  xp_earned:      number;
+  passage_title:  string | null;
+  passage_id:     string | null;
+}
+
+export interface BattleHistoryItem {
+  id:                 string;
+  played_at:          string;
+  status:             "completed" | "expired";
+  result:             "won" | "lost" | "draw" | "pending";
+  my_score:           number | null;
+  opponent_score:     number | null;
+  rank_delta:         number | null;
+  xp_earned:          number | null;
+  opponent_username:  string | null;
+  opponent_name:      string | null;
+  opponent_avatar:    string | null;
+  passage_title:      string | null;
+}
+
 /** GET /battle/eligibility — Wave 2.5 gate (5-practice precondition). */
 export interface BattleEligibility {
   eligible:  boolean;

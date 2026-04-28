@@ -610,6 +610,20 @@ export async function getBattleEligibility(): Promise<import("./types").BattleEl
   return apiFetchAuth<import("./types").BattleEligibility>("/battle/eligibility");
 }
 
+/** GET /reading/history — paginated owner-only Reading history (Wave 2.9). */
+export async function getReadingHistory(
+  page = 1, limit = 20,
+): Promise<import("./types").HistoryPage<import("./types").ReadingHistoryItem>> {
+  return apiFetchAuth(`/reading/history?page=${page}&limit=${limit}`);
+}
+
+/** GET /battle/history — paginated owner-only Battle history (Wave 2.9). */
+export async function getBattleHistory(
+  page = 1, limit = 20,
+): Promise<import("./types").HistoryPage<import("./types").BattleHistoryItem>> {
+  return apiFetchAuth(`/battle/history?page=${page}&limit=${limit}`);
+}
+
 /** PATCH /users/me/visibility — update profile_visibility (Wave 2.8). */
 export async function updateProfileVisibility(
   visibility: import("./types").ProfileVisibility,
