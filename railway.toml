@@ -1,4 +1,4 @@
-# railway.toml — Railway deployment config for Lingora backend
+# railway.toml — Railway deployment config for Lingona backend
 #
 # Docs: https://docs.railway.com/reference/config-as-code
 #
@@ -8,19 +8,25 @@
 # inside the container (incident 2026-04-24: 4 consecutive failed deploys).
 #
 # Key design:
-#   - releaseCommand runs node-pg-migrate BEFORE traffic is shifted to the new
-#     deployment, so the DB schema is always ahead of the running code.
-#   - healthcheckPath lets Railway confirm the new instance is up before
-#     cutting over — zero-downtime deploys.
+#   - releaseCommand wraps node-pg-migrate in scripts/release.sh which sets
+#     `set -euo pipefail` so a failed migration emits a non-zero exit and
+#     Railway can refuse cutover. (Layer 1 of the migration safety gate.)
+#   - healthcheckPath points at /health/schema, an endpoint that compares
+#     the deployed image's latest migration filename against the most
+#     recent row in pgmigrations. Schema drift → 500 → Railway healthcheck
+#     fails → cutover blocks. (Layer 2 — the suspenders to L1's belt.)
+#
+# Together these defend against the Wave 2 silent migration drift incident
+# (commits 5beb62f → 2d83c23, postmortem in backend/migrations/README.md).
 
 [build]
 builder = "NIXPACKS"
 
 [deploy]
 startCommand    = "npm start"
-# Run migrations before the new instance receives traffic.
-# node-pg-migrate reads DATABASE_URL from the environment automatically.
-releaseCommand  = "npx node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL"
-healthcheckPath = "/health"
+# Layer 1: migration gate. Wrapper enforces fail-closed exit code.
+releaseCommand  = "bash scripts/release.sh"
+# Layer 2: schema-aware readiness check.
+healthcheckPath = "/health/schema"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
