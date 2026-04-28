@@ -6,7 +6,7 @@
  */
 
 const progressService = require("../services/progressService");
-const { sendSuccess }  = require("../response");
+const { sendSuccess, sendError }  = require("../response");
 
 // UUID v4 pattern — matches both standard and crypto.randomUUID() output.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,49 +24,37 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * Upserts a user_progress row, runs gamification side-effects, and returns
  * an enriched record that includes XP, level, streak, and any new badges.
  */
-async function completeLesson(req, res, next) {
-  try {
-    const { lessonId } = req.params;
-    const userId = req.user.id; // always from verified JWT — never from body
-    const { score, timeTakenMs } = req.body;
-
-    // --- Validate lessonId ---
-    if (!UUID_RE.test(lessonId)) {
-      const err = new Error("Invalid lesson ID. Expected a UUID.");
-      err.status = 400;
-      return next(err);
-    }
-
-    // --- Validate score ---
-    const scoreNum = Number(score);
-    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-      const err = new Error("score must be a number between 0 and 100.");
-      err.status = 400;
-      return next(err);
-    }
-
-    // --- Validate timeTakenMs (optional) ---
-    const timeTakenNum = timeTakenMs != null ? Number(timeTakenMs) : undefined;
-    if (timeTakenNum !== undefined && (isNaN(timeTakenNum) || timeTakenNum < 0)) {
-      const err = new Error("timeTakenMs must be a non-negative number.");
-      err.status = 400;
-      return next(err);
-    }
-
-    const result = await progressService.completeLesson(
-      userId,
-      lessonId,
-      Math.round(scoreNum),
-      timeTakenNum,
-    );
-
-    return sendSuccess(res, {
-      data:    result,
-      message: "Lesson completed successfully",
-    });
-  } catch (err) {
-    next(err);
-  }
+/**
+ * POST /api/v1/lessons/:lessonId/complete — DEPRECATED (Wave 1.8).
+ *
+ * Pre-Wave-1.8 this accepted a `score` field directly from the request
+ * body and used it for XP + badge awards (perfect_score). A trusted
+ * client could POST `{ score: 100 }` to farm achievements without
+ * actually answering any quiz.
+ *
+ * The corresponding FE consumer (LessonModal/index.tsx) was orphaned
+ * by the "speaking-first homepage" pivot (commit 7975c23), so the
+ * endpoint is now reachable only via curl.
+ *
+ * Returns 410 Gone with a descriptive code. Existing user_progress
+ * rows are NOT affected.
+ *
+ * Wave 5 cleanup will delete progressService.completeLesson and the
+ * dead progressRepository entries; the route declaration in
+ * progressRoutes.js stays for the 410 response surface until then.
+ *
+ * Closes 1 P0 (Audit Batch 4): quiz score client-trust → badge farming.
+ */
+async function completeLesson(req, res, _next) {
+  console.warn(
+    `[lesson-deprecated] complete endpoint hit user=${req.user?.id || "anon"} ` +
+    `ip=${req.ip || "unknown"} path=${req.originalUrl}`,
+  );
+  return sendError(res, {
+    status: 410,
+    message: "Tính năng lesson đã ngừng hỗ trợ. Vui lòng dùng kỹ năng Speaking/Writing/Reading/Battle.",
+    code: "LESSON_COMPLETE_DEPRECATED",
+  });
 }
 
 // ---------------------------------------------------------------------------
