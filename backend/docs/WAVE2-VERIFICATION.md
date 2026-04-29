@@ -17,7 +17,7 @@ each task is documented separately in the §"Behavioral verification
 follow-up" section.
 
 The verification was prompted by the Wave 2 silent migration drift
-incident (postmortem in `backend/migrations/README.md`) — we could no
+incident (postmortem in `backend/docs/MIGRATIONS.md`) — we could no
 longer trust the original "task done verified" claims because
 post-cutover smoke at the time only checked `/health` 200 and route
 mount, not schema apply.
@@ -106,5 +106,5 @@ schema gate from this commit forward; any drift is now caught by
 
 The drift that prompted this verification, plus the safety gate
 that prevents recurrence, is documented in
-`backend/migrations/README.md` (§Postmortem and §"Production safety
+`backend/docs/MIGRATIONS.md` (§Postmortem and §"Production safety
 gate").

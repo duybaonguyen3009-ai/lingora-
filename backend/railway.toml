@@ -32,7 +32,7 @@
 # Together these defend against the Wave 2 silent migration drift incident
 # (commits 5beb62f → 2d83c23) and the Wave 2.10 release-phase-skipped
 # variant (commit 42dce70 → 45c120f → THIS hotfix). Postmortem in
-# migrations/README.md and docs/POSTMORTEM-INFRA-001.md.
+# docs/MIGRATIONS.md and docs/POSTMORTEM-INFRA-001.md.
 
 [build]
 builder = "NIXPACKS"

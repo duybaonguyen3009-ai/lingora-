@@ -65,7 +65,7 @@ Two compounding facts:
 ## Fix
 
 Atomic commit: file move + prestart hook + this postmortem +
-migrations/README.md update.
+docs/MIGRATIONS.md update.
 
 ```
 A. git mv railway.toml backend/railway.toml
