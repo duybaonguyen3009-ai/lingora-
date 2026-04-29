@@ -56,6 +56,16 @@ router.post("/logout",   authController.logout);
  *  initial pass and existing-pass users rotating. */
 router.post("/change-password", verifyToken, authController.handleChangePassword);
 
+// ─── Wave 2.10 — Email change ────────────────────────────────────────────────
+
+const { emailChangeLimiter } = require("../middleware/rateLimiters");
+
+/** POST — re-auth + atomic email update + revoke + notification + 7d undo. */
+router.post("/email-change", verifyToken, emailChangeLimiter, authController.handleEmailChange);
+
+/** GET — single-use undo via signed JWT (no auth header — token IS auth). */
+router.get("/email-change/undo", authController.handleEmailChangeUndo);
+
 // ─── Google OAuth ────────────────────────────────────────────────────────────
 
 const { passport } = require("../config/passport");

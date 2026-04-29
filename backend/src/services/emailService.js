@@ -302,10 +302,146 @@ async function sendAccountDeletedEmail(user) {
   }
 }
 
+/**
+ * Helper — redact an email like `alice@gmail.com` to `a****@g****.com`.
+ * Used in change/undo notifications so we can show the user WHICH
+ * address the change targeted without printing it in full (defense
+ * in depth — log lines, mailbox previews, screenshots).
+ */
+function redactEmail(email) {
+  if (typeof email !== "string" || !email.includes("@")) return "";
+  const [local, domain] = email.split("@");
+  const maskLocal  = (local.length > 0 ? local[0] : "") + "****";
+  const dotIdx = domain.lastIndexOf(".");
+  const tld = dotIdx >= 0 ? domain.slice(dotIdx) : "";
+  const maskDomain = (domain.length > 0 ? domain[0] : "") + "****";
+  return `${maskLocal}@${maskDomain}${tld}`;
+}
+
+/**
+ * Email-change notification (Wave 2.10).
+ *
+ * Sent to the OLD email immediately after the change commits. Includes
+ * a 7-day undo link signed with config.jwt.accessSecret. The undo
+ * token's jti is stored in email_changes.undo_token_jti so single-use
+ * is enforced even if the link leaks.
+ *
+ * IMPORTANT: pass plaintext old_email + name BEFORE any anonymization
+ * pipeline runs.
+ *
+ * @param {{ email: string, name: string|null }} user — snapshot of OLD address
+ * @param {string} newEmail
+ * @param {string} undoUrl — absolute URL with ?token=...
+ */
+async function sendEmailChangeNotification(user, newEmail, undoUrl) {
+  const resend = getResend();
+  if (!resend || !user?.email) return;
+
+  const ts = new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+  const masked = redactEmail(newEmail);
+
+  const html = wrapHtml(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:#1A1A1A;">Email tài khoản Lingona đã được đổi</h2>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Xin chào ${safe(user.name) || "bạn"},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Email tài khoản Lingona vừa được đổi sang <strong>${safe(masked)}</strong>.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      <strong>Thời gian:</strong> ${safe(ts)} (giờ Việt Nam)
+    </p>
+
+    <div style="background:#FFF7E6;border-left:3px solid #F59E0B;padding:14px 16px;margin:16px 0;border-radius:4px;">
+      <p style="margin:0 0 8px;color:#1A1A1A;font-size:14px;font-weight:600;">
+        NẾU KHÔNG PHẢI BẠN
+      </p>
+      <p style="margin:0 0 12px;color:#666;font-size:13px;line-height:1.6;">
+        Click link dưới đây trong <strong>7 ngày</strong> để khôi phục
+        email cũ và thoát toàn bộ phiên đăng nhập:
+      </p>
+      ${ctaButton("Hủy đổi và khôi phục", undoUrl)}
+      <p style="margin:12px 0 0;color:#999;font-size:11px;word-break:break-all;">
+        Hoặc copy link: ${safe(undoUrl)}
+      </p>
+    </div>
+
+    <p style="color:#999;font-size:12px;line-height:1.6;margin:24px 0 0;">
+      Sau 7 ngày link sẽ hết hạn và không thể khôi phục từ email này.
+      Nếu cần hỗ trợ, vui lòng liên hệ support@lingona.app.
+    </p>
+    <p style="color:#999;font-size:12px;line-height:1.6;margin:8px 0 0;">
+      Email này gửi tự động, không trả lời.
+    </p>
+  `);
+
+  try {
+    await resend.emails.send({
+      from: `Lingona <${FROM_EMAIL}>`,
+      to: user.email,
+      subject: "Email tài khoản Lingona đã được đổi",
+      html,
+    });
+    console.log(`[email] Email-change notification sent to OLD address (redacted: ${redactEmail(user.email)})`);
+  } catch (err) {
+    console.error("[email] Failed to send email-change notification:", err.message);
+  }
+}
+
+/**
+ * Email-undo confirmation (Wave 2.10).
+ *
+ * Sent to the OLD email AFTER the undo flow successfully reverts the
+ * change. Notifies the user the email is back and prompts them to
+ * reset their password (every session was revoked).
+ *
+ * @param {{ email: string, name: string|null }} user — restored OLD email
+ */
+async function sendEmailUndoConfirmation(user) {
+  const resend = getResend();
+  if (!resend || !user?.email) return;
+
+  const html = wrapHtml(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:#1A1A1A;">Đã khôi phục email tài khoản</h2>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Xin chào ${safe(user.name) || "bạn"},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Yêu cầu hủy đổi email đã thành công. Tài khoản Lingona của bạn
+      bây giờ đăng nhập bằng email này.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin:0 0 16px;">
+      Vì lý do bảo mật, mọi phiên đăng nhập đã bị thoát. Vui lòng
+      đăng nhập lại — và nếu nghi ngờ tài khoản bị truy cập trái phép,
+      đổi mật khẩu ngay sau khi vào.
+    </p>
+    ${ctaButton("Đăng nhập lại", `${APP_URL}/login`)}
+    <p style="color:#999;font-size:12px;line-height:1.6;margin:24px 0 0;">
+      Email này gửi tự động, không trả lời.
+    </p>
+  `);
+
+  try {
+    await resend.emails.send({
+      from: `Lingona <${FROM_EMAIL}>`,
+      to: user.email,
+      subject: "Email Lingona đã được khôi phục",
+      html,
+    });
+    console.log(`[email] Email-undo confirmation sent (redacted: ${redactEmail(user.email)})`);
+  } catch (err) {
+    console.error("[email] Failed to send email-undo confirmation:", err.message);
+  }
+}
+
 module.exports = {
   sendWelcomeEmail,
   sendPromoEmail,
   sendStreakReminderEmail,
   sendFeatureAnnouncementEmail,
   sendAccountDeletedEmail,
+  sendEmailChangeNotification,
+  sendEmailUndoConfirmation,
+  // exposed for unit test of redactor
+  __test: { redactEmail },
 };

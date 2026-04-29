@@ -18,6 +18,7 @@ import type { SpeakingMetricsData, GamificationData, ProfileStats, ProfileVisibi
 const ShareCardModal = dynamic(() => import("./Social/ShareCardModal"), { ssr: false });
 const AchievementsSection = dynamic(() => import("./AchievementsSection"), { ssr: false });
 const DeleteAccountModal = dynamic(() => import("./Profile/DeleteAccountModal"), { ssr: false });
+const ChangeEmailModal   = dynamic(() => import("./Profile/ChangeEmailModal"),   { ssr: false });
 
 interface ProfileScreenProps {
   userId: string | null;
@@ -191,6 +192,7 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
   const [showShareCard, setShowShareCard] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showEmailChange, setShowEmailChange] = useState(false);
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState(false);
@@ -373,6 +375,14 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
         </div>
       </button>
 
+      {/* Email change (Wave 2.10) — placed above Log out for natural account-settings ordering */}
+      <button
+        onClick={() => setShowEmailChange(true)}
+        className="w-full py-3 rounded-full text-sm font-semibold transition-colors duration-150"
+        style={{ background: "transparent", color: "var(--color-text-tertiary)", border: "1px solid var(--color-border)" }}>
+        Đổi email tài khoản
+      </button>
+
       {/* Logout */}
       <button onClick={handleLogout} disabled={loggingOut}
         className="w-full py-3 rounded-full text-sm font-semibold transition-colors duration-150"
@@ -400,6 +410,19 @@ export default function ProfileScreen({ userId, metrics, metricsLoading, gamific
       {/* Modals */}
       {showEdit && stats && <EditProfileModal stats={stats} onClose={() => setShowEdit(false)} onSaved={loadStats} />}
       <ShareCardModal isOpen={showShareCard} onClose={() => setShowShareCard(false)} />
+      <ChangeEmailModal
+        isOpen={showEmailChange}
+        currentEmail={user?.email ?? null}
+        onClose={() => setShowEmailChange(false)}
+        onChanged={async () => {
+          // Refresh + access tokens are dead server-side. Best-effort
+          // logout to clear local Zustand, then redirect with a flag
+          // so /login can show a "logged out — sign in with new email"
+          // banner if the future sign-in screen wants to render one.
+          try { await logoutUser(); } catch { /* expected */ }
+          router.push("/login?email_changed=1");
+        }}
+      />
       <DeleteAccountModal
         isOpen={showDelete}
         onClose={() => setShowDelete(false)}

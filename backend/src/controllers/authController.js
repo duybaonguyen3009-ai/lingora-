@@ -275,4 +275,73 @@ async function handleChangePassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, refresh, logout, handleChangePassword };
+// ─── Wave 2.10 — Email change ─────────────────────────────────────────────────
+
+const emailChangeService = require("../services/emailChangeService");
+
+/**
+ * POST /api/v1/auth/email-change   (verifyToken + emailChangeLimiter)
+ * Body: { new_email, current_password }
+ *
+ * Re-auths via current_password, atomically updates users.email, bumps
+ * password_version (revokes every outstanding access JWT and refresh
+ * token), then fires a notification email to the OLD address with a
+ * 7-day undo link.
+ */
+async function handleEmailChange(req, res, next) {
+  try {
+    const { new_email, current_password } = req.body || {};
+    await emailChangeService.changeEmail(req.user.id, current_password, new_email);
+
+    // Clear the refresh cookie — it's already revoked at the DB level,
+    // but the browser still has the value. Same pattern as logout.
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure:   config.cookie.secure,
+      sameSite: config.cookie.sameSite,
+      path:     config.cookie.path,
+    });
+
+    return sendSuccess(res, {
+      data:    { ok: true },
+      message: "Email đã được đổi. Email xác nhận đã gửi tới địa chỉ cũ.",
+    });
+  } catch (err) { next(err); }
+}
+
+/**
+ * GET /api/v1/auth/email-change/undo?token=<JWT>
+ *
+ * Public route (no JWT — the URL token IS the auth). Verifies the
+ * undo JWT, calls the service to revert + bump password_version,
+ * fires the confirmation email.
+ *
+ * Returns a tiny JSON success body. The FE landing page at
+ * /auth/email-change/undo handles redirecting the user to /login.
+ */
+async function handleEmailChangeUndo(req, res, next) {
+  try {
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+    if (!token) {
+      return sendError(res, { status: 400, message: "Thiếu token.", code: "INVALID_TOKEN" });
+    }
+    await emailChangeService.undoEmailChange(token);
+
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure:   config.cookie.secure,
+      sameSite: config.cookie.sameSite,
+      path:     config.cookie.path,
+    });
+
+    return sendSuccess(res, {
+      data:    { ok: true },
+      message: "Đã khôi phục email. Vui lòng đăng nhập lại.",
+    });
+  } catch (err) { next(err); }
+}
+
+module.exports = {
+  register, login, refresh, logout, handleChangePassword,
+  handleEmailChange, handleEmailChangeUndo,
+};

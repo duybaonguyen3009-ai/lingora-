@@ -624,6 +624,35 @@ export async function getBattleHistory(
   return apiFetchAuth(`/battle/history?page=${page}&limit=${limit}`);
 }
 
+/**
+ * POST /auth/email-change — change the authenticated user's email
+ * (Wave 2.10). Server re-auths via current_password, atomically
+ * updates, revokes all sessions. Caller MUST clear local auth state
+ * after a 200 and redirect to /login.
+ */
+export async function changeEmail(newEmail: string, currentPassword: string): Promise<{ ok: true }> {
+  return apiPostAuth<{ ok: true }>("/auth/email-change", {
+    new_email:        newEmail,
+    current_password: currentPassword,
+  });
+}
+
+/**
+ * GET /auth/email-change/undo — single-use undo via signed JWT.
+ * Public route — the URL token IS the auth.
+ */
+export async function getEmailChangeUndo(token: string): Promise<{ ok: true }> {
+  // Use the BASE_URL directly — this endpoint takes no Authorization
+  // header and the token must NOT be sent twice.
+  const url = `${BASE_URL}/auth/email-change/undo?token=${encodeURIComponent(token)}`;
+  const res = await fetch(url, { method: "GET", cache: "no-store" });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error((json as { message?: string }).message ?? "Liên kết khôi phục không còn hiệu lực.");
+  }
+  return (json as { data: { ok: true } }).data;
+}
+
 /** PATCH /users/me/visibility — update profile_visibility (Wave 2.8). */
 export async function updateProfileVisibility(
   visibility: import("./types").ProfileVisibility,

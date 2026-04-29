@@ -208,6 +208,25 @@ const voiceUploadLimiters = createLimiterPair({
     "Daily voice message limit reached.",
 });
 
+/** Email change request (Wave 2.10).
+ *
+ * Each request that gets past this limiter actually invokes bcrypt +
+ * an outbound email send, both expensive. The post-success cap of 3
+ * changes/24h is enforced at the service layer; this limiter is the
+ * top-level brute-force shield: 5 attempts per 15 min keyed by user
+ * (or IP for anon — though the route is auth-gated, the limiter ran
+ * before verifyToken can be safely defensive).
+ */
+const emailChangeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyGenerator,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Quá nhiều yêu cầu đổi email. Vui lòng thử lại sau." },
+  validate: false,
+});
+
 /** Account deletion (Wave 2.7 — PDPL VN).
  *
  * Tightest cap in the system. The endpoint is irreversible at the domain
@@ -239,4 +258,5 @@ module.exports = {
   adminWriteLimiters,
   adminReadLimiters,
   accountDeletionLimiter,
+  emailChangeLimiter,
 };
