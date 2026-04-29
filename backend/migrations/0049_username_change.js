@@ -52,11 +52,22 @@ exports.up = (pgm) => {
     },
   });
 
-  // Partial index: nearly all reads are "find an ACTIVE redirect"; the
-  // index excludes expired rows so PG doesn't even consider them.
+  // Index on expires_at for the "find active redirect" lookup.
+  //
+  // Originally written as a partial index `WHERE expires_at > now()` so
+  // expired rows were physically excluded — but Postgres rejects that
+  // predicate (error 42P17 "functions in index predicate must be marked
+  // IMMUTABLE"; now() is STABLE, not IMMUTABLE, because the planner
+  // cannot cache the value). The full index is functionally equivalent
+  // for our query pattern: WHERE expires_at > NOW() in the lookup uses
+  // this index directly, simply scanning a few extra dead rows in the
+  // tail. At Lingona scale (<100 redirect entries expected pre-launch),
+  // the cost is negligible. If the table ever grows enough to matter,
+  // the follow-up is either a nightly DELETE WHERE expires_at < now()
+  // - interval '30 days' or BRIN partitioning by month — both kept as
+  // backlog options.
   pgm.createIndex("username_redirects", "expires_at", {
-    name: "idx_username_redirects_active",
-    where: "expires_at > now()",
+    name: "idx_username_redirects_expires_at",
   });
 };
 
