@@ -370,7 +370,18 @@ async function createNotification(userId, type, data) {
      RETURNING *`,
     [userId, type, JSON.stringify(data)]
   );
-  return result.rows[0];
+  const notification = result.rows[0];
+
+  // Best-effort realtime push so NotificationBell can render without waiting
+  // for its 60s fallback poll. Failure is silent — the next client poll will
+  // pick the row up regardless.
+  try {
+    const { emitToUser } = require("../socket/ioRegistry");
+    const events = require("../socket/events");
+    emitToUser(userId, events.NOTIFICATION_NEW, notification);
+  } catch { /* registry not booted (test env) — fallback poll covers it */ }
+
+  return notification;
 }
 
 async function getNotifications(userId, limit = 20) {

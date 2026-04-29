@@ -3,17 +3,23 @@
 /**
  * NotificationBell.tsx — Bell icon with unread count badge + dropdown.
  *
- * Polls every 30s when user is logged in.
- * Dropdown shows recent notifications with type-specific messages.
+ * Real-time: subscribes to the `notification:new` socket event so new
+ * notifications surface within sub-second when the socket is healthy.
+ * Polling stays as a 60s fallback for the case where the socket dropped
+ * (offline laptop wakes, flaky wifi, server restart).
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Mascot from "@/components/ui/Mascot";
 import { getSocialNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useSocket } from "@/contexts/SocketContext";
 import type { SocialNotification } from "@/lib/types";
 
-const POLL_INTERVAL_MS = 30_000;
+// Slowed from 30s → 60s now that socket push covers the realtime path.
+// 60s is short enough that a dropped socket recovers quickly without
+// keeping the API hot for every signed-in tab.
+const POLL_INTERVAL_MS = 60_000;
 
 function formatNotification(n: SocialNotification): string {
   const data = n.data as Record<string, string>;
@@ -41,6 +47,7 @@ function timeAgo(dateStr: string): string {
 
 export default function NotificationBell() {
   const user = useAuthStore((s) => s.user);
+  const { socket } = useSocket();
   const [notifications, setNotifications] = useState<SocialNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -57,13 +64,30 @@ export default function NotificationBell() {
     }
   }, [user]);
 
-  // Initial fetch + polling
+  // Initial fetch + polling fallback
   useEffect(() => {
     if (!user) return;
     fetchNotifications();
     const interval = setInterval(fetchNotifications, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [user, fetchNotifications]);
+
+  // Realtime push — server emits notification:new on insert. Prepend the
+  // row and bump unread count without round-tripping. Dedupe by id in
+  // case the same event arrives twice (reconnection replay, double-mount
+  // in dev StrictMode).
+  useEffect(() => {
+    if (!socket || !user) return;
+    const onNew = (n: SocialNotification) => {
+      setNotifications((prev) => {
+        if (prev.some((x) => x.id === n.id)) return prev;
+        return [n, ...prev].slice(0, 50);
+      });
+      if (!n.read_at) setUnreadCount((c) => c + 1);
+    };
+    socket.on("notification:new", onNew);
+    return () => { socket.off("notification:new", onNew); };
+  }, [socket, user]);
 
   // Close dropdown on outside click
   useEffect(() => {

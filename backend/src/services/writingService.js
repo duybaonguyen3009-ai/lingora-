@@ -150,6 +150,14 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
 
       console.log(`[writing] Submission ${submissionId} scored — band ${result.overall_band}`);
 
+      // Realtime push so the FE result poller (useWritingResult) can refetch
+      // immediately instead of waiting up to 3s for its next tick.
+      try {
+        const { emitToUser } = require("../socket/ioRegistry");
+        const events = require("../socket/events");
+        emitToUser(userId, events.WRITING_RESULT_READY, { submissionId, status: "completed" });
+      } catch { /* registry not booted */ }
+
       // Fire-and-forget: update user's estimated band
       try {
         const { updateUserBand } = require("../repositories/userRepository");
@@ -202,6 +210,12 @@ async function submitEssay(userId, role, isPro, { taskType, questionText, essayT
       }).catch((dbErr) => {
         console.error(`[writing] Failed to update status for ${submissionId}:`, dbErr.message);
       });
+
+      try {
+        const { emitToUser } = require("../socket/ioRegistry");
+        const events = require("../socket/events");
+        emitToUser(userId, events.WRITING_RESULT_READY, { submissionId, status: "failed" });
+      } catch { /* registry not booted */ }
     }
   })();
 

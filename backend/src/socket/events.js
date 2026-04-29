@@ -16,4 +16,8 @@ module.exports = Object.freeze({
   USER_ONLINE: "user_online",
   USER_OFFLINE: "user_offline",
   PRESENCE_SYNC: "presence_sync",
+
+  // Outbound — server pushes for state that previously required client polling
+  NOTIFICATION_NEW: "notification:new",
+  WRITING_RESULT_READY: "writing:result_ready",
 });

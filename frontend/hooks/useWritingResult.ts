@@ -15,6 +15,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getWritingResult } from "@/lib/api";
+import { useSocket } from "@/contexts/SocketContext";
 import type { WritingSubmission } from "@/lib/types";
 
 const POLL_INTERVAL_MS = 3000;
@@ -33,6 +34,7 @@ interface UseWritingResultReturn {
 }
 
 export function useWritingResult(submissionId: string | null): UseWritingResultReturn {
+  const { socket } = useSocket();
   const [submission, setSubmission] = useState<WritingSubmission | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +89,23 @@ export function useWritingResult(submissionId: string | null): UseWritingResultR
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [submissionId, fetchResult]);
+
+  // Realtime: server emits writing:result_ready when scoring finishes.
+  // Cancel the pending poll, refetch immediately. Polling stays as the
+  // fallback path (registry not booted, socket disconnected, replay).
+  useEffect(() => {
+    if (!socket || !submissionId) return;
+    const onReady = (payload: { submissionId: string; status: string }) => {
+      if (payload?.submissionId !== submissionId) return;
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      fetchResult();
+    };
+    socket.on("writing:result_ready", onReady);
+    return () => { socket.off("writing:result_ready", onReady); };
+  }, [socket, submissionId, fetchResult]);
 
   const refetch = useCallback(() => {
     pollCount.current = 0;

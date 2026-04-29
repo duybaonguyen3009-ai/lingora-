@@ -47,6 +47,10 @@ const io = new Server(server, {
 // Make io accessible to controllers via app.set
 app.set("io", io);
 
+// Register io for non-request layers (services, repositories) that need to
+// push real-time events without threading io through every signature.
+require("./socket/ioRegistry").setIo(io);
+
 // Auth middleware — verify JWT from handshake
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
