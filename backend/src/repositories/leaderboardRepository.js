@@ -43,24 +43,19 @@ async function getWeeklyRankings(limit = 50) {
 /**
  * getAllTimeRankings
  *
- * Top N users ranked by all-time total XP.
- * Only users with at least one XP event appear.
+ * Top N users ranked by all-time total XP. Reads the materialised view
+ * leaderboard_xp_alltime (migration 0050) — see service-layer debounce
+ * for refresh policy. Eventually consistent up to ~5 minutes.
  *
  * @param {number} [limit=50]
  * @returns {Promise<Array<{ user_id, name, xp, rank }>>}
  */
 async function getAllTimeRankings(limit = 50) {
   const result = await query(
-    `SELECT u.id                                                              AS user_id,
-            u.name,
-            COALESCE(SUM(x.delta), 0)::int                                   AS xp,
-            RANK() OVER (ORDER BY COALESCE(SUM(x.delta), 0) DESC)::int       AS rank
-     FROM   users u
-     JOIN   xp_ledger x ON x.user_id = u.id
-     WHERE  u.deleted_at IS NULL
-     GROUP  BY u.id, u.name
-     ORDER  BY xp DESC
-     LIMIT  $1`,
+    `SELECT user_id, name, xp, rank
+       FROM leaderboard_xp_alltime
+      ORDER BY rank ASC
+      LIMIT $1`,
     [limit],
   );
   return result.rows;
@@ -112,26 +107,24 @@ async function getUserWeeklyRank(userId) {
  */
 async function getUserAllTimeRank(userId) {
   const result = await query(
-    `WITH all_time_totals AS (
-       SELECT u.id       AS user_id,
-              u.name,
-              COALESCE(SUM(x.delta), 0)::int AS xp
-       FROM   users u
-       JOIN   xp_ledger x ON x.user_id = u.id
-       WHERE  u.deleted_at IS NULL
-       GROUP  BY u.id, u.name
-     ),
-     ranked AS (
-       SELECT user_id, name, xp,
-              RANK() OVER (ORDER BY xp DESC)::int AS rank
-       FROM   all_time_totals
-     )
-     SELECT user_id, name, xp, rank
-     FROM   ranked
-     WHERE  user_id = $1`,
+    `SELECT user_id, name, xp, rank
+       FROM leaderboard_xp_alltime
+      WHERE user_id = $1`,
     [userId],
   );
   return result.rows[0] ?? null;
+}
+
+/**
+ * refreshAllTimeLeaderboard
+ *
+ * REFRESH MATERIALIZED VIEW CONCURRENTLY — non-blocking for readers.
+ * Cannot run inside a transaction; node-pg-migrate's wrapped pool
+ * `query()` issues this as a top-level statement which is fine.
+ * Caller (service layer) is responsible for debouncing.
+ */
+async function refreshAllTimeLeaderboard() {
+  await query(`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_xp_alltime`);
 }
 
 module.exports = {
@@ -139,4 +132,5 @@ module.exports = {
   getAllTimeRankings,
   getUserWeeklyRank,
   getUserAllTimeRank,
+  refreshAllTimeLeaderboard,
 };
