@@ -17,10 +17,18 @@ interface BattleQueueProps {
 export default function BattleQueue({ onMatched, onCancel }: BattleQueueProps) {
   const [status, setStatus] = useState<"joining" | "queued" | "error">("joining");
   const [matchId, setMatchId] = useState<string | null>(null);
-  const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Wall-clock elapsed (Wave 4.11 pattern). Display only here, but keep
+  // the same shape as BattleMatch so a hidden tab doesn't show a frozen
+  // "Finding opponent..." counter.
+  const startTimeMsRef = useRef<number | null>(null);
+  const [, setTick] = useState(0);
+  const elapsed = startTimeMsRef.current === null
+    ? 0
+    : Math.floor((Date.now() - startTimeMsRef.current) / 1000);
 
   const cleanup = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -64,7 +72,10 @@ export default function BattleQueue({ onMatched, onCancel }: BattleQueueProps) {
   useEffect(() => {
     if (status !== "queued" || !matchId) return;
 
-    timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+    if (startTimeMsRef.current === null) startTimeMsRef.current = Date.now();
+    timerRef.current = setInterval(() => setTick((n) => n + 1), 1000);
+    const onVisibility = () => { if (!document.hidden) setTick((n) => n + 1); };
+    document.addEventListener("visibilitychange", onVisibility);
 
     pollRef.current = setInterval(async () => {
       try {
@@ -76,7 +87,10 @@ export default function BattleQueue({ onMatched, onCancel }: BattleQueueProps) {
       } catch { /* silent — keep polling */ }
     }, 3000);
 
-    return cleanup;
+    return () => {
+      cleanup();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [status, matchId, cleanup, onMatched]);
 
   const handleCancel = async () => {

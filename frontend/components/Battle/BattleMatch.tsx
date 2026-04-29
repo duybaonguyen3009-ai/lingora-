@@ -20,10 +20,20 @@ export default function BattleMatch({ matchId, onComplete, onClose }: BattleMatc
   const [data, setData] = useState<BattleMatchStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [elapsed, setElapsed] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Wall-clock elapsed (Wave 4.11 pattern). Score = correct*1000 - elapsed,
+  // so any undercount under background-tab setInterval throttle would
+  // inflate the score — this is the anti-cheat path. setInterval here
+  // only forces a re-render via setTick; the actual elapsed value is
+  // always derived from Date.now() − startTimeMs.
+  const startTimeMsRef = useRef<number | null>(null);
+  const [, setTick] = useState(0);
+  const elapsed = startTimeMsRef.current === null
+    ? 0
+    : Math.floor((Date.now() - startTimeMsRef.current) / 1000);
 
   // Load match data
   useEffect(() => {
@@ -41,8 +51,14 @@ export default function BattleMatch({ matchId, onComplete, onClose }: BattleMatc
   // Start timer
   useEffect(() => {
     if (!data || loading) return;
-    timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    if (startTimeMsRef.current === null) startTimeMsRef.current = Date.now();
+    timerRef.current = setInterval(() => setTick((n) => n + 1), 1000);
+    const onVisibility = () => { if (!document.hidden) setTick((n) => n + 1); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [data, loading]);
 
   const handleAnswer = useCallback((orderIndex: number, answer: string) => {
@@ -60,8 +76,12 @@ export default function BattleMatch({ matchId, onComplete, onClose }: BattleMatc
       answer: answers[q.order_index] || "",
     }));
 
+    const timeSeconds = startTimeMsRef.current === null
+      ? 0
+      : Math.floor((Date.now() - startTimeMsRef.current) / 1000);
+
     try {
-      const result = await submitBattleAnswers(matchId, { answers: answerArray, timeSeconds: elapsed });
+      const result = await submitBattleAnswers(matchId, { answers: answerArray, timeSeconds });
       setSubmitted(true);
 
       if (result.status === "completed") {
@@ -83,7 +103,7 @@ export default function BattleMatch({ matchId, onComplete, onClose }: BattleMatc
     } catch {
       setSubmitting(false);
     }
-  }, [data, answers, elapsed, matchId, submitting, onComplete]);
+  }, [data, answers, matchId, submitting, onComplete]);
 
   // ---------------------------------------------------------------------------
   // Render
