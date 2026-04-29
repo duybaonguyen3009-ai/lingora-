@@ -50,11 +50,21 @@ export default function FullTestRunner({ testId, onComplete, onClose }: Props) {
   const [data, setData] = useState<ReadingFullTestData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Timer
-  const [elapsed, setElapsed] = useState(0);
+  // Timer — derived from wall-clock diff so background-tab throttle of
+  // setInterval (browsers clamp to ~1/min when hidden) cannot stretch
+  // the exam. setInterval here only forces re-render; remaining time is
+  // always recomputed from Date.now() − startTimeMs. visibilitychange
+  // forces an immediate re-render when the tab comes back so the user
+  // sees the correct time without waiting for the next tick.
+  const startTimeMsRef = useRef<number | null>(null);
+  const [, setTick] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const warningsFiredRef = useRef<{ ten: boolean; five: boolean; one: boolean; zero: boolean }>({ ten: false, five: false, one: false, zero: false });
   const [toast, setToast] = useState<string | null>(null);
+
+  const elapsed = startTimeMsRef.current === null
+    ? 0
+    : Math.min(BUDGET_SECONDS, Math.floor((Date.now() - startTimeMsRef.current) / 1000));
 
   // Per-section state
   const [activeSection, setActiveSection] = useState(0);
@@ -82,8 +92,14 @@ export default function FullTestRunner({ testId, onComplete, onClose }: Props) {
 
   useEffect(() => {
     if (phase !== "running") return;
-    timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    if (startTimeMsRef.current === null) startTimeMsRef.current = Date.now();
+    timerRef.current = setInterval(() => setTick((n) => n + 1), 1000);
+    const onVisibility = () => { if (!document.hidden) setTick((n) => n + 1); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [phase]);
 
   useEffect(() => {
@@ -111,10 +127,14 @@ export default function FullTestRunner({ testId, onComplete, onClose }: Props) {
       };
     });
 
+    const timeSeconds = startTimeMsRef.current === null
+      ? 0
+      : Math.min(BUDGET_SECONDS, Math.floor((Date.now() - startTimeMsRef.current) / 1000));
+
     try {
       const result = await submitReadingFullTest({
         passage_results: passageResults,
-        time_seconds: elapsed,
+        time_seconds: timeSeconds,
         started_at: data.started_at,
       });
       onComplete(result);
@@ -122,7 +142,7 @@ export default function FullTestRunner({ testId, onComplete, onClose }: Props) {
       setPhase("running");
       setError("Không nộp bài được. Thử lại.");
     }
-  }, [data, answersBySection, elapsed, onComplete]);
+  }, [data, answersBySection, onComplete]);
 
   useEffect(() => {
     if (phase !== "running") return;
