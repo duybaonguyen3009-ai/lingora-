@@ -27,12 +27,13 @@
 
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { GRAMMAR_UNITS, GRAMMAR_TOPICS, TOTAL_GRAMMAR_LESSONS } from "./grammarData";
 import {
   getGrammarProgress,
   recordGrammarLesson,
   recordGrammarExam,
+  backfillGrammar,
 } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/authStore";
 
@@ -126,19 +127,63 @@ export interface UseGrammarProgressResult {
 export function useGrammarProgress(): UseGrammarProgressResult {
   const userId = useAuthStore((s) => s.user?.id ?? null);
   const [data, setData] = useState<GrammarProgressData>(EMPTY_PROGRESS);
+  // Tracks user IDs we've already attempted backfill for in this mount,
+  // so a re-render that re-reads userId doesn't fire the bulk import a
+  // second time. Idempotent server-side regardless (commit 1/3 findOne
+  // pre-check) — this just saves a needless POST.
+  const backfillAttemptedRef = useRef<Set<string>>(new Set());
 
   // Hydrate from server on mount + when the authenticated user changes.
-  // No re-fetch on completion calls — those write through to local state
-  // optimistically. The server xp_earned and totalXp are recomputed from
-  // xp_ledger; the FE keeps a tier-based local total during the session
-  // for snappy UI, then re-hydrates from server next mount.
+  // Sequence:
+  //   1. If localStorage has a non-empty 'lingona-grammar-progress'
+  //      payload, POST it to /grammar/backfill ONCE per user.
+  //      On success: remove the key, then fall through to a fresh
+  //      GET so the UI reflects the freshly imported state.
+  //      On failure: leave localStorage in place; we'll retry next
+  //      session. Hydrate from whatever the server already has.
+  //   2. GET /grammar/progress and replace local state.
   useEffect(() => {
     let cancelled = false;
     if (!userId) {
       setData(EMPTY_PROGRESS);
       return;
     }
+
     (async () => {
+      // ── Step 1: one-time backfill ──────────────────────────────
+      if (typeof window !== "undefined" && !backfillAttemptedRef.current.has(userId)) {
+        backfillAttemptedRef.current.add(userId);
+        const raw = (() => {
+          try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
+        })();
+        if (raw) {
+          let parsed: GrammarProgressData | null = null;
+          try { parsed = JSON.parse(raw) as GrammarProgressData; } catch { parsed = null; }
+          const lessonCount = parsed?.lessonResults ? Object.keys(parsed.lessonResults).length : 0;
+          const examCount = parsed?.examResults ? Object.keys(parsed.examResults).length : 0;
+          if (parsed && (lessonCount > 0 || examCount > 0)) {
+            try {
+              await backfillGrammar({
+                lessonResults: parsed.lessonResults ?? {},
+                examResults: parsed.examResults ?? {},
+                totalXp: parsed.totalXp ?? 0,
+              });
+              // Clear the key so the next session doesn't re-attempt the
+              // import. Server is idempotent regardless, but this avoids
+              // the round-trip and keeps the device clean.
+              try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+            } catch {
+              // Backfill failed — keep localStorage intact for the next
+              // session. Fall through to the server-state hydrate so the
+              // UI still reflects whatever progress already lives in DB.
+            }
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      // ── Step 2: hydrate from server ────────────────────────────
       try {
         const remote = await getGrammarProgress();
         if (cancelled) return;
@@ -149,8 +194,7 @@ export function useGrammarProgress(): UseGrammarProgressResult {
         });
       } catch {
         // Silent — keep EMPTY_PROGRESS so the UI shows "not yet started"
-        // rather than blocking. Wave 5.4.5 commit 3/3 backfill flow will
-        // recover any pre-existing localStorage progress.
+        // rather than blocking. The next session will retry.
       }
     })();
     return () => { cancelled = true; };
