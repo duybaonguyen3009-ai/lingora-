@@ -5,7 +5,6 @@ import Mascot from "@/components/ui/Mascot";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./Social/NotificationBell";
 import useSound from "@/hooks/useSound";
-import { useReward } from "@/contexts/RewardContext";
 import { itemsForSurface, parentGroupId, type NavItem } from "@/config/nav";
 import type { GamificationData } from "@/lib/types";
 import type { BattleRankTier } from "@/lib/types";
@@ -57,7 +56,6 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ active, onChange, gamification, rankTier = "iron", userName, displayStreak }: AppSidebarProps) {
   const { play } = useSound();
-  const { shields } = useReward();
   const [expanded, setExpanded] = useState<Set<string>>(loadExpanded);
 
   // Auto-expand the parent of the active child whenever active changes.
@@ -277,15 +275,6 @@ export default function AppSidebar({ active, onChange, gamification, rankTier = 
           <span className="text-xs" style={{ color: "var(--color-text-tertiary)" }}>
             day streak
           </span>
-          {shields > 0 && (
-            <span
-              className="text-xs font-semibold flex items-center gap-0.5 ml-auto"
-              style={{ color: "#60A5FA" }}
-              title={`${shields} streak shield${shields > 1 ? "s" : ""}`}
-            >
-              🛡️ {shields}
-            </span>
-          )}
         </div>
 
         {/* Rank */}

@@ -17,7 +17,6 @@ import Skeleton from "@/components/ui/Skeleton";
 import Mascot from "@/components/ui/Mascot";
 import DailyMissionPanel from "@/components/DailyMissions/DailyMissionPanel";
 import StreakWarningBanner from "@/components/StreakWarningBanner";
-import { useReward } from "@/contexts/RewardContext";
 import { getBattleHome, getFriends } from "@/lib/api";
 import type {
   GamificationData,
@@ -63,7 +62,6 @@ export default function HomeDashboard({
   onNavigate,
   onFocusAction,
 }: HomeDashboardProps) {
-  const { shields } = useReward();
   const [battleData, setBattleData] = useState<BattleHome | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
@@ -199,15 +197,6 @@ export default function HomeDashboard({
                 {streakUrgent ? "Streak at risk!" : "day streak"}
               </div>
             </div>
-            {shields > 0 && (
-              <span
-                className="text-xs font-semibold shrink-0"
-                style={{ color: "#60A5FA" }}
-                title={`${shields} streak shield${shields > 1 ? "s" : ""}`}
-              >
-                🛡️ {shields}
-              </span>
-            )}
           </div>
 
           {/* Rank */}
